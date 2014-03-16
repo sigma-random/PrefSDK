@@ -8,17 +8,17 @@ local ZLibFormat = FormatDefinition:new("ZLib Format", "Compression", "Dax", "1.
 
 function ZLibFormat:validateFormat(buffer)
   local compression = buffer:readType(0, DataType.UInt8)  
-  local cm = bit32.band(compression, 0xF)
-  local cinfo = bit32.rshift(bit32.band(compression, 0xF0), 4)
+  local cm = bit.band(compression, 0xF)
+  local cinfo = bit.rshift(bit.band(compression, 0xF0), 4)
   
   if (cm ~= 8) or (not ZLib.isWindowSizeValid(cinfo)) then
     return false
   end
   
   local flag = buffer:readType(1, DataType.UInt8)
-  local check = bit32.band(flag, 0x1F)
-  local dict = bit32.rshift(bit32.band(flag, 0x20), 5)
-  local level = bit32.rshift(bit32.band(flag, 0xC0), 6)
+  local check = bit.band(flag, 0x1F)
+  local dict = bit.rshift(bit.band(flag, 0x20), 5)
+  local level = bit.rshift(bit.band(flag, 0xC0), 6)
   
   if not ZLib.isChecksumValid(compression, flag) then
     return false

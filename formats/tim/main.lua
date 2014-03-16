@@ -16,32 +16,32 @@ end
 function TimFormat:validateFormat(buffer)
   local id = buffer:readType(0, DataType.UInt32)
   
-  if bit32.band(id, 0xFF) ~= 0x10 then -- Id
+  if bit.band(id, 0xFF) ~= 0x10 then -- Id
     return false
   end
   
-  if bit32.rshift(bit32.band(id, 0xFF00), 8) ~= 0x00 then -- Version
+  if bit.rshift(bit.band(id, 0xFF00), 8) ~= 0x00 then -- Version
     return false
   end
   
-  if bit32.rshift(bit32.band(id, 0xFFFF0000), 16) ~= 0x0000 then -- Reserved
+  if bit.rshift(bit.band(id, 0xFFFF0000), 16) ~= 0x0000 then -- Reserved
     return false
   end
   
   local flag = buffer:readType(4, DataType.UInt32)
-  local bpp = bit32.band(flag, 0x7)
+  local bpp = bit.band(flag, 0x7)
   
   if (bpp < 0) or (bpp > 4) then -- Bpp
     return false
   end
   
-  local hasclut = bit32.rshift(bit32.band(flag, 0x8), 3)
+  local hasclut = bit.rshift(bit.band(flag, 0x8), 3)
   
   if (hasclut ~= 0) and (hasclut ~= 1) then
     return false
   end
   
-  if bit32.rshift(bit32.band(flag, 0xFFFFFFF0), 4) ~= 0x000000 then
+  if bit.rshift(bit.band(flag, 0xFFFFFFF0), 4) ~= 0x000000 then
     return false
   end
   
@@ -76,7 +76,7 @@ function TimFormat:validateFormat(buffer)
       clutsize = clutsize + (clutelements * 2)
     end
     
-    if clutsize > #buffer then
+    if clutsize > buffer:size() then
       return false
     end
     

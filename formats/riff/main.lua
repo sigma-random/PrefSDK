@@ -31,7 +31,7 @@ function RiffFormat:parseFormat(formatmodel, buffer)
   
   local pos = riffheader:endOffset()
   
-  while pos < #buffer do
+  while pos < buffer:size() do
     local chunksize = RiffFormat:verifyChunkType(buffer:readString(pos, 4), formatmodel, buffer)
     
     if chunksize == 0 then

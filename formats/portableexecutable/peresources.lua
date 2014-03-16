@@ -3,11 +3,11 @@ local PeDefs = require("formats.portableexecutable.pedefs")
 local PeResources = { }
 
 function PeResources.imageResourceNameIsString(val)
-  return bit32.band(val, PeDefs.ImageResourceNameIsString) ~= 0
+  return bit.band(val, PeDefs.ImageResourceNameIsString) ~= 0
 end
 
 function PeResources.imageResourceDataIsDirectory(val)
-  return bit32.band(val, PeDefs.ImageResourceDataIsDirectory) ~= 0
+  return bit.band(val, PeDefs.ImageResourceDataIsDirectory) ~= 0
 end
 
 function PeResources.getEntriesCount(resourcedirectory, buffer)

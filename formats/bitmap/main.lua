@@ -82,7 +82,7 @@ function BitmapFormat:parseFormat(formatmodel, buffer)
     local colortable = formatmodel:addStructure("ColorTable")
     
     if clrused == 0 then
-      colortable:addField(DataType.UInt32, bit32.lshift(1, bitcount), "tableentry")
+      colortable:addField(DataType.UInt32, bit.lshift(1, bitcount), "tableentry")
     else
       colortable:addField(DataType.UInt32, clrused, "tableentry")
     end

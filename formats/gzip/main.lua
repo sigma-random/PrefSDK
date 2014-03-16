@@ -107,7 +107,7 @@ end
 
 function GZipFormat:defineData(formatmodel, buffer)
   local sect = formatmodel:addStructure("GZIP_FILE")
-  local size = #buffer - sect:offset() - 8;
+  local size = buffer:size() - sect:offset() - 8;
   
   sect:addField(DataType.Blob, size, "compressed")
   

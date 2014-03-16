@@ -24,14 +24,14 @@ end
 function INesFormat.getMapperTypeFromLow(formatobject, buffer)
   local lowpart = formatobject:value()
   local highpart = formatobject:model().INesHeader.SystemFlags2.HighROMMapperType:value()
-  local mt = bit32.bor(bit32.lshift(highpart, 4), lowpart)
+  local mt = bit.bor(bit.lshift(highpart, 4), lowpart)
   return MapperTypes[mt]
 end
 
 function INesFormat.getMapperTypeFromHigh(formatobject, buffer)
   local highpart = formatobject:value()
   local lowpart = formatobject:model().INesHeader.SystemFlags1.LowROMMapperType:value()
-  local mt = bit32.bor(bit32.lshift(highpart, 4), lowpart)
+  local mt = bit.bor(bit.lshift(highpart, 4), lowpart)
   return MapperTypes[mt]
 end
 

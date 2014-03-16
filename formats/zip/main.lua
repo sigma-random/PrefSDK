@@ -23,7 +23,7 @@ end
 function ZipFormat:parseFormat(formatmodel, buffer)  
   local pos = 0
   
-  while pos < #buffer do
+  while pos < buffer:size() do
     local tag = buffer:readType(pos, DataType.UInt32)
     
     if tag == 0x04034B50 then
