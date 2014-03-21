@@ -1,6 +1,6 @@
 require("sdk.lua.class")
 -- require("sdk.types.datatype")
-require("sdk.formats.element.elementtype")
+require("sdk.format.element.elementtype")
 local FieldElement = require("sdk.format.element.fieldelement")
 local BitField = require("sdk.format.element.bitfield")
 
@@ -63,7 +63,7 @@ end
 
 function FieldArray:indexOf(item)
   for i,v in ipairs(self._itemoffsets) do
-    if v == item:offset()
+    if v == item:offset() then
       return i - 1
     end
   end

@@ -54,37 +54,37 @@ function BitmapFormat:validateFormat(buffer)
   return true
 end
 
-function BitmapFormat:parseFormat(formatmodel, buffer)
-  local bitmapfileheader = formatmodel:addStructure("BitmapFileHeader")  
-  bitmapfileheader:addField(DataType.UInt16, "bfType")
-  bitmapfileheader:addField(DataType.UInt32, "bfSize")
-  bitmapfileheader:addField(DataType.UInt16, "bfReserved1")
-  bitmapfileheader:addField(DataType.UInt16, "bfReserved2")
-  bitmapfileheader:addField(DataType.UInt32, "bfOffBits")
+function BitmapFormat:parseFormat(formattree, buffer)
+  local bitmapfileheader = formattree:addStructure("BitmapFileHeader")  
+  -- bitmapfileheader:addField(DataType.UInt16, "bfType")
+  -- bitmapfileheader:addField(DataType.UInt32, "bfSize")
+  -- bitmapfileheader:addField(DataType.UInt16, "bfReserved1")
+  -- bitmapfileheader:addField(DataType.UInt16, "bfReserved2")
+  -- bitmapfileheader:addField(DataType.UInt32, "bfOffBits")
   
-  local bitmapinfoheader = formatmodel:addStructure("BitmapInfoHeader")
-  bitmapinfoheader:addField(DataType.UInt32, "biSize")
-  bitmapinfoheader:addField(DataType.UInt32, "biWidth")
-  bitmapinfoheader:addField(DataType.UInt32, "biHeight")
-  bitmapinfoheader:addField(DataType.UInt16, "biPlanes")
-  bitmapinfoheader:addField(DataType.UInt16, "biBitCount"):dynamicInfo(BitmapFormat.readBpp)
-  bitmapinfoheader:addField(DataType.UInt32, "biCompression")
-  bitmapinfoheader:addField(DataType.UInt32, "biSizeImage")
-  bitmapinfoheader:addField(DataType.Int32, "biXPelsPerMeter")
-  bitmapinfoheader:addField(DataType.Int32, "biYPelsPerMeter")
-  bitmapinfoheader:addField(DataType.UInt32, "biClrUsed")
-  bitmapinfoheader:addField(DataType.UInt32, "biClrImportant");
+  -- local bitmapinfoheader = formatmodel:addStructure("BitmapInfoHeader")
+  -- bitmapinfoheader:addField(DataType.UInt32, "biSize")
+  -- bitmapinfoheader:addField(DataType.UInt32, "biWidth")
+  -- bitmapinfoheader:addField(DataType.UInt32, "biHeight")
+  -- bitmapinfoheader:addField(DataType.UInt16, "biPlanes")
+  -- bitmapinfoheader:addField(DataType.UInt16, "biBitCount"):dynamicInfo(BitmapFormat.readBpp)
+  -- bitmapinfoheader:addField(DataType.UInt32, "biCompression")
+  -- bitmapinfoheader:addField(DataType.UInt32, "biSizeImage")
+  -- bitmapinfoheader:addField(DataType.Int32, "biXPelsPerMeter")
+  -- bitmapinfoheader:addField(DataType.Int32, "biYPelsPerMeter")
+  -- bitmapinfoheader:addField(DataType.UInt32, "biClrUsed")
+  -- bitmapinfoheader:addField(DataType.UInt32, "biClrImportant");
   
-  local bitcount = bitmapinfoheader.biBitCount:value()
+  -- local bitcount = bitmapinfoheader.biBitCount:value()
   
-  if bitcount < 24 then
-    local clrused = bitmapinfoheader.biClrUsed:value()
-    local colortable = formatmodel:addStructure("ColorTable")
+  -- if bitcount < 24 then
+    -- local clrused = bitmapinfoheader.biClrUsed:value()
+    -- local colortable = formatmodel:addStructure("ColorTable")
     
-    if clrused == 0 then
-      colortable:addField(DataType.UInt32, bit.lshift(1, bitcount), "tableentry")
-    else
-      colortable:addField(DataType.UInt32, clrused, "tableentry")
-    end
-  end
+    -- if clrused == 0 then
+      -- colortable:addField(DataType.UInt32, bit.lshift(1, bitcount), "tableentry")
+    -- else
+      -- colortable:addField(DataType.UInt32, clrused, "tableentry")
+    -- end
+  -- end
 end

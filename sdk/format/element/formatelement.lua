@@ -1,5 +1,5 @@
 require("sdk.lua.class")
-require("sdk.formats.element.elementtype")
+require("sdk.format.element.elementtype")
 
 FormatElement = class()
 

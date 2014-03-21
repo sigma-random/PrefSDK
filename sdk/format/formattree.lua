@@ -22,7 +22,7 @@ end
 
 function FormatTree:indexOf(s)
   for i,v in ipairs(self._structureoffsets) do
-    if v == s:offset()
+    if v == s:offset() then
       return i - 1
     end
   end

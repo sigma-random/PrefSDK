@@ -1,5 +1,5 @@
 require("sdk.lua.class")
-require("sdk.formats.element.elementtype")
+require("sdk.format.element.elementtype")
 local FormatElement = require("sdk.format.element.formatelement")
 local FieldArray = require("sdk.format.element.fieldarray")
 local StringField = require("sdk.format.element.stringfield")

@@ -1,6 +1,6 @@
 require("sdk.lua.class")
 -- require("sdk.types.datatype")
-require("sdk.formats.element.elementtype")
+require("sdk.format.element.elementtype")
 local FieldElement = require("sdk.format.element.fieldelement")
 local BitField = require("sdk.format.element.bitfield")
 
