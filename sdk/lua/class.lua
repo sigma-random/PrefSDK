@@ -2,20 +2,20 @@ function class(superclass)
   local c = { }
   local meta = { }
   
-  if supeclass then
-    meta.__index = supeclass
-  else
-    meta.__index = c
+  c.__index = c
+  
+  if superclass then
+    meta.__index = superclass
   end
   
-  function meta.__call(self, ...)
-    local instance = setmetatable({ }, { __index = c})
+  function meta.__call(cls, ...)
+    local self = setmetatable({ }, cls)
     
-    if instance.__ctor then
-      instance.__ctor(instance, ...)
+    if self.__ctor then
+      self:__ctor(...)
     end
     
-    return instance
+    return self
   end
   
   return setmetatable(c, meta)
