@@ -8,7 +8,7 @@ local Field = require("sdk.format.element.field")
 local Structure = class(FormatElement)
 
 function Structure:__ctor(offset, name, parent, tree, buffer)
-  FormatTree.__ctor(self, offset, name, parent, tree, buffer)
+  FormatElement.__ctor(self, offset, name, parent, tree, buffer)
   
   self._fieldoffsets = { }
   self._fields = { }
@@ -55,6 +55,14 @@ function Structure:addField(fieldtype, name, count)
   
   self._fields[newoffset] = f
   return f
+end
+
+function Structure:fieldCount()
+  return #self._fieldoffsets
+end
+
+function Structure:field(i)
+  return self._fields[self._fieldoffsets[i]]
 end
 
 function Structure:setBase(b)

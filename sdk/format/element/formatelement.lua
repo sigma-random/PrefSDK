@@ -8,12 +8,20 @@ function FormatElement:__ctor(offset, name, parent, tree, buffer)
   self._name = name
   self._parent = parent
   self._base = 16
-  self._buffer = tree
-  self._formattree = buffer
+  self._tree = tree
+  self._buffer = buffer
   
   function self._infoprocedure(formatelement, buffer)
     return ""
   end
+end
+
+function FormatElement:tree()
+  return self._tree
+end
+
+function FormatElement:buffer()
+  return self._buffer
 end
 
 function FormatElement:elementType()
@@ -48,7 +56,7 @@ function FormatElement:endOffset()
   return self._offset + self:size()
 end
 
-function FormatElement:parent()
+function FormatElement:parentElement()
   return self._parent
 end
 

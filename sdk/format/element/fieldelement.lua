@@ -28,7 +28,7 @@ function FieldElement:displayValue()
     return self._buffer:readString(self._offset, 1)
   end
   
-  return self._buffer:stringValue(self._offset, self._base, seld._datatype)
+  return self._buffer:stringValue(self._offset, self._base, self._datatype)
 end
 
 function FieldElement:isSigned()

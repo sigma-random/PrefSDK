@@ -10,6 +10,7 @@ function FormatTree:new(buffer)
   local o = setmetatable({ }, FormatTree)
   
   o._buffer = buffer
+  return o
 end
 
 function FormatTree:structureCount()
@@ -31,8 +32,12 @@ function FormatTree:indexOf(s)
 end
 
 function FormatTree:addStructure(name, offset)
-  local newoffset = offset and offset or self._structureoffsets[table.maxn(self._structureoffsets)]
+  local newoffset = self._buffer:baseOffset()
   local s = Structure(newoffset, name, { }, self, self._buffer)
+  
+  if offset then
+    newoffset = offset
+  end
   
   table.insert(self._structureoffsets, newoffset)
   table.sort(self._structureoffsets)
