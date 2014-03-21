@@ -4,7 +4,7 @@ require("sdk.format.element.elementtype")
 local FieldElement = require("sdk.format.element.fieldelement")
 local BitField = require("sdk.format.element.bitfield")
 
-FieldArray = class(FieldElement)
+local FieldArray = class(FieldElement)
 
 function FieldArray.__ctor(itemtype, itemcount, offset, name, parent, tree, buffer)
   FieldElement.__ctor(self, DataType.Array, offset, name, parent, tree, buffer)
@@ -82,3 +82,5 @@ end
 function FieldArray:displayValue()
   return ""
 end
+
+return FieldArray

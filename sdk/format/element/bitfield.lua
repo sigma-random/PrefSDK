@@ -3,7 +3,7 @@ require("sdk.lua.class")
 require("sdk.format.element.elementtype")
 local FieldElement = require("sdk.format.element.fieldelement")
 
-BitField = class(FieldElement)
+local BitField = class(FieldElement)
 
 function BitField:__ctor(bitstart, bitend, offset, name, parent, tree, buffer)
   FieldElement.__ctor(self, offset, name, parent, tree, buffer)
@@ -65,3 +65,5 @@ function BitField:createMask(bitstart, bitend)
     i = i + 1
   end
 end
+
+return BitField

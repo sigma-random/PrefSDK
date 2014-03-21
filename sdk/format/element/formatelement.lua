@@ -1,7 +1,7 @@
 require("sdk.lua.class")
 require("sdk.format.element.elementtype")
 
-FormatElement = class()
+local FormatElement = class()
 
 function FormatElement:__ctor(offset, name, parent, tree, buffer)
   self._offset = offset
@@ -81,3 +81,5 @@ end
 function FormatElement:displayValue()
   return ""
 end
+
+return FormatElement

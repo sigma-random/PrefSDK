@@ -4,7 +4,7 @@ require("sdk.format.element.elementtype")
 local FieldElement = require("sdk.format.element.fieldelement")
 local BitField = require("sdk.format.element.bitfield")
 
-Field = class(FieldElement)
+local Field = class(FieldElement)
 
 function Field:__ctor(fieldtype, offset, name, parent, tree, buffer)
   FieldElement.__ctor(self, offset, name, parent, tree, buffer)
@@ -37,3 +37,5 @@ end
 function Field:bitField(i)
   return self._bitfields[self._bitfieldnames[i]]
 end
+
+return Field

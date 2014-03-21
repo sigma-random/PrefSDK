@@ -5,7 +5,7 @@ local FieldArray = require("sdk.format.element.fieldarray")
 local StringField = require("sdk.format.element.stringfield")
 local Field = require("sdk.format.element.field")
 
-Structure = class(FormatElement)
+local Structure = class(FormatElement)
 
 function Structure:__ctor(offset, name, parent, tree, buffer)
   FormatTree.__ctor(self, offset, name, parent, tree, buffer)
@@ -76,3 +76,5 @@ function Structure:size()
   
   return s
 end
+
+return Structure

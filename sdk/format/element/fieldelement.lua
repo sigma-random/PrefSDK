@@ -3,7 +3,7 @@ require("sdk.lua.class")
 require("sdk.format.element.elementtype")
 local FormatElement = require("sdk.format.element.formatelement")
 
-FieldElement = class(FormatElement)
+local FieldElement = class(FormatElement)
 
 function FieldElement:__ctor(datatype, offset, name, parent, tree, buffer)
   FormatElement.__ctor(self, offset, name, parent, tree, buffer)
@@ -42,3 +42,5 @@ end
 function FieldElement:isOverflowed()
   return self._buffer:willOverflow(self._offset, self._datatype)
 end
+
+return FieldElement

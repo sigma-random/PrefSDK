@@ -3,7 +3,7 @@ require("sdk.lua.class")
 require("sdk.format.element.elementtype")
 local FieldArray = require("sdk.format.element.fieldarray")
 
-StringField = class(FieldArray)
+local StringField = class(FieldArray)
 
 function StringField.__ctor(itemcount, offset, name, parent, tree, buffer)
   FieldArray.__ctor(DataType.Char, itemcount, offset, name, parent, tree, buffer)
@@ -14,3 +14,5 @@ function StringField:displayValue()
   local s = self._buffer.readString(self._offset, len)
   return string.format("'%s'", s)
 end
+
+return StringField
