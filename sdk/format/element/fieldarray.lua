@@ -64,7 +64,7 @@ end
 function FieldArray:indexOf(item)
   for i,v in ipairs(self._itemoffsets) do
     if v == item:offset() then
-      return i - 1
+      return i
     end
   end
   
