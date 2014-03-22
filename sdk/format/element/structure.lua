@@ -36,7 +36,7 @@ function Structure:addField(fieldtype, name, count)
   local newoffset = self._offset + self:size()
   local f = nil
     
-  if DataType.isArray(fieldtype) then
+  if count then
     if not DataType.isString(fieldtype) and not count then
       error("Structure:addField(): Array size expected")
     elseif DataType.isString(fieldtype) then

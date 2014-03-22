@@ -2,11 +2,12 @@ require("sdk.lua.class")
 -- require("sdk.types.datatype")
 require("sdk.format.element.elementtype")
 local FieldElement = require("sdk.format.element.fieldelement")
+local Field = require("sdk.format.element.field")
 local BitField = require("sdk.format.element.bitfield")
 
 local FieldArray = class(FieldElement)
 
-function FieldArray.__ctor(itemtype, itemcount, offset, name, parent, tree, buffer)
+function FieldArray:__ctor(itemtype, itemcount, offset, name, parent, tree, buffer)
   FieldElement.__ctor(self, DataType.Array, offset, name, parent, tree, buffer)
   
   self._itemcount = itemcount
@@ -25,6 +26,7 @@ function FieldArray.__ctor(itemtype, itemcount, offset, name, parent, tree, buff
       
       self._itemoffsets[i] = itemoffset
       self._itemids[itemoffset] = f:id()
+      itemoffset = itemoffset + itemsize
       i = i + 1
     end
   end
@@ -35,7 +37,7 @@ function FieldArray:elementType()
 end
 
 function FieldArray:size()
-  return DataType.sizeOf(self._datatype) * self._itemcount
+  return DataType.sizeOf(self._itemtype) * self._itemcount
 end
 
 function FieldArray:value()
@@ -83,7 +85,7 @@ function FieldArray:displayType()
 end
 
 function FieldArray:displayName()
-  return string.format("%s[%d]", DataType.stringValue(self._itemtype), self._itemcount)
+  return string.format("%s[%d]", self:name(), self._itemcount)
 end
 
 function FieldArray:displayValue()
