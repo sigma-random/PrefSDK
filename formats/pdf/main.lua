@@ -24,58 +24,58 @@ function PdfFormat:validateFormat(buffer)
   return true
 end
 
-function PdfFormat:parseFormat(formatmodel, buffer)
+function PdfFormat:parseFormat(formattree, buffer)
   local objtable = self:findAllKeywords(buffer)
   -- PdfDebug.printObjectTable(objtable)
 
   for i, v in ipairs(objtable) do
     if v.type == PdfTypes.PdfWhitespace then
-      self:createPdfWhitespaceStruct(formatmodel, v)
+      self:createPdfWhitespaceStruct(formattree, v)
     elseif v.type == PdfTypes.PdfComment then
-      self:createPdfCommentStruct(formatmodel, v)
+      self:createPdfCommentStruct(formattree, v)
     elseif v.type == PdfTypes.PdfObject then
-      self:createPdfObjectStruct(formatmodel, v)
+      self:createPdfObjectStruct(formattree, v)
     elseif v.type == PdfTypes.PdfHeader then
-      self:createPdfHeaderStruct(formatmodel, v)
+      self:createPdfHeaderStruct(formattree, v)
     elseif v.type == PdfTypes.PdfXRef then
-      self:createPdfXRefStruct(formatmodel, v)
+      self:createPdfXRefStruct(formattree, v)
     elseif v.type == PdfTypes.PdfTrailer then
-      self:createPdfTrailerStruct(formatmodel, v)
+      self:createPdfTrailerStruct(formattree, v)
     else
       error("Unknown PdfType")
     end
   end
 end
 
-function PdfFormat:createPdfWhitespaceStruct(formatmodel, obj)
-  local pdfobj = formatmodel:addStructure("PDFWHITESPACE")
-  pdfobj:addField(DataType.Blob, obj.endpos - obj.startpos, "Whitespace")
+function PdfFormat:createPdfWhitespaceStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFWHITESPACE")
+  pdfobj:addField(DataType.Blob, "Whitespace", obj.endpos - obj.startpos)
 end
 
-function PdfFormat:createPdfCommentStruct(formatmodel, obj)
-  local pdfobj = formatmodel:addStructure("PDFCOMMENT")
-  pdfobj:addField(DataType.Blob, obj.endpos - obj.startpos, "Comment")
+function PdfFormat:createPdfCommentStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFCOMMENT")
+  pdfobj:addField(DataType.Blob, "Comment", obj.endpos - obj.startpos)
 end
 
-function PdfFormat:createPdfObjectStruct(formatmodel, obj)
-  local pdfobj = formatmodel:addStructure("PDFOBJECT")
+function PdfFormat:createPdfObjectStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFOBJECT")
   pdfobj:dynamicInfo(PdfFormat.getObjectName)
-  pdfobj:addField(DataType.Blob, obj.endpos - obj.startpos, "Data")
+  pdfobj:addField(DataType.Blob, "Data", obj.endpos - obj.startpos)
 end
 
-function PdfFormat:createPdfHeaderStruct(formatmodel, obj)
-  local pdfobj = formatmodel:addStructure("PDFHEADER")
-  pdfobj:addField(DataType.Char, obj.endpos - obj.startpos, "Header")
+function PdfFormat:createPdfHeaderStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFHEADER")
+  pdfobj:addField(DataType.Char, "Header", obj.endpos - obj.startpos)
 end
 
-function PdfFormat:createPdfXRefStruct(formatmodel, obj)
-  local pdfobj = formatmodel:addStructure("PDFXREF")
-  pdfobj:addField(DataType.Blob, obj.endpos - obj.startpos, "Data")
+function PdfFormat:createPdfXRefStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFXREF")
+  pdfobj:addField(DataType.Blob, "Data", obj.endpos - obj.startpos)
 end
 
-function PdfFormat:createPdfTrailerStruct(formatmodel, obj)
-  local pdfobj = formatmodel:addStructure("PDFTRAILER")
-  pdfobj:addField(DataType.Char, obj.endpos - obj.startpos, "Trailer")
+function PdfFormat:createPdfTrailerStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFTRAILER")
+  pdfobj:addField(DataType.Char, "Trailer", obj.endpos - obj.startpos)
 end
 
 function PdfFormat:findAllKeywords(buffer)

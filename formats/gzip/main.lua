@@ -87,7 +87,7 @@ function GZipFormat:defineHeader(formatmodel, buffer) -- 0x8B1F
   
   if fextra:value() == 1 then
     field = sect:addField(DataType.UInt8, "XLEN")
-    field = sect:addField(DataType.UInt8, field:value(), "hdExtraField")
+    field = sect:addField(DataType.UInt8, "hdExtraField", field:value())
   end
   
   if fname:value() == 1 then

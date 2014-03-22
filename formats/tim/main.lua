@@ -120,7 +120,7 @@ function TimFormat:parseFormat(formatmodel, buffer)
   pixeldata:addField(DataType.UInt16, "FrameBufferY")
   pixeldata:addField(DataType.UInt16, "Width")
   pixeldata:addField(DataType.UInt16, "Height")
-  pixeldata:addField(DataType.Blob, pixeldata.BlockSize:value() - pixeldata:size(), "Pixel")
+  pixeldata:addField(DataType.Blob, "Pixel", pixeldata.BlockSize:value() - pixeldata:size())
 end
 
 function TimFormat:createClutBlocks(formatmodel, buffer, bpp)
@@ -144,6 +144,6 @@ function TimFormat:createClutBlocks(formatmodel, buffer, bpp)
   local colors = clut:addStructure("Colors")
   
   for i = 1, clutcount do
-    colors:addField(DataType.Blob, clutelements * 2, "Clut" .. (i - 1))
+    colors:addField(DataType.Blob, "Clut" .. (i - 1), clutelements * 2)
   end
 end

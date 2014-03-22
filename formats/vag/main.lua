@@ -45,14 +45,14 @@ end
     
 function VagFormat:parseFormat(formatmodel, buffer)
   local vagheader = formatmodel:addStructure("VagHeader")
-  vagheader:addField(DataType.Char, 4, "Id")
+  vagheader:addField(DataType.Char, "Id", 4)
   vagheader:addField(DataType.UInt32, "Version")
   vagheader:addField(DataType.UInt32, "Reserved1")
   vagheader:addField(DataType.UInt32, "DataSize")
   vagheader:addField(DataType.UInt32, "SamplingFrequency")
-  vagheader:addField(DataType.Blob, 12, "Reserved2")
-  vagheader:addField(DataType.Char, 16, "Name")
+  vagheader:addField(DataType.Blob, "Reserved2", 12)
+  vagheader:addField(DataType.Char, "Name", 16)
   
   local vagdata = formatmodel:addStructure("VagData")
-  vagdata:addField(DataType.Blob, vagheader.DataSize:value(), "WaveformData")
+  vagdata:addField(DataType.Blob, "WaveformData", vagheader.DataSize:value())
 end

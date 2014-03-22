@@ -56,7 +56,7 @@ end
 
 function RiffFormat:defineFmtChunk(formatmodel, buffer)
   local formatchunk = formatmodel:addStructure("FormatChunk")
-  formatchunk:addField(DataType.Char, 4, "ChunkID")
+  formatchunk:addField(DataType.Char, "ChunkID", 4)
   formatchunk:addField(DataType.UInt32, "ChunkDataSize")
   formatchunk:addField(DataType.UInt16, "CompressionCode"):dynamicInfo(RiffFormat.getWaveCompressionType)
   formatchunk:addField(DataType.UInt16, "NumberOfChannels")
@@ -68,7 +68,7 @@ function RiffFormat:defineFmtChunk(formatmodel, buffer)
   local chunkdatasize = formatchunk.ChunkDataSize:value()
 
   if chunkdatasize > 0 then
-    formatchunk:addField(DataType.Blob, chunkdatasize - 16, "ExtraFormatData")
+    formatchunk:addField(DataType.Blob, "ExtraFormatData", chunkdatasize - 16)
   end
 
   return formatchunk:size()
@@ -76,7 +76,7 @@ end
 
 function RiffFormat:defineDataChunk(formatmodel, buffer)
   local datachunk = formatmodel:addStructure("DataChunk")
-  datachunk:addField(DataType.Char, 4, "ChunkID")
+  datachunk:addField(DataType.Char, "ChunkID", 4)
   datachunk:addField(DataType.UInt32, "ChunkDataSize")  
   datachunk:addField(DataType.Blob, datachunk.ChunkDataSize:value(), "SampleData")
   
@@ -85,7 +85,7 @@ end
 
 function RiffFormat:defineFactChunk(formatmodel, buffer)
   local factchunk = formatmodel:addStructure("FactChunk")
-  factchunk:addField(DataType.Char, 4, "ChunkID")
+  factchunk:addField(DataType.Char, "ChunkID", 4)
   factchunk:addField(DataType.UInt32, "ChunkDataSize")
   factchunk:addField(DataType.Blob, factchunk.ChunkDataSize:value(), "FormatData")
   

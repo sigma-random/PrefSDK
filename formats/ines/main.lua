@@ -59,7 +59,7 @@ end
 
 function INesFormat:parseFormat(formatmodel, buffer)
   local inesheader = formatmodel:addStructure("INesHeader")
-  inesheader:addField(DataType.Char, 4, "Signature")
+  inesheader:addField(DataType.Char, "Signature", 4)
   inesheader:addField(DataType.UInt8, "RomBanksCount"):dynamicInfo(INesFormat.calcRomSize)
   inesheader:addField(DataType.UInt8, "VRomBanksCount"):dynamicInfo(INesFormat.calcVRomSize)
   
@@ -86,5 +86,5 @@ function INesFormat:parseFormat(formatmodel, buffer)
   f_unofficialflags:setBitField(4, "RamInCPU")
   f_unofficialflags:setBitField(5, "BusConflicts")
   
-  inesheader:addField(DataType.UInt8, 2, "Reserved")
+  inesheader:addField(DataType.UInt8, "Reserved", 2)
 end

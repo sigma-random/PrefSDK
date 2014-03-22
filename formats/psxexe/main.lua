@@ -15,7 +15,7 @@ end
     
 function PsxExeFormat:parseFormat(formatmodel, buffer)
   local exeheader = formatmodel:addStructure("ExeHeader")
-  exeheader:addField(DataType.Char, 8, "id")
+  exeheader:addField(DataType.Char, "id", 8)
   exeheader:addField(DataType.UInt32, "text")
   exeheader:addField(DataType.UInt32, "data")
   exeheader:addField(DataType.UInt32, "pc0")
@@ -36,10 +36,10 @@ function PsxExeFormat:parseFormat(formatmodel, buffer)
   
   local strmarker = buffer:readString(exeheader:size())
   local regionmarker = formatmodel:addStructure("RegionMarker")
-  regionmarker:addField(DataType.Char, string.len(strmarker), "Marker")
+  regionmarker:addField(DataType.Char, "Marker", string.len(strmarker))
   
   local textsection = formatmodel:addStructure("TextSection", 0x800)
-  textsection:addField(DataType.Blob, exeheader.t_size:value(), "Data")
+  textsection:addField(DataType.Blob, "Data", exeheader.t_size:value())
 end
 
 

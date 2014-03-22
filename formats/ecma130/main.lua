@@ -12,10 +12,10 @@ end
 
 function Ecma130Format:createSector(offset, sectoridx, formatmodel)
   local sector = formatmodel:addStructure(string.format("Sector%X", sectoridx))
-  sector:addField(DataType.UInt8, 12, "Sync")
+  sector:addField(DataType.UInt8, "Sync", 12)
   
   local header = sector:addStructure("Header")
-  header:addField(DataType.UInt8, 3, "Address")
+  header:addField(DataType.UInt8, "Address", 3)
   header:addField(DataType.UInt8, "Mode")
   local mode = header.Mode:value()
  
@@ -27,24 +27,24 @@ function Ecma130Format:createSector(offset, sectoridx, formatmodel)
     error("Unknown Sector Mode")
   end
   
-  sector:addField(DataType.UInt8, 24, "F1-Frames")
-  sector:addField(DataType.UInt8, 24, "F2-Frames")
-  sector:addField(DataType.UInt8, 24, "F3-Frames")
-  sector:addField(DataType.UInt8, 24, "Boh")
+  sector:addField(DataType.UInt8, "F1-Frames", 24)
+  sector:addField(DataType.UInt8, "F2-Frames", 24)
+  sector:addField(DataType.UInt8, "F3-Frames", 24)
+  sector:addField(DataType.UInt8, "Boh", 24)
   
   return offset + sector:size()
 end
 
 function Ecma130Format:createSectorMode00_02(sector)
-  sector:addField(DataType.Blob, 2336, "UserData")
+  sector:addField(DataType.Blob, "UserData", 2336)
 end
 
 function Ecma130Format:createSectorMode01(sector)
-  sector:addField(DataType.Blob, 2048, "UserData")
+  sector:addField(DataType.Blob, "UserData", 2048)
   sector:addField(DataType.UInt32, "EDC")
-  sector:addField(DataType.UInt8, 8, "Intermediate")
-  sector:addField(DataType.UInt8, 172, "P-Parity")
-  sector:addField(DataType.UInt8, 104, "P-Parity")
+  sector:addField(DataType.UInt8, "Intermediate", 8)
+  sector:addField(DataType.UInt8, "P-Parity", 172)
+  sector:addField(DataType.UInt8, "P-Parity", 104)
 end
 
 function Ecma130Format:validateFormat(formatmodel, buffer)
