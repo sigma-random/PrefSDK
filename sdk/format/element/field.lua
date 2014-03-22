@@ -10,7 +10,7 @@ function Field:__ctor(datatype, offset, name, parent, tree, buffer)
   FieldElement.__ctor(self, datatype, offset, name, parent, tree, buffer)
   
   self._bitfieldnames = { }
-  self._bitfields = { }
+  self._bitfieldids = { }
 end
 
 function Field:elementType()
@@ -21,12 +21,22 @@ function Field:value()
   return self._buffer:readType(self._offset, self._datatype)
 end
 
+function Field:indexOf(bf)
+  for i,v in ipairs(self._bitfieldnames) do
+    if v == bf:name() then
+      return i
+    end
+  end
+  
+  return -1
+end
+
 function Field:setBitField(name, bitstart, bitend)
   local realbitend = bitend and bitend or bitstart
   local bf = BitField(bitstart, realbitend, self._offset, name, self, self._tree, self._buffer)
   
   table.insert(self._bitfieldnames, name)
-  self._bitfields[name] = bf
+  self._bitfieldids[name] = bf:id()
   return bf
 end
 
@@ -34,8 +44,14 @@ function Field:bitFieldCount()
   return #self._bitfieldnames
 end
 
+function Field:bitFieldId(i)
+  local name = self._bitfieldnames[i]
+  return self._bitfieldids[name]
+end
+
 function Field:bitField(i)
-  return self._bitfields[self._bitfieldnames[i]]
+  local id = self:bitFieldId(i)
+  return self._tree.pool[id]
 end
 
 return Field

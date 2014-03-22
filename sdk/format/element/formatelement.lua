@@ -1,5 +1,7 @@
+local uuid = require("sdk.math.uuid")
 require("sdk.lua.class")
 require("sdk.format.element.elementtype")
+local uuid = require("sdk.math.uuid")
 
 local FormatElement = class()
 
@@ -10,14 +12,18 @@ function FormatElement:__ctor(offset, name, parent, tree, buffer)
   self._base = 16
   self._tree = tree
   self._buffer = buffer
+  self._id = uuid()
+  
+  -- Add 'self' to element pool
+  tree.pool[self._id] = self
   
   function self._infoprocedure(formatelement, buffer)
     return ""
   end
 end
 
-function FormatElement:tree()
-  return self._tree
+function FormatElement:id()
+  return self._id
 end
 
 function FormatElement:buffer()
@@ -44,6 +50,10 @@ function FormatElement:value()
   return 0
 end
 
+function FormatElement:indexOf(i)
+  return -1
+end
+
 function FormatElement:size()
   return 0
 end
@@ -58,6 +68,14 @@ end
 
 function FormatElement:parentElement()
   return self._parent
+end
+
+function FormatElement:parentId()
+  if self:hasParent() then
+    return self._parent:id()
+  end
+  
+  return ""
 end
 
 function FormatElement:hasParent()

@@ -12,7 +12,7 @@ function FieldArray.__ctor(itemtype, itemcount, offset, name, parent, tree, buff
   self._itemcount = itemcount
   self._itemtype = itemtype
   self._itemoffsets = { }
-  self._items = { }
+  self._itemids = { }
   
   if itemtype ~= DataType.Blob then
     local i = 1
@@ -21,9 +21,10 @@ function FieldArray.__ctor(itemtype, itemcount, offset, name, parent, tree, buff
     
     while i <= itemcount do
       local itemname = string.format("%s[%d]", name, i - 1)
+      local f = Field(itemtype, itemoffset, itemname, self, tree, buffer)
       
       self._itemoffsets[i] = itemoffset
-      self._items[itemoffset] = Field(itemtype, itemoffset, itemname, self, tree, buffer)
+      self._itemids[itemoffset] = f:id()
       i = i + 1
     end
   end
@@ -44,8 +45,8 @@ end
 function FieldArray:setBase(b)
   self._base = b
   
-  for k,v in pairs(self._items) do
-    v:setBase(b)
+  for k,v in pairs(self._itemids) do
+    self._tree.pool[v]:setBase(b)
   end
 end
 
@@ -57,8 +58,14 @@ function FieldArray:itemCount()
   return self._itemcount
 end
 
+function FieldArray:itemId(i)
+  local offset = self._itemoffsets[i]
+  return self._itemids[offset]
+end
+
 function FieldArray:item(i)
-  return self._items[self._itemoffsets[i]]
+  local id = self:itemId(i)
+  return self._tree.pool[id]
 end
 
 function FieldArray:indexOf(item)
@@ -72,11 +79,11 @@ function FieldArray:indexOf(item)
 end
 
 function FieldArray:displayType()
-  return string.format("%s[]", DataType.stringValue(eself._itemtype))
+  return string.format("%s[]", DataType.stringValue(self._itemtype))
 end
 
 function FieldArray:displayName()
-  return string.format("%s[%d]", DataType.stringValue(eself._itemtype), self._itemcount)
+  return string.format("%s[%d]", DataType.stringValue(self._itemtype), self._itemcount)
 end
 
 function FieldArray:displayValue()

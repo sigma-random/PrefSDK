@@ -7,11 +7,11 @@ local Field = require("sdk.format.element.field")
 
 local Structure = class(FormatElement)
 
-function Structure:__ctor(offset, name, parent, tree, buffer)
-  FormatElement.__ctor(self, offset, name, parent, tree, buffer)
+function Structure:__ctor(offset, name, parent, tree, buffer, pool)
+  FormatElement.__ctor(self, offset, name, parent, tree, buffer, pool)
   
   self._fieldoffsets = { }
-  self._fields = { }
+  self._fieldids = { }
 end
 
 function Structure:elementType()
@@ -28,8 +28,7 @@ function Structure:addStructure(name)
   
   table.insert(self._fieldoffsets, newoffset)
   table.sort(self._fieldoffsets)
-  
-  self._fields[newoffset] = s
+  self._fieldids[newoffset] = s:id()
   return s
 end
 
@@ -53,7 +52,7 @@ function Structure:addField(fieldtype, name, count)
   table.insert(self._fieldoffsets, newoffset)
   table.sort(self._fieldoffsets)
   
-  self._fields[newoffset] = f
+  self._fieldids[newoffset] = f:id()
   return f
 end
 
@@ -61,25 +60,39 @@ function Structure:fieldCount()
   return #self._fieldoffsets
 end
 
+function Structure:fieldId(i)
+  local offset = self._fieldoffsets[i]
+  return self._fieldids[offset]
+end
+
 function Structure:field(i)
-  return self._fields[self._fieldoffsets[i]]
+  local id = self:fieldId(i)
+  return self._tree.pool[id]
 end
 
 function Structure:setBase(b)
   self._base = b
   
-  for k,v in pairs(self._fields) do
-    v:setBase(b)
+  for k,v in pairs(self._fieldids) do
+    self._tree.pool[v]:setBase(b)
   end
 end
 
-
+function Structure:indexOf(f)
+  for i,v in ipairs(self._fieldoffsets) do
+    if v == f:offset() then
+      return i
+    end
+  end
+  
+  return -1
+end
 
 function Structure:size()
   local s = 0
   
-  for k,v in pairs(self._fields) do
-    s = s + v:size()
+  for k,v in pairs(self._fieldids) do
+    s = s + self._tree.pool[v]:size()
   end
   
   return s

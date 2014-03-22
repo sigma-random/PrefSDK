@@ -1,7 +1,9 @@
+require("sdk.lua.class")
 local Structure = require("sdk.format.element.structure")
 
-FormatTree = { _structureoffsets = { },
-               _structures = { },
+FormatTree = { pool = { },
+               _structureoffsets = { },
+               _structureids = { },
                _buffer = nil }
                
 FormatTree.__index = FormatTree
@@ -17,8 +19,14 @@ function FormatTree:structureCount()
   return #self._structureoffsets
 end
 
+function FormatTree:structureId(i)
+  local offset = self._structureoffsets[i]
+  return self._structureids[offset]
+end
+
 function FormatTree:structure(i)  
-  return self._structures[self._structureoffsets[i]]
+  local id = self:structureId(i)
+  return self.pool[id]
 end
 
 function FormatTree:indexOf(s)
@@ -37,14 +45,14 @@ function FormatTree:addStructure(name, offset)
   if offset then
     newoffset = offset
   elseif #self._structureoffsets > 0 then
-    local lastoffset = self._structureoffsets[#self._structureoffsets]
-    newoffset = newoffset + self._structures[lastoffset]:endOffset()
+    local id = self:structureId(#self._structureoffsets)
+    newoffset = newoffset + self.pool[id]:endOffset()
   end
     
   local s = Structure(newoffset, name, { }, self, self._buffer)
   
   table.insert(self._structureoffsets, newoffset)
   table.sort(self._structureoffsets)
-  self._structures[newoffset] = s
+  self._structureids[newoffset] = s:id()
   return s
 end
