@@ -53,6 +53,6 @@ function FormatTree:addStructure(name, offset)
   
   table.insert(self._structureoffsets, newoffset)
   table.sort(self._structureoffsets)
-  self._structureids[newoffset] = s:id()
+  self._structureids[newoffset] = s:elementId()
   return s
 end

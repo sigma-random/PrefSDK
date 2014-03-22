@@ -24,8 +24,9 @@ function FieldArray:__ctor(itemtype, itemcount, offset, name, parent, tree, buff
       local itemname = string.format("%s[%d]", name, i - 1)
       local f = Field(itemtype, itemoffset, itemname, self, tree, buffer)
       
+      self[i - 1] = f
       self._itemoffsets[i] = itemoffset
-      self._itemids[itemoffset] = f:id()
+      self._itemids[itemoffset] = f:elementId()
       itemoffset = itemoffset + itemsize
       i = i + 1
     end

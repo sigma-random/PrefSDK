@@ -13,9 +13,9 @@ function PsxExeFormat:validateFormat(buffer)
   return true
 end
     
-function PsxExeFormat:parseFormat(formatmodel, buffer)
-  local exeheader = formatmodel:addStructure("ExeHeader")
-  exeheader:addField(DataType.Char, "id", 8)
+function PsxExeFormat:parseFormat(formattree, buffer)
+  local exeheader = formattree:addStructure("ExeHeader")
+  exeheader:addField(DataType.Char, "id", 8)  
   exeheader:addField(DataType.UInt32, "text")
   exeheader:addField(DataType.UInt32, "data")
   exeheader:addField(DataType.UInt32, "pc0")
@@ -35,16 +35,16 @@ function PsxExeFormat:parseFormat(formatmodel, buffer)
   exeheader:addField(DataType.UInt32, "SavedS0")
   
   local strmarker = buffer:readString(exeheader:size())
-  local regionmarker = formatmodel:addStructure("RegionMarker")
+  local regionmarker = formattree:addStructure("RegionMarker")
   regionmarker:addField(DataType.Char, "Marker", string.len(strmarker))
   
-  local textsection = formatmodel:addStructure("TextSection", 0x800)
+  local textsection = formattree:addStructure("TextSection", 0x800)
   textsection:addField(DataType.Blob, "Data", exeheader.t_size:value())
 end
 
 
--- function PsxExeFormat:generateDisassembler(formatmodel, buffer)
---  local exeheader = formatmodel:find("EXE_HEADER")
+-- function PsxExeFormat:generateDisassembler(formattree, buffer)
+--  local exeheader = formattree:find("EXE_HEADER")
 --  local fpc0 = exeheader:find("pc0")
 --  local ft_addr = exeheader:find("t_addr")
 --  local ft_size = exeheader:find("t_size")

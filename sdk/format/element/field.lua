@@ -36,7 +36,8 @@ function Field:setBitField(name, bitstart, bitend)
   local bf = BitField(bitstart, realbitend, self._offset, name, self, self._tree, self._buffer)
   
   table.insert(self._bitfieldnames, name)
-  self._bitfieldids[name] = bf:id()
+  self[name] = bf
+  self._bitfieldids[name] = bf:elementId()
   return bf
 end
 

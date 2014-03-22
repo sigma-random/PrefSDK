@@ -28,7 +28,9 @@ function Structure:addStructure(name)
   
   table.insert(self._fieldoffsets, newoffset)
   table.sort(self._fieldoffsets)
-  self._fieldids[newoffset] = s:id()
+  
+  self[name] = s
+  self._fieldids[newoffset] = s:elementId()
   return s
 end
 
@@ -52,7 +54,8 @@ function Structure:addField(fieldtype, name, count)
   table.insert(self._fieldoffsets, newoffset)
   table.sort(self._fieldoffsets)
   
-  self._fieldids[newoffset] = f:id()
+  self[name] = f
+  self._fieldids[newoffset] = f:elementId()
   return f
 end
 

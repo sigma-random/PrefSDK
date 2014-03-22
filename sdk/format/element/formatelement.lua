@@ -22,7 +22,7 @@ function FormatElement:__ctor(offset, name, parent, tree, buffer)
   end
 end
 
-function FormatElement:id()
+function FormatElement:elementId()
   return self._id
 end
 
@@ -72,7 +72,7 @@ end
 
 function FormatElement:parentId()
   if self:hasParent() then
-    return self._parent:id()
+    return self._parent:elementId()
   end
   
   return ""
