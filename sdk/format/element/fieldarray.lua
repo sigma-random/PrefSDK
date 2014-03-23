@@ -20,11 +20,10 @@ function FieldArray:__ctor(itemtype, itemcount, offset, name, parent, tree, buff
   
   if not isblob then
     function self._dynamicparser.parseprocedure(fa)
-      local i = 1
       local itemoffset = fa._offset
       local itemsize = DataType.sizeOf(fa._itemtype)
       
-      while i <= itemcount do
+      for i = 1, fa._itemcount do
         local itemname = string.format("%s[%d]", fa:name(), i - 1)
         local f = Field(fa._itemtype, itemoffset, itemname, fa, fa._tree, fa._buffer)
         
@@ -32,7 +31,6 @@ function FieldArray:__ctor(itemtype, itemcount, offset, name, parent, tree, buff
         fa._itemoffsets[i] = itemoffset
         fa._itemids[itemoffset] = f:elementId()
         itemoffset = itemoffset + itemsize
-        i = i + 1
       end
     end
   end

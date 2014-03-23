@@ -3,14 +3,18 @@ local BitmapBPP = require("formats.bitmap.bpp")
 
 local BitmapFormat = FormatDefinition:new("Bitmap Format", "Imaging", "Dax", "1.1", Endian.LittleEndian)
 
-function BitmapFormat.readBpp(formatobject, buffer)
-  local bpp = BitmapBPP[formatobject:value()]
+function BitmapFormat.readBpp(formatelement, buffer)
+  local bpp = BitmapBPP[formatelement:value()]
   
   if bpp ~= nil then
     return bpp
   end
 
   return "Invalid Bpp"
+end
+
+function BitmapFormat.displayColorHex(fcolorentry, buffer)
+  return string.format("#%02X%02X%02X%02X", fcolorentry.Reserved:value(), fcolorentry.Red:value(), fcolorentry.Green:value(), fcolorentry.Blue:value())
 end
 
 function BitmapFormat.parseBits(bitmapbits)
@@ -29,7 +33,7 @@ function BitmapFormat.parseBits(bitmapbits)
   end
   
   while line < h do
-    bitmapbits:addField(DataType.Blob, string.format("ScanLine_%d", line), rowsize)
+    bitmapbits:addField(DataType.UInt8, string.format("ScanLine_%d", line), rowsize)
     line = line + 1
   end
 end
@@ -99,12 +103,26 @@ function BitmapFormat:parseFormat(formattree, buffer)
   local bitcount = bitmapinfoheader.biBitCount:value()
   
   if bitcount < 24 then
-    local clrused = bitmapinfoheader.biClrUsed:value()
-    local colortable = formattree:addStructure("ColorTable")
-    
-    colortable:addField(DataType.UInt32, "tableentry", (clrused and clrused or bit.lshift(1, bitcount)))
+    self:parseColorTable(formattree, bitmapinfoheader, bitcount)
   end
   
   local bits = formattree:addStructure("BitmapBits")
   bits:dynamicParser((bitmapinfoheader.biSizeImage:value() > 0), BitmapFormat.parseBits)
+end
+
+function BitmapFormat:parseColorTable(formattree, bitmapinfoheader, bitcount)
+  local clrused = bitmapinfoheader.biClrUsed:value()
+  local colortable = formattree:addStructure("ColorTable")
+  local tablesize = (clrused and clrused or bit.lshift(1, bitcount))
+      
+  for i=1, tablesize do
+    local colorentry = colortable:addStructure(string.format("Color_%d", i - 1))
+    
+    colorentry:addField(DataType.UInt8, "Blue")
+    colorentry:addField(DataType.UInt8, "Green")
+    colorentry:addField(DataType.UInt8, "Red")
+    colorentry:addField(DataType.UInt8, "Reserved")
+    
+    colorentry:dynamicInfo(BitmapFormat.displayColorHex)
+  end
 end

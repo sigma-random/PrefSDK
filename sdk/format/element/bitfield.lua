@@ -51,18 +51,14 @@ function BitField:size()
 end
 
 function BitField:createMask(bitstart, bitend)
-  local i = 0
   local mask = 0x00000000
   
-  while i < 32 do
-    
+  for i = 0, 31 do
     if (i >= bitstart) and (i <= bitend) then
         mask = bit.bor(mask, bit.lshift(1, i))
     else
         mask = bit.bor(mask, bit.lshift(0, i))
     end
-    
-    i = i + 1
   end
 end
 
