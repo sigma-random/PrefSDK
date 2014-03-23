@@ -13,6 +13,7 @@ function FormatElement:__ctor(offset, name, parent, tree, buffer)
   self._tree = tree
   self._buffer = buffer
   self._id = uuid()
+  self._dynamicparser = { completed = false, haschildren = false, parseprocedure = nil }
   
   -- Add 'self' to element pool
   tree.pool[self._id] = self
@@ -20,6 +21,43 @@ function FormatElement:__ctor(offset, name, parent, tree, buffer)
   function self._infoprocedure(formatelement, buffer)
     return ""
   end
+end
+
+function FormatElement:tree()
+  return self._tree
+end
+
+function FormatElement:buffer()
+  return self._buffer
+end
+
+function FormatElement:dynamicParser(condition, func)
+  self._dynamicparser.completed = false
+  self._dynamicparser.haschildren = condition
+  self._dynamicparser.parseprocedure = func
+end
+
+function FormatElement:parseChildren()
+  if self._dynamicparser.completed then
+    return -- Don't parse again
+  end
+  
+  self._dynamicparser.parseprocedure(self)
+  self._dynamicparser.completed = true
+end
+
+function FormatElement:isDynamic()
+  return (not self._dynamicparser.completed) and (self._dynamicparser.parseprocedure ~= nil)
+end
+
+function FormatElement:hasChildren()
+  if self._dynamicparser.parseprocedure == nil then
+    return false
+  elseif type(self._dynamicparser.haschildren) == "function" then
+    return (self._dynamicparser.completed == false) and (self._dynamicparser.haschildren(self._tree) == true)
+  end
+  
+  return (not self._dynamicparser.completed) and (self._dynamicparser.haschildren == true)
 end
 
 function FormatElement:elementId()

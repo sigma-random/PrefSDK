@@ -33,6 +33,14 @@ function FieldArray:__ctor(itemtype, itemcount, offset, name, parent, tree, buff
   end
 end
 
+function FieldArray:hasChildren()
+  if not FieldElement.isDynamic(self) then
+    return (self._itemtype ~= DataType.Blob) and (self._itemcount > 0)
+  end
+  
+  return FieldElement.hasChildren(self)
+end
+
 function FieldArray:elementType()
   return ElementType.FieldArray
 end

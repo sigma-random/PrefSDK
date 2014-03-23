@@ -15,6 +15,10 @@ function FormatTree:new(buffer)
   return o
 end
 
+function FormatTree:isEmpty()
+  return #self._structureoffsets == 0
+end
+
 function FormatTree:structureCount()
   return #self._structureoffsets
 end
@@ -53,6 +57,8 @@ function FormatTree:addStructure(name, offset)
   
   table.insert(self._structureoffsets, newoffset)
   table.sort(self._structureoffsets)
+  
+  self[name] = s
   self._structureids[newoffset] = s:elementId()
   return s
 end

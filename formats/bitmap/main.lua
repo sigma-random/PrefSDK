@@ -13,6 +13,27 @@ function BitmapFormat.readBpp(formatobject, buffer)
   return "Invalid Bpp"
 end
 
+function BitmapFormat.parseBits(bitmapbits)
+  local tree = bitmapbits:tree();
+  local buffer = bitmapbits:buffer();
+  
+  local w = tree.BitmapInfoHeader.biWidth:value()
+  local h = tree.BitmapInfoHeader.biHeight:value()
+  local bpp = tree.BitmapInfoHeader.biBitCount:value()
+  local rowsize = (((bpp * w) + 31) / 32) * 4
+  
+  local line = 0
+    
+  if h < 0 then
+    h = math.abs(h)
+  end
+  
+  while line < h do
+    bitmapbits:addField(DataType.Blob, string.format("ScanLine_%d", line), rowsize)
+    line = line + 1
+  end
+end
+
 function BitmapFormat:validateFormat(buffer)
   local sign = buffer:readString(0, 2)
   
@@ -64,8 +85,8 @@ function BitmapFormat:parseFormat(formattree, buffer)
   
   local bitmapinfoheader = formattree:addStructure("BitmapInfoHeader")
   bitmapinfoheader:addField(DataType.UInt32, "biSize")
-  bitmapinfoheader:addField(DataType.UInt32, "biWidth")
-  bitmapinfoheader:addField(DataType.UInt32, "biHeight")
+  bitmapinfoheader:addField(DataType.Int32, "biWidth")
+  bitmapinfoheader:addField(DataType.Int32, "biHeight")
   bitmapinfoheader:addField(DataType.UInt16, "biPlanes")
   bitmapinfoheader:addField(DataType.UInt16, "biBitCount"):dynamicInfo(BitmapFormat.readBpp)
   bitmapinfoheader:addField(DataType.UInt32, "biCompression")
@@ -75,16 +96,15 @@ function BitmapFormat:parseFormat(formattree, buffer)
   bitmapinfoheader:addField(DataType.UInt32, "biClrUsed")
   bitmapinfoheader:addField(DataType.UInt32, "biClrImportant");
   
-  -- local bitcount = bitmapinfoheader.biBitCount:value()
+  local bitcount = bitmapinfoheader.biBitCount:value()
   
-  -- if bitcount < 24 then
-    -- local clrused = bitmapinfoheader.biClrUsed:value()
-    -- local colortable = formatmodel:addStructure("ColorTable")
+  if bitcount < 24 then
+    local clrused = bitmapinfoheader.biClrUsed:value()
+    local colortable = formattree:addStructure("ColorTable")
     
-    -- if clrused == 0 then
-      -- colortable:addField(DataType.UInt32, bit.lshift(1, bitcount), "tableentry")
-    -- else
-      -- colortable:addField(DataType.UInt32, clrused, "tableentry")
-    -- end
-  -- end
+    colortable:addField(DataType.UInt32, "tableentry", (clrused and clrused or bit.lshift(1, bitcount)))
+  end
+  
+  local bits = formattree:addStructure("BitmapBits")
+  bits:dynamicParser((bitmapinfoheader.biSizeImage:value() > 0), BitmapFormat.parseBits)
 end

@@ -13,6 +13,14 @@ function Field:__ctor(datatype, offset, name, parent, tree, buffer)
   self._bitfieldids = { }
 end
 
+function Field:hasChildren()
+  if not FieldElement.isDynamic(self) then
+    return #self._bitfieldnames > 0
+  end
+  
+  return FieldElement.hasChildren(self)
+end
+
 function Field:elementType()
   return ElementType.Field
 end

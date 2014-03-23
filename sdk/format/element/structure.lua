@@ -22,6 +22,14 @@ function Structure:displayType()
   return "Struct"
 end
 
+function Structure:hasChildren()
+  if not FormatElement.isDynamic(self) then
+    return #self._fieldoffsets > 0
+  end
+  
+  return FormatElement.hasChildren(self)
+end
+
 function Structure:addStructure(name)
   local newoffset = self._offset + self:size()
   local s = Structure(newoffset, name, self, self._tree, self._buffer)
