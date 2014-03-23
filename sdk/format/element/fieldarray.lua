@@ -10,25 +10,30 @@ local FieldArray = class(FieldElement)
 function FieldArray:__ctor(itemtype, itemcount, offset, name, parent, tree, buffer)
   FieldElement.__ctor(self, DataType.Array, offset, name, parent, tree, buffer)
   
+  local isblob = (itemtype == DataType.Blob)
+  
   self._itemcount = itemcount
   self._itemtype = itemtype
   self._itemoffsets = { }
   self._itemids = { }
+  self._dynamicparser = { completed = false, haschildren = not isblob }
   
-  if itemtype ~= DataType.Blob then
-    local i = 1
-    local itemoffset = offset
-    local itemsize = DataType.sizeOf(itemtype)
-    
-    while i <= itemcount do
-      local itemname = string.format("%s[%d]", name, i - 1)
-      local f = Field(itemtype, itemoffset, itemname, self, tree, buffer)
+  if not isblob then
+    function self._dynamicparser.parseprocedure(fa)
+      local i = 1
+      local itemoffset = fa._offset
+      local itemsize = DataType.sizeOf(fa._itemtype)
       
-      self[i - 1] = f
-      self._itemoffsets[i] = itemoffset
-      self._itemids[itemoffset] = f:elementId()
-      itemoffset = itemoffset + itemsize
-      i = i + 1
+      while i <= itemcount do
+        local itemname = string.format("%s[%d]", fa:name(), i - 1)
+        local f = Field(fa._itemtype, itemoffset, itemname, fa, fa._tree, fa._buffer)
+        
+        fa[i - 1] = f
+        fa._itemoffsets[i] = itemoffset
+        fa._itemids[itemoffset] = f:elementId()
+        itemoffset = itemoffset + itemsize
+        i = i + 1
+      end
     end
   end
 end
@@ -39,6 +44,10 @@ function FieldArray:hasChildren()
   end
   
   return FieldElement.hasChildren(self)
+end
+
+function FieldArray:dynamicParser(condition, func)
+  error("FieldArray:dynamicParser() cannot be called, because it's dynamic by definition")
 end
 
 function FieldArray:elementType()
