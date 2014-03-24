@@ -7,8 +7,8 @@ local Field = require("sdk.format.element.field")
 
 local Structure = class(FormatElement)
 
-function Structure:__ctor(offset, name, parent, tree, buffer, pool)
-  FormatElement.__ctor(self, offset, name, parent, tree, buffer, pool)
+function Structure:__ctor(offset, name, parent, tree, buffer)
+  FormatElement.__ctor(self, offset, name, parent, tree, buffer)
   
   self._fieldoffsets = { }
   self._fieldids = { }
@@ -99,7 +99,7 @@ function Structure:indexOf(f)
   return -1
 end
 
-function Structure:size()
+function Structure:size()  
   local s = 0
   
   for k,v in pairs(self._fieldids) do

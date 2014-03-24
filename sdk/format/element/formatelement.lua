@@ -92,7 +92,7 @@ function FormatElement:indexOf(i)
   return -1
 end
 
-function FormatElement:size()
+function FormatElement:size()  
   return 0
 end
 
