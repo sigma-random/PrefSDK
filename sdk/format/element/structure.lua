@@ -1,5 +1,6 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
+local DataType = require("sdk.types.datatype")
 local FormatElement = require("sdk.format.element.formatelement")
 local FieldArray = require("sdk.format.element.fieldarray")
 local Field = require("sdk.format.element.field")
@@ -28,7 +29,7 @@ function Structure:addField(datatype, name, count)
   local f = nil
   local cfield = C.Structure_addField(self._cthis, datatype, name, count or 1)
   
-  if count and count > 1 then
+  if (count and count > 1) or DataType.isString(datatype) then
     f = FieldArray(cfield, self._databuffer, self)
   else
     f = Field(cfield, self._databuffer, self)
