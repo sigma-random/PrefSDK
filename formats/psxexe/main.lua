@@ -1,5 +1,6 @@
 -- require("disassembler.mips32")
 local FormatDefinition = require("sdk.format.formatdefinition")
+local DataType = require("sdk.types.datatype")
 
 local PsxExeFormat = FormatDefinition.register("PSX-EXE Format", "Sony Playstation 1", "Dax", "1.0")
 

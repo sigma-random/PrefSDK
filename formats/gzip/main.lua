@@ -1,4 +1,5 @@
 local FormatDefinition = require("sdk.format.formatdefinition")
+local DataType = require("sdk.types.datatype")
 local OperatingSystems = require("formats.gzip.gziptypes")
 
 local GZipFormat = FormatDefinition.register("GZip Format", "Compression", "Karl", "1.1")

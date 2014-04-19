@@ -1,4 +1,5 @@
 local FormatDefinition = require("sdk.format.formatdefinition")
+local DataType = require("sdk.types.datatype")
 
 -- function saveAsWav(formatmodel, buffer)  
 --  local filename = PrefUI.getSaveFileName("Convert to Wave...")

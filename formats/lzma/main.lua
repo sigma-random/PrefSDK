@@ -1,5 +1,6 @@
 local MathFunctions = require("sdk.math.functions")
 local FormatDefinition = require("sdk.format.formatdefinition")
+local DataType = require("sdk.types.datatype")
 local LZma = require("sdk.compression.lzma")
 
 local LZmaFormat = FormatDefinition.register("LZMA Format", "Compression", "Dax", "1.0")

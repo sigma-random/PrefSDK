@@ -1,5 +1,6 @@
 local ByteOrder = require("sdk.types.byteorder")
 local FormatDefinition = require("sdk.format.formatdefinition")
+local DataType = require("sdk.types.datatype")
 
 local ZipFormat = FormatDefinition.register("Zip Format", "Compression", "Dax", "1.0")
 

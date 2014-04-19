@@ -1,4 +1,5 @@
 local FormatDefinition = require("sdk.format.formatdefinition")
+local DataType = require("sdk.types.datatype")
 -- local MC68HC05Processor = require("processors.mc68hc05")
 
 local MC68HC05Rom = FormatDefinition.register("MC68HC05 Microcontroller ROM", "ICs (Freescale)", "Dax", "1.0")

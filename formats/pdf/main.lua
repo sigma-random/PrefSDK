@@ -1,5 +1,6 @@
 -- require("sdk.strings.encoding.escape")
 local FormatDefinition = require("sdk.format.formatdefinition")
+local DataType = require("sdk.types.datatype")
 local PdfTypes = require("formats.pdf.pdftypes")
 local PdfDebug = require("formats.pdf.pdfdebug")
 

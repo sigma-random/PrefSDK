@@ -1,4 +1,5 @@
 local FormatDefinition = require("sdk.format.formatdefinition")
+local DataType = require("sdk.types.datatype")
 
 local Ecma130Format = FormatDefinition.register("ECMA-130 Format", "File System", "Dax", "1.0")
 

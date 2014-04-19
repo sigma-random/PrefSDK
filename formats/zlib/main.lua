@@ -2,6 +2,7 @@
 
 local ZLib = require("sdk.compression.zlib")
 local FormatDefinition = require("sdk.format.formatdefinition")
+local DataType = require("sdk.types.datatype")
 
 local ZLibFormat = FormatDefinition.register("ZLib Format", "Compression", "Dax", "1.0")
 

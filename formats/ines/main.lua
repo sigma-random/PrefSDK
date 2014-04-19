@@ -1,4 +1,5 @@
 local FormatDefinition = require("sdk.format.formatdefinition")
+local DataType = require("sdk.types.datatype")
 local MapperTypes = require("formats.ines.mappers")
 
 local INesFormat = FormatDefinition.register("iNES Format", "Nintendo", "Dax", "1.0")
