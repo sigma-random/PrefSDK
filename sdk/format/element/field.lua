@@ -18,7 +18,10 @@ function Field:__ctor(cthis, databuffer)
 end
 
 function Field:setBitField(name, bitstart, bitend)
-  return BitField(C.Field_setBitField(self._cthis, name, bitstart, bitend or bitstart), self._databuffer)
+  local bf = BitField(C.Field_setBitField(self._cthis, name, bitstart, bitend or bitstart), self._databuffer)
+  
+  self[name] = bf
+  return bf
 end
 
 function Field:bitFieldCount()
