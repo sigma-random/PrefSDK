@@ -46,9 +46,9 @@ function GZipFormat:validateFormat()
 end
     
 function GZipFormat:parseFormat(formattree)  
-  GZipFormat:defineHeader(formattree)
-  GZipFormat:defineData(formattree)
-  GZipFormat:defineTrailer(formattree)
+  self:defineHeader(formattree)
+  self:defineData(formattree)
+  self:defineTrailer(formattree)
 end 
 
 function GZipFormat:defineHeader(formattree) -- 0x8B1F
