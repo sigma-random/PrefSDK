@@ -30,26 +30,24 @@ local FormatDefinition = require("sdk.format.formatdefinition")
 --  end
 -- end
 
-local VagFormat = FormatDefinition:new("VAG Format", "Sony Playstation 1", "Dax", "1.0", Endian.BigEndian)
+local VagFormat = FormatDefinition.register("VAG Format", "Sony Playstation 1", "Dax", "1.0")
 -- VagFormat:registerOption("Save as WAV", saveAsWav)
 
-function VagFormat:validateFormat(buffer)
-  local sign = buffer:readString(0, 4)
-  
-  if sign ~= "VAGp" then
-    return false
-  end
-  
-  return true
+function VagFormat:__ctor(databuffer)
+  FormatDefinition.__ctor(self, databuffer)
+end
+
+function VagFormat:validateFormat()
+  self:checkData(0, DataType.AsciiString, "VAGp")
 end
     
 function VagFormat:parseFormat(formatmodel, buffer)
   local vagheader = formatmodel:addStructure("VagHeader")
   vagheader:addField(DataType.Char, "Id", 4)
-  vagheader:addField(DataType.UInt32, "Version")
-  vagheader:addField(DataType.UInt32, "Reserved1")
-  vagheader:addField(DataType.UInt32, "DataSize")
-  vagheader:addField(DataType.UInt32, "SamplingFrequency")
+  vagheader:addField(DataType.UInt32_BE, "Version")
+  vagheader:addField(DataType.UInt32_BE, "Reserved1")
+  vagheader:addField(DataType.UInt32_BE, "DataSize")
+  vagheader:addField(DataType.UInt32_BE, "SamplingFrequency")
   vagheader:addField(DataType.Blob, "Reserved2", 12)
   vagheader:addField(DataType.Char, "Name", 16)
   

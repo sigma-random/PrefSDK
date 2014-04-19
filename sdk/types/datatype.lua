@@ -1,155 +1,137 @@
-TypeCategories = { Undefined    = 0x00000000,
-                   Unsigned     = 0x10000000,
-                   Vector       = 0x20000000,
+local ffi = require("ffi")
 
-                   Integer      = 0x00010000,
-                   Characters   = 0x00020000,
+ffi.cdef
+[[
+  /* DataType's Flags */
+  const uint64_t DataType_Invalid;
 
-                   Ascii        = 0x00100000,
-                   Unicode      = 0x00200000 }
-                    
-DataType = { Invalid       = TypeCategories.Undefined,
-             UInt8         = bit.bor(TypeCategories.Unsigned, TypeCategories.Integer, 0x00000001),
-             UInt16        = bit.bor(TypeCategories.Unsigned, TypeCategories.Integer, 0x00000002),
-             UInt32        = bit.bor(TypeCategories.Unsigned, TypeCategories.Integer, 0x00000004),
-             UInt64        = bit.bor(TypeCategories.Unsigned, TypeCategories.Integer, 0x00000008),
+  const uint64_t DataType_UInt8;
+  const uint64_t DataType_UInt16;
+  const uint64_t DataType_UInt32;
+  const uint64_t DataType_UInt64;
 
-             Int8          = bit.bor(TypeCategories.Integer, 0x00000001),
-             Int16         = bit.bor(TypeCategories.Integer, 0x00000002),
-             Int32         = bit.bor(TypeCategories.Integer, 0x00000004),
-             Int64         = bit.bor(TypeCategories.Integer, 0x00000008),
+  const uint64_t DataType_Int8;
+  const uint64_t DataType_Int16;
+  const uint64_t DataType_Int32;
+  const uint64_t DataType_Int64;
 
-             AsciiChar     = bit.bor(TypeCategories.Characters, TypeCategories.Ascii),
-             UnicodeChar   = bit.bor(TypeCategories.Characters, TypeCategories.Unicode),
-             Char          = bit.bor(TypeCategories.AsciiChar),
+  const uint64_t DataType_UInt16_LE;
+  const uint64_t DataType_UInt32_LE;
+  const uint64_t DataType_UInt64_LE;
 
-             Array         = TypeCategories.Vector,
-             AsciiString   = bit.bor(TypeCategories.Vector, TypeCategories.Characters, TypeCategories.Ascii),
-             UnicodeString = bit.bor(TypeCategories.Vector, TypeCategories.Characters, TypeCategories.Unicode),
+  const uint64_t DataType_Int16_LE;
+  const uint64_t DataType_Int32_LE;
+  const uint64_t DataType_Int64_LE;
+  
+  const uint64_t DataType_UInt16_BE;
+  const uint64_t DataType_UInt32_BE;
+  const uint64_t DataType_UInt64_BE;
 
-             Blob          = TypeCategories.Undefined }
+  const uint64_t DataType_Int16_BE;
+  const uint64_t DataType_Int32_BE;
+  const uint64_t DataType_Int64_BE;
+  
+  const uint64_t DataType_AsciiCharacter;
+  const uint64_t DataType_UnicodeCharacter;
+  const uint64_t DataType_Character;
+
+  const uint64_t DataType_Array;
+  const uint64_t DataType_AsciiString;
+  const uint64_t DataType_UnicodeString;
+
+  const uint64_t DataType_Blob;
+
+  /* DataType's Functions */
+  bool DataType_isInteger(uint64_t type);
+  bool DataType_isSigned(uint64_t type);
+  bool DataType_isString(uint64_t type);
+  bool DataType_isAscii(uint64_t type);
+  bool DataType_isUnicode(uint64_t type);
+  bool DataType_isArray(uint64_t type);
+  int DataType_sizeOf(uint64_t type);
+  int DataType_byteOrder(uint64_t type);
+  int DataType_byteWidth(uint64_t type);
+  int DataType_bitWidth(uint64_t type);
+  const char* DataType_stringValue(uint64_t type);
+]]
+
+local C = ffi.C
+local DataType = { Invalid               = C.DataType_Invalid,
+  
+                   UInt8                 = C.DataType_UInt8,
+                   UInt16                = C.DataType_UInt16,
+                   UInt32                = C.DataType_UInt32,
+                   UInt64                = C.DataType_UInt64,
+                   
+                   Int8                  = C.DataType_Int8,
+                   Int16                 = C.DataType_Int16,
+                   Int32                 = C.DataType_Int32,
+                   Int64                 = C.DataType_Int64,
+                   
+                   UInt16_LE             = C.DataType_UInt16_LE,
+                   UInt32_LE             = C.DataType_UInt32_LE,
+                   UInt64_LE             = C.DataType_UInt64_LE,
+                   
+                   Int16_LE              = C.DataType_Int16_LE,
+                   Int32_LE              = C.DataType_Int32_LE,
+                   Int64_LE              = C.DataType_Int64_LE,
+                   
+                   UInt16_BE             = C.DataType_UInt16_BE,
+                   UInt32_BE             = C.DataType_UInt32_BE,
+                   UInt64_BE             = C.DataType_UInt64_BE,
+                   
+                   Int16_BE              = C.DataType_Int16_BE,
+                   Int32_BE              = C.DataType_Int32_BE,
+                   Int64_BE              = C.DataType_Int64_BE,
+                   
+                   AsciiCharacter        = C.DataType_AsciiCharacter,
+                   UnicodeCharacter      = C.DataType_UnicodeCharacter,
+                   Character             = C.DataType_Character,
+                   
+                   Array                 = C.DataType_Array,
+                   AsciiString           = C.DataType_AsciiString,
+                   UnicodeString         = C.DataType_UnicodeString,
+                   
+                   Blob                  = C.DataType_Blob }
              
 function DataType.isInteger(datatype)
-  return bit.band(datatype, DataType.Integer) ~= 0
+  return C.DataType_isInteger(datatype)
 end
 
 function DataType.isSigned(datatype)
-  return bit.band(datatype, DataType.Unsigned) == 0
+  return C.DataType_isSigned(datatype)
 end
 
 function DataType.isString(datatype)
-  return bit.band(datatype, bit.bor(DataType.Vector, DataType.Caracters)) ~= 0
+  return C.DataType_isString(datatype)
 end
 
 function DataType.isUnicode(datatype)
-  return bit.band(datatype, bit.bor(DataType.Caracters, DataType.Unicode)) ~= 0
+  return C.DataType_isUnicode(datatype)
 end
 
 function DataType.isArray(datatype)
-  return bit.band(datatype, DataType.Vector) ~= 0
+  return C.DataType_isArray(datatype)
 end
 
 function DataType.sizeOf(datatype)
-  if bit.band(datatype, DataType.Vector) then
-    return 0
-  end
-  
-  -- NOTE: Blob requires 1 byte (used as array element only)
-  if (bit.band(datatype, DataType.Ascii) ~= 0) or (datatype == DataType.UInt8) or (datatype == DataType.Int8) or (datatype == DataType.Blob) then
-    return 1
-  end
-  
-  if (bit.band(datatype, DataType.Unicode) ~= 0) or (datatype == DataType.UInt16) or (datatype == DataType.Int16) then
-    return 2
-  end
+  return C.DataType_sizeOf(datatype)
+end
 
-  if (datatype == DataType.UInt32) or (datatype == DataType.Int32) then
-    return 4
-  end
-
-  if (datatype == DataType.UInt64) or (datatype == DataType.Int64) then
-    return 8
-  end
-            
-  return 0
+function DataType.byteOrder(datatype)
+  return C.DataType_byteOrder(datatype)
 end
 
 function DataType.byteWidth(datatype)
-  if (datatype == DataType.Blob) or (datatype == DataType.AsciiChar) or (datatype == DataType.UInt8) or (datatype == DataType.Int8) then
-    return 1
-  end
-  
-  if (datatype == DataType.UnicodeChar) or (datatype == DataType.UInt16) or (datatype == DataType.Int16) then
-    return 2
-  end
-  
-  if (datatype == DataType.UInt32) or (datatype == DataType.Int32) then
-    return 4
-  end
-  
-  if (datatype == DataType.UInt64) or (datatype == DataType.Int64) then
-    return 8
-  end
-  
-  return 0
+  return C.DataType_byteWidth(datatype)
+end
+
+function DataType.bitWidth(datatype)
+  return C.DataType_bitWidth(datatype)
 end
 
 function DataType.stringValue(datatype)
-  if datatype == DataType.AsciiChar then
-    return "AsciiChar"
-  end
-  
-  if datatype == DataType.UnicodeChar then
-    return "UnicodeChar"
-  end
-  
-  if datatype == DataType.UInt8 then
-    return "UInt8"
-  end
-  
-  if datatype == DataType.UInt16 then
-    return "UInt16"
-  end
-  
-  if datatype == DataType.UInt32 then
-    return "UInt32"
-  end
-  
-  if datatype == DataType.UInt64 then
-    return "UInt64"
-  end
-  
-  if datatype == DataType.Int8 then
-    return "Int8"
-  end
-  
-  if datatype == DataType.Int16 then
-    return "Int16"
-  end
-  
-  if datatype == DataType.Int32 then
-    return "Int32"
-  end
-  
-  if datatype == DataType.Int64 then
-    return "Int64"
-  end
-  
-  if datatype == DataType.Array then
-    return "Array"
-  end
-  
-  if datatype == DataType.AsciiString then
-    return "AsciiString"
-  end
-  
-  if datatype == DataType.UnicodeString then
-    return "UnicodeString"
-  end
-  
-  if datatype == DataType.Blob then
-    return "Blob"
-  end
-  
-  error("DataType.stringValue(): Unknown Type")
+  return C.DataType_stringValue(datatype)
 end
+
+return DataType

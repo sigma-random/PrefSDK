@@ -1,11 +1,11 @@
-local FormatOption = { name = "<NoName>",
-                       action = nil }
+local oop = require("sdk.lua.oop")
 
-function FormatOption:new(name, action)
-  local o = setmetatable({ }, { __index = FormatOption })
-  o.name = name
-  o.action = action
-  return o
+local FormatOption = oop.class()
+
+function FormatOption:__ctor(name, description, action)
+  self.name = name
+  self.description = description
+  self.action = action
 end
 
 return FormatOption

@@ -1,124 +1,106 @@
 local FormatDefinition = require("sdk.format.formatdefinition")
 local OperatingSystems = require("formats.gzip.gziptypes")
 
-local GZipFormat = FormatDefinition:new("GZip Format", "Compression", "Karl", "1.0", Endian.LittleEndian)
+local GZipFormat = FormatDefinition.register("GZip Format", "Compression", "Karl", "1.1")
 
-function GZipFormat.getCompressionMethod(formatobject, buffer)
-  local value = formatobject:value()
-  if value == 0x08 then
-	return "deflate"
-  end
+function GZipFormat:__ctor(databuffer)
+  FormatDefinition.__ctor(self, databuffer)
 end
 
-function GZipFormat.getExtraFlagsMethod(formatobject, buffer)
-  local value = formatobject:value()
+function GZipFormat:getCompressionMethod(comprmethodfield)
+  if comprmethodfield:value() == 0x08 then
+    return "Deflate"
+  end
+  
+  return "Unknown"
+end
+
+function GZipFormat:getExtraFlags(extraflagsfield)
+  local value = extraflagsfield:value()
   
   if value == 0x02 then
-    return "compressor used maximum compression, slowest algorithm"
+    return "Compressor used maximum compression, slowest algorithm"
   elseif value == 0x04 then
-    return "compressor used fastest algorithm"
+    return "Compressor used fastest algorithm"
   end
+  
+  return "Unknown"
 end
 
-function GZipFormat.getModificationTimeMethod(formatobject, buffer)
-  local value = formatobject:value()
-  
-  if value ~= 0x00 then
+function GZipFormat:getModificationTime(modtimefield)  
+  if modtimefield:value() ~= 0x00 then
     return os.date("%Y-%m-%d %H:%M", 10800 + value)
   end
+  
+  return "Invalid"
 end
 
-function GZipFormat.getOperatingSystemMethod(formatobject, buffer)
-  local value = formatobject:value()
-  return OperatingSystems[value]
+function GZipFormat:getOperatingSystem(osfield)
+  return OperatingSystems[osfield:value()]
 end
 
-function GZipFormat:validateFormat(buffer)
-  local sign = buffer:readType(0, DataType.UInt16)
-  
-  if sign ~= 0x8B1F then
-    return false
-  end
-  
-  local compression = buffer:readType(2, DataType.UInt8)
-  
-  if compression ~= 0x08 then
-    return false
-  end
-  
-  return true
+function GZipFormat:validateFormat()
+  self:checkData(0, DataType.UInt16_LE, 0x8B1F)
+  self:checkData(2, DataType.UInt8, 0x08)
 end
     
-function GZipFormat:parseFormat(formatmodel, buffer)
-  local tag = buffer:readType(0, DataType.UInt16)
-  
-  if tag == 0x8B1F then
-    GZipFormat:defineHeader(formatmodel, buffer)
-    GZipFormat:defineData(formatmodel, buffer)
-    GZipFormat:defineTrailer(formatmodel, buffer)
-  else
-    print("Unknown Tag")
-  end
+function GZipFormat:parseFormat(formattree)  
+  GZipFormat:defineHeader(formattree)
+  GZipFormat:defineData(formattree)
+  GZipFormat:defineTrailer(formattree)
 end 
 
-function GZipFormat:defineHeader(formatmodel, buffer) -- 0x8B1F
-  local sect = formatmodel:addStructure("GZipHeader")
+function GZipFormat:defineHeader(formattree) -- 0x8B1F
+  local gzipheader = formattree:addStructure("GZipHeader")
+  gzipheader:addField(DataType.UInt16_LE, "Id")
+  gzipheader:addField(DataType.UInt8, "CompressionMethod"):dynamicInfo(GZipFormat.getCompressionMethod)
   
-  sect:addField(DataType.UInt16, "Signature")
-  local field = sect:addField(DataType.UInt8, "CompressionMethod")
-  field:dynamicInfo(GZipFormat.getCompressionMethod)
+  local flags = gzipheader:addField(DataType.UInt8, "Flags")
+  flags:setBitField("FTEXT", 0)
+  flags:setBitField("FHCRC", 1)
+  flags:setBitField("FEXTRA", 2)
+  flags:setBitField("FNAME", 3)
+  flags:setBitField("FCOMMENT", 4)
+  flags:setBitField("Reserved", 5)
+  flags:setBitField("Reserved", 6)
+  flags:setBitField("Reserved", 7)
   
-  field = sect:addField(DataType.UInt8, "FLAGS")
-  local ftext = field:setBitField(0, "FTEXT")
-  local fhcrc = field:setBitField(1, "FHCRC")
-  local fextra = field:setBitField(2, "FEXTRA")
-  local fname = field:setBitField(3, "FNAME")
-  local fcomment = field:setBitField(4, "FCOMMENT")
-  field:setBitField(5, "reserved")
-  field:setBitField(6, "reserved")
-  field:setBitField(7, "reserved")
+  gzipheader:addField(DataType.UInt32_LE, "ModificationTime"):dynamicInfo(GZipFormat.getModificationTime)
+  gzipheader:addField(DataType.UInt8, "ExtraFlags"):dynamicInfo(GZipFormat.getExtraFlags)
+  gzipheader:addField(DataType.UInt8, "OperatingSystem"):dynamicInfo(GZipFormat.getOperatingSystem)
   
-  field = sect:addField(DataType.UInt32, "ModificationTime")
-  field:dynamicInfo(GZipFormat.getModificationTimeMethod)
-  field = sect:addField(DataType.UInt8, "ExtraFlags")
-  field:dynamicInfo(GZipFormat.getExtraFlagsMethod)
-  field = sect:addField(DataType.UInt8, "OperatingSystem")
-  field:dynamicInfo(GZipFormat.getOperatingSystemMethod)
-  
-  if fextra:value() == 1 then
-    field = sect:addField(DataType.UInt8, "XLEN")
-    field = sect:addField(DataType.UInt8, "hdExtraField", field:value())
+  if flags.FEXTRA:value() == 1 then
+    gzipheader:addField(DataType.UInt8, "XLEN")
+    gzipheader:addField(DataType.UInt8, "hdExtraField", gzipheader.XLEN:value())
   end
   
-  if fname:value() == 1 then
-    sect:addField(DataType.AsciiString, "Filename")
+  if flags.FNAME:value() == 1 then
+    gzipheader:addField(DataType.AsciiString, "Filename")
   end
   
-  if fcomment:value() == 1 then
-    sect:addField(DataType.AsciiString, "Comment")
+  if flags.FCOMMENT:value() == 1 then
+    gzipheader:addField(DataType.AsciiString, "Comment")
   end
   
-  if fhcrc:value() == 1 then
-    sect:addField(DataType.UInt16, "CRC-16")
+  if flags.FHCRC:value() == 1 then
+    gzipheader:addField(DataType.UInt16_LE, "CRC-16")
   end
 
-  return sect:size()
+  return gzipheader:size()
 end
 
-function GZipFormat:defineData(formatmodel, buffer)
-  local sect = formatmodel:addStructure("GZIP_FILE")
-  local size = buffer:size() - sect:offset() - 8;
+function GZipFormat:defineData(formattree)
+  local gzipdata = formattree:addStructure("GZipData")
+  local size = self.databuffer:size() - gzipdata:offset() - 8;
   
-  sect:addField(DataType.Blob, size, "compressed")
-  
-  return sect:size()
+  gzipdata:addField(DataType.Blob, size, "Compression")
+  return gzipdata:size()
 end
 
-function GZipFormat:defineTrailer(formatmodel, buffer)
-  local sect = formatmodel:addStructure("GZIP_TRAILER")
+function GZipFormat:defineTrailer(formattree)
+  local gziptrailer = formattree:addStructure("GZipTrailer")
+  gziptrailer:addField(DataType.UInt32_LE, "CRC-32")
+  gziptrailer:addField(DataType.UInt32_LE, "InputSize")
   
-  sect:addField(DataType.UInt32, "CRC-32")
-  sect:addField(DataType.UInt32, "InputSize")
-  
-  return sect:size()
+  return gziptrailer:size()
 end

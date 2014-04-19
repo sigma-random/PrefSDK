@@ -1,64 +1,45 @@
-require("sdk.lua.class")
+local ffi = require("ffi")
+local oop = require("sdk.lua.oop")
+local ElementType = require("sdk.format.element.elementtype")
 local Structure = require("sdk.format.element.structure")
 
-FormatTree = { pool = { },
-               _structureoffsets = { },
-               _structureids = { },
-               _buffer = nil }
-               
-FormatTree.__index = FormatTree
+ffi.cdef
+[[  
+  void* FormatTree_addStructure(void* __this, const char* name);
+  void* FormatTree_addStructureAtOffset(void* __this, const char* name, uint64_t offset);
+  void* FormatTree_getStructure(void* __this, uint64_t i);
+  uint64_t FormatTree_getStructureCount(void* __this);
+]]
 
-function FormatTree:new(buffer)
-  local o = setmetatable({ }, FormatTree)
-  
-  o._buffer = buffer
-  return o
-end
+local C = ffi.C
+local FormatTree = oop.class()
 
-function FormatTree:isEmpty()
-  return #self._structureoffsets == 0
+function FormatTree:__ctor(cthis, databuffer)
+  self._cthis = cthis
+  self._databuffer = databuffer
 end
 
 function FormatTree:structureCount()
-  return #self._structureoffsets
-end
-
-function FormatTree:structureId(i)
-  local offset = self._structureoffsets[i]
-  return self._structureids[offset]
+  return C.FormatTree_getStructureCount(self._cthis)
 end
 
 function FormatTree:structure(i)  
-  local id = self:structureId(i)
-  return self.pool[id]
-end
-
-function FormatTree:indexOf(s)
-  for i,v in ipairs(self._structureoffsets) do
-    if v == s:offset() then
-      return i
-    end
-  end
-  
-  return -1
+  local cstruct = C.FormatTree_getStructure(self._cthis, i)
+  return Structure(cstruct)
 end
 
 function FormatTree:addStructure(name, offset)
-  local newoffset = self._buffer:baseOffset()
+  local cstruct = nil
   
   if offset then
-    newoffset = offset
-  elseif #self._structureoffsets > 0 then
-    local id = self:structureId(#self._structureoffsets)
-    newoffset = newoffset + self.pool[id]:endOffset()
+    cstruct = C.FormatTree_addStructureAtOffset(self._cthis, name, offset)
+  else
+    cstruct = C.FormatTree_addStructure(self._cthis, name)
   end
-    
-  local s = Structure(newoffset, name, { }, self, self._buffer)
   
-  table.insert(self._structureoffsets, newoffset)
-  table.sort(self._structureoffsets)
-  
+  local s = Structure(cstruct, self._databuffer)
   self[name] = s
-  self._structureids[newoffset] = s:elementId()
   return s
 end
+
+return FormatTree

@@ -1,4 +1,6 @@
-function class(superclass)
+local oop = { }
+
+function oop.class(superclass)
   local c = { }
   local meta = { }
   
@@ -20,3 +22,5 @@ function class(superclass)
   
   return setmetatable(c, meta)
 end
+ 
+return oop

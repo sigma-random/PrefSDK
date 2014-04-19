@@ -1,51 +1,91 @@
 -- ZLib Data Structure: http://software.intel.com/sites/products/documentation/hpc/ipp/ipps/ipps_ch13/ch13_22_ZLIB.html#fig13-1
 
-local ZLibInfo = require("formats.zlib.zlibinfo")
 local ZLib = require("sdk.compression.zlib")
 local FormatDefinition = require("sdk.format.formatdefinition")
 
-local ZLibFormat = FormatDefinition:new("ZLib Format", "Compression", "Dax", "1.0", Endian.LittleEndian)
+local ZLibFormat = FormatDefinition.register("ZLib Format", "Compression", "Dax", "1.0")
 
-function ZLibFormat:validateFormat(buffer)
-  local compression = buffer:readType(0, DataType.UInt8)  
+function ZLibFormat:__ctor(databuffer)
+  FormatDefinition.__ctor(self, databuffer)
+end
+
+function ZLibFormat:compressionMethod(comprmethodfield)
+  local cm = comprmethodfield:value()
+  
+  if cm == 8 then
+    return "Deflate"
+  elseif cm == 15 then
+    return "Reserved"
+  end
+  
+  return ""
+end
+
+function ZLibFormat:windowSize(windowsizefield)
+  return string.format("LZ77 Window Size: %dKB", ZLib.calcLZ77WindowSize(windowsizefield:value()))
+end
+
+function ZLibFormat:checkDictionary(hasdictfield, buffer)
+  local hasdict = hasdictfield:value()
+  
+  if hasdict == 0 then
+    return "Dictionary NOT Present"
+  end
+  
+  return "Dictionary Is Present"
+end
+
+function ZLibFormat:validateCheckFlag(checksumfield)
+  local zlibheader = self.formattree.ZLibHeader
+  
+  if ZLib.isChecksumValid(zlibheader.Compression:value(), zlibheader.Flag:value()) == true then
+    return "Checksum OK"
+  end
+  
+  return "Checksum ERROR"
+end
+
+function ZLibFormat:compressionLevel(comprlevelfield)
+  return string.format("Compression Level: %d", comprlevelfield:value())
+end
+
+function ZLibFormat:validateFormat()
+  local compression = self.databuffer:readType(0, DataType.UInt8)  
   local cm = bit.band(compression, 0xF)
   local cinfo = bit.rshift(bit.band(compression, 0xF0), 4)
   
-  if (cm ~= 8) or (not ZLib.isWindowSizeValid(cinfo)) then
-    return false
+  if (cm ~= 8) then
+    error("Invalid Compression Method")
+  elseif not ZLib.isWindowSizeValid(cinfo) then
+    error("Invalid Window Size")
   end
   
-  local flag = buffer:readType(1, DataType.UInt8)
+  local flag = self.databuffer:readType(1, DataType.UInt8)
   local check = bit.band(flag, 0x1F)
   local dict = bit.rshift(bit.band(flag, 0x20), 5)
   local level = bit.rshift(bit.band(flag, 0xC0), 6)
   
   if not ZLib.isChecksumValid(compression, flag) then
-    return false
+    error("Invalid Checksum")
   end
   
   if ((dict ~= 0) and (dict ~= 1)) or ((level < 0) or (level > 3)) then
-    return false
+    error("Invalid Flags")
   end
-  
-  return true
 end
 
-function ZLibFormat:parseFormat(formatmodel, buffer)
-  local zlibheader = formatmodel:addStructure("ZLibHeader")
+function ZLibFormat:parseFormat(formattree)
+  local zlibheader = formattree:addStructure("ZLibHeader")
   local fcompression = zlibheader:addField(DataType.UInt8, "Compression")
-  fcompression:setBitField(0, 3, "Method"):dynamicInfo(ZLibInfo.compressionMethod)
-  local fcinfo = fcompression:setBitField(4, 7, "Info")
+  fcompression:setBitField("Method", 0, 3):dynamicInfo(ZLibInfo.compressionMethod)
+  local fcinfo = fcompression:setBitField("Info", 4, 7)
   
   if zlibheader.Compression.Method:value() == 8 then
     fcinfo:dynamicInfo(ZLibInfo.windowSize)
   end
   
   local fflag = zlibheader:addField(DataType.UInt8, "Flag")
-  fflag:setBitField(0, 4, "Check"):dynamicInfo(ZLibInfo.validateCheckFlag)
-  fflag:setBitField(5, "Dict"):dynamicInfo(ZLibInfo.checkDictionary)
-  fflag:setBitField(6, 7, "Level"):dynamicInfo(ZLibInfo.compressionLevel)
-  
-  if fflag.Dict ~= 0 then
-  end
+  fflag:setBitField("Check", 0, 4):dynamicInfo(ZLibInfo.validateCheckFlag)
+  fflag:setBitField("Dict", 5):dynamicInfo(ZLibInfo.checkDictionary)
+  fflag:setBitField("Level", 6, 7):dynamicInfo(ZLibInfo.compressionLevel)
 end

@@ -1,46 +1,36 @@
-require("sdk.lua.class")
--- require("sdk.types.datatype")
-require("sdk.format.element.elementtype")
+local ffi = require("ffi")
+local oop = require("sdk.lua.oop")
 local FormatElement = require("sdk.format.element.formatelement")
 
-local FieldElement = class(FormatElement)
+ffi.cdef
+[[  
+  int FieldElement_getDataType(void* __this);
+  bool FieldElement_isSigned(void* __this);
+  bool FieldElement_isInteger(void* __this);
+  bool FieldElement_isOverflowed(void* __this);
+]]
 
-function FieldElement:__ctor(datatype, offset, name, parent, tree, buffer)
-  FormatElement.__ctor(self, offset, name, parent, tree, buffer)
-  
-  self._datatype = datatype
+local C = ffi.C
+local FieldElement = oop.class(FormatElement)
+
+function FieldElement:__ctor(cthis, databuffer)
+  FormatElement.__ctor(self, cthis, databuffer)
 end
 
 function FieldElement:dataType()
-  return self._datatype
-end
-
-function FieldElement:size()
-  return DataType.sizeOf(self._datatype)
-end
-
-function FieldElement:displayType()
-  return DataType.stringValue(self._datatype)
-end
-
-function FieldElement:displayValue()
-  if self._datatype == DataType.Char then
-    return self._buffer:readString(self._offset, 1)
-  end
-  
-  return self._buffer:stringValue(self._offset, self._base, self._datatype)
+  return C.FieldElement_getDataType(self._cthis)
 end
 
 function FieldElement:isSigned()
-  return DataType.isSigned(self._datatype)
+  return C.FieldElement_isSigned(self._cthis)
 end
 
 function FieldElement:isInteger()
-  return DataType.isInteger(self._datatype)
+  return C.FieldElement_isInteger(self._cthis)
 end
 
 function FieldElement:isOverflowed()
-  return self._buffer:willOverflow(self._offset, self._datatype)
+  return C.FieldElement_isOverflowed(self._cthis)
 end
 
 return FieldElement

@@ -1,4 +1,6 @@
-function isAscii(ch)
+local CType = { }
+
+function CType.isAscii(ch)
   if (ch >= 0x00) and (ch <= 0x7F) then
     return true
   end
@@ -6,7 +8,7 @@ function isAscii(ch)
   return false
 end
 
-function isGraph(ch)
+function CType.isGraph(ch)
   if (ch >= 0x21) and (ch <= 0x7E) then
     return true
   end
@@ -14,7 +16,7 @@ function isGraph(ch)
   return false
 end
 
-function isPunct(ch)
+function CType.isPunct(ch)
   if ((ch >= 0x21) and (ch <= 0x2D)) or ((ch >= 0x3A) and (ch <= 0x40)) or ((ch >= 0x5B) and (ch <= 0x60)) or ((ch >= 0x7B) and (ch <= 0x7E))then
     return true
   end
@@ -22,7 +24,7 @@ function isPunct(ch)
   return false
 end
 
-function isAlpha(ch)
+function CType.isAlpha(ch)
   if ((ch >= 0x41) and (ch <= 0x5A)) or ((ch >= 0x61) and (ch <= 0x7A)) then
     return true
   end
@@ -30,7 +32,7 @@ function isAlpha(ch)
   return false
 end
 
-function isDigit(ch)
+function CType.isDigit(ch)
   if (ch >= 0x30) and (ch <= 0x39) then
     return true
   end
@@ -38,7 +40,7 @@ function isDigit(ch)
   return false
 end
 
-function isAlnum(ch)
+function CType.isAlnum(ch)
   if isAlpha(ch) or isDigit(ch) then
     return true
   end
@@ -46,7 +48,7 @@ function isAlnum(ch)
   return false
 end
 
-function isGraph(ch)
+function CType.isGraph(ch)
   if (ch >= 0x21) and (ch <= 0x7E) then
     return true
   end
@@ -54,7 +56,7 @@ function isGraph(ch)
   return false
 end
 
-function isWhite(ch)
+function CType.isWhite(ch)
   if (ch == 0x20) or (ch == 0x09) or (ch == 0x0D) or (ch == 0x0A) then
     return true
   end
@@ -62,10 +64,12 @@ function isWhite(ch)
   return false
 end
 
-function isPrint(ch)
-  if isAlnum(ch) or isPunct(ch) or isWhite(ch) then
+function CType.isPrint(ch)
+  if CType.isAlnum(ch) or CType.isPunct(ch) or CType.isWhite(ch) then
     return true
   end
   
   return false
 end
+
+return CType

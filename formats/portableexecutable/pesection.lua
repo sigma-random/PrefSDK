@@ -1,14 +1,20 @@
+local oop = require("sdk.lua.oop")
 local PeDefs = require("formats.portableexecutable.pedefs")
 local PeDirectories = require("formats.portableexecutable.pedirectories")
 
-local PeSections = { }
+local PeSectionTable = oop.class()
 
-function PeSections.imageFirstSection(ntheaders)
+function PeSectionTable:__ctor(formattree, databuffer)
+  self.formattree = formattree
+  self.databuffer = databuffer
+end
+
+function PeSectionTable:imageFirstSection(ntheaders)
   local sizeofoptheader = ntheaders.FileHeader.SizeOfOptionalHeader:value()
   return ntheaders:offset() + sizeofoptheader + 0x18
 end
 
-function PeSections.rvaInSection(rva, sectionheader)
+function PeSectionTable:rvaInSection(rva, sectionheader)
   local sectrva = sectionheader.VirtualAddress:value()
   local sectsize = sectionheader.VirtualSize:value()
   
@@ -19,13 +25,13 @@ function PeSections.rvaInSection(rva, sectionheader)
   return false
 end
 
-function PeSections.inSection(rva, sectionheader)
+function PeSectionTable:inSection(rva, sectionheader)
   local sectrva = sectionheader.VirtualAddress:value()
   local sectsize = sectionheader.VirtualSize:value()
   return ((rva >= sectrva) and (rva < (sectrva + sectsize)))
 end
 
-function PeSections.sectionFromRva(rva, ntheaders)
+function PeSectionTable:sectionFromRva(rva, ntheaders)
   local numberofsections = ntheaders.FileHeader.NumberOfSections:value()
   
   if numberofsections > 0 then
@@ -34,7 +40,7 @@ function PeSections.sectionFromRva(rva, ntheaders)
     for i = 1, numberofsections do
       local section = sectiontable["Section" .. i]
       
-      if PeSections.inSection(rva, section) then
+      if PeSectionTable.inSection(rva, section) then
 	return section
       end
     end
@@ -43,8 +49,8 @@ function PeSections.sectionFromRva(rva, ntheaders)
   return nil
 end
 
-function PeSections.sectionName(rva, ntheaders, buffer)
-  local section = PeSections.sectionFromRva(rva, ntheaders)
+function PeSectionTable:sectionName(rva, ntheaders, buffer)
+  local section = PeSectionTable.sectionFromRva(rva, ntheaders)
   
   if section ~= nil then
     return buffer:readString(section.Name:offset())
@@ -53,22 +59,12 @@ function PeSections.sectionName(rva, ntheaders, buffer)
   return ""
 end
 
-function PeSections.sectionDisplayName(rva, ntheaders, buffer)
-  local name = PeSections.sectionName(rva, ntheaders, buffer)
+function PeSectionTable:sectionDisplayName(rva, ntheaders, buffer)
+  local name = PeSectionTable.sectionName(rva, ntheaders, buffer)
   return name:gsub("%p", ""):gsub("%a", string.upper, 1)
 end
 
-function PeSections.analyzeSection(sectionheader, section, ntheaders, buffer)
-  local datadirectory = ntheaders.OptionalHeader.DataDirectory
-  
-  for i = 1, PeDefs.NumberOfDirectoryEntries do
-    local directory = datadirectory[PeDefs.DirectoryNames[i]]
-    local rva = directory.VirtualAddress:value()
-    
-    if (rva ~= 0) and PeSections.inSection(rva, sectionheader) then
-      PeDirectories.createDirectory(sectionheader, section, rva, i, buffer)
-    end
-  end
+function PeSectionTable:readSections()
 end
 
-return PeSections
+return PeSectionTable

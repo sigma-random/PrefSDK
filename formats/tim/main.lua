@@ -1,10 +1,15 @@
 local FormatDefinition = require("sdk.format.formatdefinition")
+local ByteOrder = require("sdk.types.byteorder")
 
 local TimBpp = { [0] = "4-Bit CLUT", [1] = "8-Bit CLUT", [2] = "15-Bit Direct", [3] = "24-Bit Direct", [4] = "Mixed" } 
-local TimFormat = FormatDefinition:new("TIM Format", "Sony Playstation 1", "Dax", "1.0", Endian.LittleEndian)
+local TimFormat = FormatDefinition.register("TIM Format", "Sony Playstation 1", "Dax", "1.0")
 
-function TimFormat.getBpp(formatobject, buffer)
-  local bpp = TimBpp[formatobject:value()]
+function TimFormat:__ctor(databuffer)
+  FormatDefinition.__ctor(self, databuffer)
+end
+
+function TimFormat:getBpp(bppfield)
+  local bpp = TimBpp[bppfield:value()]
   
   if bpp ~= nil then
     return bpp
@@ -13,49 +18,50 @@ function TimFormat.getBpp(formatobject, buffer)
   return "Unknown"
 end
 
-function TimFormat:validateFormat(buffer)
-  local id = buffer:readType(0, DataType.UInt32)
+function TimFormat:validateFormat()
+  local databuffer = self.databuffer
+  local id = databuffer:readUInt32(0, ByteOrder.LittleEndian)
   
   if bit.band(id, 0xFF) ~= 0x10 then -- Id
-    return false
+    error("Invalid ID")
   end
   
   if bit.rshift(bit.band(id, 0xFF00), 8) ~= 0x00 then -- Version
-    return false
+    error("Invalid Version")
   end
   
   if bit.rshift(bit.band(id, 0xFFFF0000), 16) ~= 0x0000 then -- Reserved
-    return false
+    error("Reserved field must be 0")
   end
-  
-  local flag = buffer:readType(4, DataType.UInt32)
+    
+  local flag = databuffer:readUInt32(4, ByteOrder.LittleEndian)
   local bpp = bit.band(flag, 0x7)
   
   if (bpp < 0) or (bpp > 4) then -- Bpp
-    return false
+    error("Invalid BPP")
   end
   
   local hasclut = bit.rshift(bit.band(flag, 0x8), 3)
   
   if (hasclut ~= 0) and (hasclut ~= 1) then
-    return false
+    error("Invalid CLUT field")
   end
   
   if bit.rshift(bit.band(flag, 0xFFFFFFF0), 4) ~= 0x000000 then
-    return false
+    error("Upper part of FLAGS field must be 0")
   end
   
   local pixeldatapos = 8
   
   if hasclut == 1 then
-    local clblksize = buffer:readType(8, DataType.UInt32)
-    local clfbx = buffer:readType(12, DataType.UInt16)
-    local clfby = buffer:readType(14, DataType.UInt16)
-    local clw = buffer:readType(16, DataType.UInt16)
-    local clh = buffer:readType(18, DataType.UInt16)
+    local clblksize = databuffer:readUInt32(8, ByteOrder.LittleEndian)
+    local clfbx = databuffer:readUInt16(12, ByteOrder.LittleEndian)
+    local clfby = databuffer:readUInt16(14, ByteOrder.LittleEndian)
+    local clw = databuffer:readUInt16(16, ByteOrder.LittleEndian)
+    local clh = databuffer:readUInt16(18, ByteOrder.LittleEndian)
     
     if ((clfbx < 0) or (clw < 0) or (clfby < 0) or (clh < 0)) or (clfbx >= clw) or (clfby >= clh) then
-      return false
+      error("Invalid TIM Metrics")
     end
     
     local clutelements = 0
@@ -65,7 +71,7 @@ function TimFormat:validateFormat(buffer)
     elseif bpp == 1 then -- 8-Bit CLUT
       clutelements = 256
     else
-      return false
+      error("Invalid CLUT Table Size")
     end
     
     -- clutcount = clutsize - sizeof(CLUT_TABLE) / (cluelements * entrysize)
@@ -76,8 +82,8 @@ function TimFormat:validateFormat(buffer)
       clutsize = clutsize + (clutelements * 2)
     end
     
-    if clutsize > buffer:size() then
-      return false
+    if clutsize > databuffer:size() then
+      error("CLUT's size cannot be greater than file size")
     end
     
     pixeldatapos = clutsize + 20
@@ -85,51 +91,49 @@ function TimFormat:validateFormat(buffer)
   
   pixeldatapos = pixeldatapos + 4 -- Skip Pixel Block Size
   
-  local pxfbx = buffer:readType(pixeldatapos, DataType.UInt16)
-  local pxfby = buffer:readType(pixeldatapos + 2, DataType.UInt16)
-  local pxw = buffer:readType(pixeldatapos + 4, DataType.UInt16)
-  local pxh = buffer:readType(pixeldatapos + 6, DataType.UInt16)
+  local pxfbx = databuffer:readUInt16(pixeldatapos, ByteOrder.LittleEndian)
+  local pxfby = databuffer:readUInt16(pixeldatapos + 2, ByteOrder.LittleEndian)
+  local pxw = databuffer:readUInt16(pixeldatapos + 4, ByteOrder.LittleEndian)
+  local pxh = databuffer:readUInt16(pixeldatapos + 6, ByteOrder.LittleEndian)
   
   if ((pxfbx < 0) or (pxw < 0) or (pxfby < 0) or (pxh < 0)) or (pxfbx > pxw) or (pxfby > pxh) then
-    return false
+    error("Invalid Pixel Block Metrics")
   end
-  
-  return true
 end
     
-function TimFormat:parseFormat(formatmodel, buffer)
-  local timheader = formatmodel:addStructure("TimHeader")
+function TimFormat:parseFormat(formattree)
+  local timheader = formattree:addStructure("TimHeader")
   
-  local fid = timheader:addField(DataType.UInt32, "Id")
-  fid:setBitField(0, 7, "Id")
-  fid:setBitField(8, 15, "Version")
-  fid:setBitField(16, 31, "Reserved");
+  local fid = timheader:addField(DataType.UInt32_LE, "Id")
+  fid:setBitField("Id", 0, 7)
+  fid:setBitField("Version", 8, 15)
+  fid:setBitField("Reserved", 16, 31)
   
-  local fflag = timheader:addField(DataType.UInt32, "Flag")
-  fflag:setBitField(0, 2, "Bpp"):dynamicInfo(TimFormat.getBpp)
-  fflag:setBitField(3, "HasClut")
-  fflag:setBitField(4, 31, "Reserved")
+  local fflag = timheader:addField(DataType.UInt32_LE, "Flag")
+  fflag:setBitField("Bpp", 0, 2):dynamicInfo(TimFormat.getBpp)
+  fflag:setBitField("HasClut", 3)
+  fflag:setBitField("Reserved", 4, 31)
   
   if timheader.Flag.HasClut:value() == 1 then
-    self:createClutBlocks(formatmodel, buffer, timheader.Flag.Bpp:value())
+    self:createClutBlocks(formattree, timheader.Flag.Bpp:value())
   end
   
-  local pixeldata = formatmodel:addStructure("PixelData")
-  pixeldata:addField(DataType.UInt32, "BlockSize")
-  pixeldata:addField(DataType.UInt16, "FrameBufferX")
-  pixeldata:addField(DataType.UInt16, "FrameBufferY")
-  pixeldata:addField(DataType.UInt16, "Width")
-  pixeldata:addField(DataType.UInt16, "Height")
+  local pixeldata = formattree:addStructure("PixelData")
+  pixeldata:addField(DataType.UInt32_LE, "BlockSize")
+  pixeldata:addField(DataType.UInt16_LE, "FrameBufferX")
+  pixeldata:addField(DataType.UInt16_LE, "FrameBufferY")
+  pixeldata:addField(DataType.UInt16_LE, "Width")
+  pixeldata:addField(DataType.UInt16_LE, "Height")
   pixeldata:addField(DataType.Blob, "Pixel", pixeldata.BlockSize:value() - pixeldata:size())
 end
 
-function TimFormat:createClutBlocks(formatmodel, buffer, bpp)
-  local clut = formatmodel:addStructure("Clut")
-  clut:addField(DataType.UInt32, "BlockSize")
-  clut:addField(DataType.UInt16, "FrameBufferX")
-  clut:addField(DataType.UInt16, "FrameBufferY")
-  clut:addField(DataType.UInt16, "Width")
-  clut:addField(DataType.UInt16, "Height")
+function TimFormat:createClutBlocks(formattree, bpp)
+  local clut = formattree:addStructure("Clut")
+  clut:addField(DataType.UInt32_LE, "BlockSize")
+  clut:addField(DataType.UInt16_LE, "FrameBufferX")
+  clut:addField(DataType.UInt16_LE, "FrameBufferY")
+  clut:addField(DataType.UInt16_LE, "Width")
+  clut:addField(DataType.UInt16_LE, "Height")
   
   local clutelements = 0
 

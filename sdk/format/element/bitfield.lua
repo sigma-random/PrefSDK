@@ -1,65 +1,27 @@
-require("sdk.lua.class")
--- require("sdk.types.datatype")
-require("sdk.format.element.elementtype")
+local ffi = require("ffi")
+local oop = require("sdk.lua.oop")
 local FieldElement = require("sdk.format.element.fieldelement")
 
-local BitField = class(FieldElement)
+ffi.cdef
+[[  
+  uint64_t BitField_getMask(void* __this);
+  int BitField_getBitStart(void* __this);
+  int BitField_getBitEnd(void* __this);
+]]
 
-function BitField:__ctor(bitstart, bitend, offset, name, parent, tree, buffer)
-  FieldElement.__ctor(self, parent:dataType(), offset, name, parent, tree, buffer)
-  
-  self._bitstart = bitstart
-  self._bitend = bitend
-  self._mask = self:createMask(bitstart, bitend)
-end
+local C = ffi.C
+local BitField = oop.class(FieldElement)
 
-function BitField:elementType()
-  return ElementType.BitField
-end
-
-function BitField:displayType()
-  if self._bitstart == self._bitend then
-    return "bit"
-  end
-  
-  return "bit[]"
-end
-
-function BitField:displayName()
-  if self._bitstart == self._bitend then
-    return string.format("%1[%2]", self._name, self._bitstart)
-  end
-  
-  return string.format("%1[%2..%3]", self._name, self._bitstart, self._bitend)
+function BitField:__ctor(cthis, databuffer)
+  FieldElement.__ctor(self, cthis, databuffer)
 end
 
 function BitField:bitStart()
-  return self._bitstart
+  return C.BitField_getBitStart(self._cthis)
 end
 
 function BitField:bitEnd()
-  return self._bitend
-end
-
-function BitField:value()
-  local v = self._parent:value()
-  return bit.rshift(bit.band(v, self._mask), self._bitstart)
-end
-
-function BitField:size()
-  return 0 -- No Size for BitFields
-end
-
-function BitField:createMask(bitstart, bitend)
-  local mask = 0x00000000
-  
-  for i = 0, 31 do
-    if (i >= bitstart) and (i <= bitend) then
-        mask = bit.bor(mask, bit.lshift(1, i))
-    else
-        mask = bit.bor(mask, bit.lshift(0, i))
-    end
-  end
+  return C.BitField_getBitEnd(self._cthis)
 end
 
 return BitField

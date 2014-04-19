@@ -1,6 +1,10 @@
 local FormatDefinition = require("sdk.format.formatdefinition")
 
-local Ecma130Format = FormatDefinition:new("ECMA-130 Format", "File System", "Dax", "1.0", Endian.PlatformEndian)
+local Ecma130Format = FormatDefinition.register("ECMA-130 Format", "File System", "Dax", "1.0")
+
+function Ecma130Format:__ctor(databuffer)
+  FormatDefinition.__ctor(self, databuffer)
+end
 
 function getSectorType(formatobject, buffer)
   
@@ -10,8 +14,8 @@ function Ecma130Format:sectorToOffset(sector)
   return sector * SectorSize
 end
 
-function Ecma130Format:createSector(offset, sectoridx, formatmodel)
-  local sector = formatmodel:addStructure(string.format("Sector%X", sectoridx))
+function Ecma130Format:createSector(offset, sectoridx, formattree)
+  local sector = formattree:addStructure(string.format("Sector%X", sectoridx))
   sector:addField(DataType.UInt8, "Sync", 12)
   
   local header = sector:addStructure("Header")
@@ -47,16 +51,16 @@ function Ecma130Format:createSectorMode01(sector)
   sector:addField(DataType.UInt8, "P-Parity", 104)
 end
 
-function Ecma130Format:validateFormat(formatmodel, buffer)
-  return false
+function Ecma130Format:validateFormat()
+  -- Do not validate anything atm.
 end
 
-function Ecma130Format:parseFormat(formatmodel, buffer)
+function Ecma130Format:parseFormat(formattree)
   local offset = 0
   local sectoridx = 0
   
   while sectoridx < 20 do
-    offset = self:createSector(offset, sectoridx, formatmodel)
+    offset = self:createSector(offset, sectoridx, formattree)
     sectoridx = sectoridx + 1
   end
 end

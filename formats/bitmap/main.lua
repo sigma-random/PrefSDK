@@ -1,26 +1,78 @@
+local DataType = require("sdk.types.datatype")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local BitmapBPP = require("formats.bitmap.bpp")
 
-local BitmapFormat = FormatDefinition:new("Bitmap Format", "Imaging", "Dax", "1.1", Endian.LittleEndian)
+local BitmapFormat = FormatDefinition.register("Bitmap Format", "Imaging", "Dax", "1.1")
 
-function BitmapFormat.readBpp(formatelement, buffer)
-  local bpp = BitmapBPP[formatelement:value()]
-  
-  if bpp ~= nil then
-    return bpp
+function BitmapFormat:__ctor(databuffer)
+  FormatDefinition.__ctor(self, databuffer)
+end
+
+function BitmapFormat:validateFormat()
+  self:checkData(0, DataType.AsciiString, "BM")                 -- Bitmap's Signature
+  self:checkData(14, DataType.UInt32_LE, 40)                    -- BitmapInfoHeader.biSize
+  self:checkData(26, DataType.UInt16_LE, 0x00000001)            -- BitmapInfoHseader.biPlanes
+  self:checkData(28, DataType.UInt16_LE, {1, 4, 8, 16, 24, 32}) -- BitmapInfoHeader.biBitCount
+end
+
+function BitmapFormat:displaySize(sizefield)
+  if sizefield:value() < 0 then
+    return string.format("%dpx (Reversed)", math.abs(sizefield:value()))
   end
-
-  return "Invalid Bpp"
-end
-
-function BitmapFormat.displayColorHex(fcolorentry, buffer)
-  return string.format("#%02X%02X%02X%02X", fcolorentry.Reserved:value(), fcolorentry.Red:value(), fcolorentry.Green:value(), fcolorentry.Blue:value())
-end
-
-function BitmapFormat.parseBits(bitmapbits)
-  local tree = bitmapbits:tree();
-  local buffer = bitmapbits:buffer();
   
+  return string.format("%dpx", sizefield:value())
+end
+
+function BitmapFormat:parseFormat(formattree)
+  local bitmapfileheader = formattree:addStructure("BitmapFileHeader")
+  bitmapfileheader:addField(DataType.UInt16_LE, "bfType")
+  bitmapfileheader:addField(DataType.UInt32_LE, "bfSize")
+  bitmapfileheader:addField(DataType.UInt16_LE, "bfReserved1")
+  bitmapfileheader:addField(DataType.UInt16_LE, "bfReserved2")
+  bitmapfileheader:addField(DataType.UInt32_LE, "bfOffBits")
+  
+  local bitmapinfoheader = formattree:addStructure("BitmapInfoHeader")
+  bitmapinfoheader:addField(DataType.UInt32_LE, "biSize")
+  bitmapinfoheader:addField(DataType.Int32_LE, "biWidth"):dynamicInfo(BitmapFormat.displaySize)
+  bitmapinfoheader:addField(DataType.Int32_LE, "biHeight"):dynamicInfo(BitmapFormat.displaySize)
+  bitmapinfoheader:addField(DataType.UInt16_LE, "biPlanes")
+  bitmapinfoheader:addField(DataType.UInt16_LE, "biBitCount")
+  bitmapinfoheader:addField(DataType.UInt32_LE, "biCompression")
+  bitmapinfoheader:addField(DataType.UInt32_LE, "biSizeImage")
+  bitmapinfoheader:addField(DataType.Int32_LE, "biXPelsPerMeter")
+  bitmapinfoheader:addField(DataType.Int32_LE, "biYPelsPerMeter")
+  bitmapinfoheader:addField(DataType.UInt32_LE, "biClrUsed")
+  bitmapinfoheader:addField(DataType.UInt32_LE, "biClrImportant");
+  
+  local bitcount = bitmapinfoheader.biBitCount:value()
+  
+  if bitcount < 24 then
+    self:parseColorTable(formattree, bitmapinfoheader, bitcount)
+  end
+  
+  formattree:addStructure("BitmapBits"):dynamicParser(bitmapinfoheader.biSizeImage:value() > 0, BitmapFormat.parseBits)
+end
+
+function BitmapFormat:parseColorTable(formattree, bitmapinfoheader, bitcount)
+  local clrused = bitmapinfoheader.biClrUsed:value()
+  local colortable = formattree:addStructure("ColorTable")
+  local tablesize = (clrused and clrused or bit.lshift(1, bitcount))
+  
+  for i = 1, tablesize do
+    local colorentry = colortable:addStructure(string.format("Color_%d", i - 1)):dynamicInfo(BitmapFormat.displayColorHex)
+    colorentry:addField(DataType.UInt8, "Blue")
+    colorentry:addField(DataType.UInt8, "Green")
+    colorentry:addField(DataType.UInt8, "Red")
+    colorentry:addField(DataType.UInt8, "Reserved")
+  end
+end
+
+function BitmapFormat:displayColorHex(colorentry)
+  return string.format("#%02X%02X%02X%02X", colorentry.Reserved:value(), colorentry.Red:value(), colorentry.Green:value(), colorentry.Blue:value())
+end
+
+function BitmapFormat:parseBits(bitmapbits)
+  local tree = self.formattree
   local w = tree.BitmapInfoHeader.biWidth:value()
   local h = tree.BitmapInfoHeader.biHeight:value()
   local bpp = tree.BitmapInfoHeader.biBitCount:value()
@@ -35,94 +87,5 @@ function BitmapFormat.parseBits(bitmapbits)
   while line < h do
     bitmapbits:addField(DataType.UInt8, string.format("ScanLine_%d", line), rowsize)
     line = line + 1
-  end
-end
-
-function BitmapFormat:validateFormat(buffer)
-  local sign = buffer:readString(0, 2)
-  
-  if sign ~= "BM" then
-    return false
-  end
-  
-  local bmpsize = buffer:readType(2, DataType.UInt32)
-  
-  if bmpsize == 0 then
-    return false
-  end
-  
-  local bmpbits = buffer:readType(10, DataType.UInt32)
-  
-  if (bmpbits == 0) or (bmpbits >= bmpsize) then
-    return false
-  end
-  
-  local bmpplanes = buffer:readType(26, DataType.UInt16)
-  
-  if bmpplanes ~= 1 then
-    return false
-  end
-  
-  local bmpbpp = buffer:readType(28, DataType.UInt16)
-  
-  -- Check if Bitmap's Bpp is valid --
-  if (bmpbpp ~= 1) and (bmpbpp ~= 2) and (bmpbpp ~= 4) and (bmpbpp ~= 8) and (bmpbpp ~= 16) and (bmpbpp ~= 24) and (bmpbpp ~= 32) then
-    return false
-  end
-  
-  local bmpcompression = buffer:readType(30, DataType.UInt16)
-  
-  if bmpcompression > 6 then
-    return false
-  end
-  
-  return true
-end
-
-function BitmapFormat:parseFormat(formattree, buffer)
-  local bitmapfileheader = formattree:addStructure("BitmapFileHeader")  
-  bitmapfileheader:addField(DataType.UInt16, "bfType")
-  bitmapfileheader:addField(DataType.UInt32, "bfSize")
-  bitmapfileheader:addField(DataType.UInt16, "bfReserved1")
-  bitmapfileheader:addField(DataType.UInt16, "bfReserved2")
-  bitmapfileheader:addField(DataType.UInt32, "bfOffBits")
-  
-  local bitmapinfoheader = formattree:addStructure("BitmapInfoHeader")
-  bitmapinfoheader:addField(DataType.UInt32, "biSize")
-  bitmapinfoheader:addField(DataType.Int32, "biWidth")
-  bitmapinfoheader:addField(DataType.Int32, "biHeight")
-  bitmapinfoheader:addField(DataType.UInt16, "biPlanes")
-  bitmapinfoheader:addField(DataType.UInt16, "biBitCount"):dynamicInfo(BitmapFormat.readBpp)
-  bitmapinfoheader:addField(DataType.UInt32, "biCompression")
-  bitmapinfoheader:addField(DataType.UInt32, "biSizeImage")
-  bitmapinfoheader:addField(DataType.Int32, "biXPelsPerMeter")
-  bitmapinfoheader:addField(DataType.Int32, "biYPelsPerMeter")
-  bitmapinfoheader:addField(DataType.UInt32, "biClrUsed")
-  bitmapinfoheader:addField(DataType.UInt32, "biClrImportant");
-  
-  local bitcount = bitmapinfoheader.biBitCount:value()
-  
-  if bitcount < 24 then
-    self:parseColorTable(formattree, bitmapinfoheader, bitcount)
-  end
-  
-  local bits = formattree:addStructure("BitmapBits")
-  bits:dynamicParser((bitmapinfoheader.biSizeImage:value() > 0), BitmapFormat.parseBits)
-end
-
-function BitmapFormat:parseColorTable(formattree, bitmapinfoheader, bitcount)
-  local clrused = bitmapinfoheader.biClrUsed:value()
-  local colortable = formattree:addStructure("ColorTable")
-  local tablesize = (clrused and clrused or bit.lshift(1, bitcount))
-      
-  for i=1, tablesize do
-    local colorentry = colortable:addStructure(string.format("Color_%d", i - 1))
-    
-    colorentry:addField(DataType.UInt8, "Blue")
-    colorentry:addField(DataType.UInt8, "Green")
-    colorentry:addField(DataType.UInt8, "Red")
-    colorentry:addField(DataType.UInt8, "Reserved")
-    
-    colorentry:dynamicInfo(BitmapFormat.displayColorHex)
   end
 end
