@@ -8,7 +8,7 @@ function RiffFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
 end
 
-function RiffFormat.getWaveCompressionType(compressiontypefield)
+function RiffFormat:getWaveCompressionType(compressiontypefield)
   local compressiontype = WaveCompressionType[compressiontypefield:value()]
   
   if compressiontype ~= nil then
@@ -24,7 +24,7 @@ end
 
 function RiffFormat:parseFormat(formattree)
   local riffheader = formattree:addStructure("RiffHeader")
-  riffheader:addField(DataType.Character, 4, "ChunkID", 4)
+  riffheader:addField(DataType.Character, "ChunkID", 4)
   riffheader:addField(DataType.UInt32_LE, "ChunkDataSize")
   riffheader:addField(DataType.Character, "RiffType", 4)
   

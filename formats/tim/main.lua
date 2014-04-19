@@ -100,6 +100,8 @@ function TimFormat:validateFormat()
   if ((pxfbx < 0) or (pxw < 0) or (pxfby < 0) or (pxh < 0)) or (pxfbx > pxw) or (pxfby > pxh) then
     error("Invalid Pixel Block Metrics")
   end
+  
+  self.validated = true
 end
     
 function TimFormat:parseFormat(formattree)
@@ -145,7 +147,7 @@ function TimFormat:createClutBlocks(formattree, bpp)
   end
   
   -- clutcount = clutsize - sizeof(CLUT_TABLE) / (cluelements * entrysize)
-  local clutcount = (clut.BlockSize:value() - clut:size()) / (clutelements * 2)
+  local clutcount = tonumber((clut.BlockSize:value() - clut:size()) / (clutelements * 2))
   local colors = clut:addStructure("Colors")
   
   for i = 1, clutcount do

@@ -15,17 +15,13 @@ function PdfFormat:__ctor(databuffer)
   self.pdfobject.__index = self._pdfobject
 end
 
-function PdfFormat.getObjectName(formatobject, buffer)
-  local offset = formatobject:offset()
-  local objpos = buffer:indexOf("obj", offset)
-  return "Object(Number, Revision): " .. buffer:readString(offset, (objpos - offset) - 1)
+function PdfFormat:getObjectName(objstruct)
+  local offset = objstruct:offset()
+  local objpos = self.databuffer:indexOf("obj", offset)
+  return "Object(Number, Revision): " .. self.databuffer:readString(offset, (objpos - offset) - 1)
 end
 
-function PdfFormat.parsePdfObject(pdfobject)
-  pdfobj:addField(DataType.Blob, "Data", obj.endpos - obj.startpos)
-end
-
-function PdfFormat:validateFormat(buffer)
+function PdfFormat:validateFormat()
   self:checkData(0, DataType.AsciiString, "%PDF-")
 end
 
@@ -63,9 +59,8 @@ function PdfFormat:createPdfCommentStruct(formattree, obj)
 end
 
 function PdfFormat:createPdfObjectStruct(formattree, obj)
-  local pdfobj = formattree:addStructure("PDFOBJECT", obj.startpos)
-  pdfobj:dynamicInfo(PdfFormat.getObjectName)
-  pdfobj:dynamicParser(PdfFormat.parsePdfObject)
+  local pdfobj = formattree:addStructure("PDFOBJECT", obj.startpos):dynamicInfo(PdfFormat.getObjectName)
+  pdfobj:addField(DataType.Blob, "Data", obj.endpos - obj.startpos)
 end
 
 function PdfFormat:createPdfHeaderStruct(formattree, obj)
@@ -93,16 +88,16 @@ function PdfFormat:findAllKeywords(buffer)
     local ch = buffer:readChar(self.filepos)
     local t = nil -- Single PdfObject (if any)
     
-    if PdfFormat:isWhitespace(ch) then
-      t = PdfFormat:createWhitespaceObj(buffer)
-    elseif (ch == "%") then
-      t = PdfFormat:createCommentObj(buffer)
-    elseif (ch >= "0") and (ch <= "9") then
-      t = PdfFormat:createObjObj(buffer)
-    elseif (ch == "x") and (buffer:readString(self.filepos, 4) == "xref") then
-      t = PdfFormat:createXRefObj(buffer)
+    if self:isWhitespace(ch) then
+      t = self:createWhitespaceObj(buffer)
+    elseif (ch == '%') then
+      t = self:createCommentObj(buffer)
+    elseif (ch >= '0') and (ch <= '9') then
+      t = self:createObjObj(buffer)
+    elseif (ch == 'x') and (buffer:readString(self.filepos, 4) == "xref") then
+      t = self:createXRefObj(buffer)
     else
-      error("Unknown Character: '"..ch.."' at offset: "..self.filepos)
+      error("Unknown Character: '" .. ch .. "' at offset: " .. tostring(self.filepos))
     end
     
     if t ~= nil then
@@ -115,7 +110,7 @@ function PdfFormat:findAllKeywords(buffer)
 end
 
 function PdfFormat:isWhitespace(ch)
-  return ((ch == "\r") or (ch == "\n") or (ch == "\t") or (ch == " "))
+  return ((ch == '\r') or (ch == '\n') or (ch == '\t') or (ch == ' '))
 end
 
 function PdfFormat:eatWhitespaces(buffer)
@@ -130,7 +125,7 @@ function PdfFormat:createWhitespaceObj(buffer)
   obj.type = PdfTypes.PdfWhitespace
   obj.startpos = self.filepos
     
-  while PdfFormat:isWhitespace(buffer:readChar(self.filepos)) do
+  while self:isWhitespace(buffer:readChar(self.filepos)) do
     self.filepos = self.filepos + 1
   end
    
@@ -151,9 +146,9 @@ function PdfFormat:createCommentObj(buffer)
   obj.type = commenttype
   obj.startpos = self.filepos
   
-  self.filepos = self.filepos + string.len(buffer:readLine(self.filepos)) -- Eat Comment Line
+  self.filepos = buffer:indexOfEol(self.filepos) -- Eat Comment Line
   
-  if PdfFormat:isWhitespace(buffer.readChar(self.filepos)) then
+  if self:isWhitespace(buffer:readChar(self.filepos)) then
     self.filepos = self.filepos + 1 -- Eat Single NewLine Char
   end
   
@@ -167,16 +162,16 @@ function PdfFormat:createObjObj(buffer)
   local endobjpos = buffer:indexOf("endobj", self.filepos)
   
   if (objpos == -1) or (endobjpos == -1) then
-    error("Wrong PdfObject at: " .. self.filepos)
+    error("Wrong PdfObject at: " .. tostring(self.filepos))
   end
   
   obj.type = PdfTypes.PdfObject
   obj.startpos = self.filepos
   
   self.filepos = endobjpos + string.len("endobj") -- Eat Entire PdfObject
-  PdfFormat:eatWhitespaces(buffer)
+  self:eatWhitespaces(buffer)
   
-  obj.endpos = self.filepos  
+  obj.endpos = self.filepos
   return obj
 end
 
@@ -185,16 +180,16 @@ function PdfFormat:createXRefObj(buffer)
   local startxrefpos = buffer:indexOf("startxref", self.filepos)
   
   if startxrefpos == -1 then
-    error("Wrong PdfXRef at: " .. self.filepos)
+    error("Wrong PdfXRef at: " .. tostring(self.filepos))
   end
   
   obj.type = PdfTypes.PdfXRef
   obj.startpos = self.filepos
   
   self.filepos = startxrefpos + string.len("startxref") -- Eat Entire PdfXRef
-  PdfFormat:eatWhitespaces(buffer)
+  self:eatWhitespaces(buffer)
   self.filepos = self.filepos + string.len(buffer:readLine(self.filepos)) -- Eat XRef Offset
-  PdfFormat:eatWhitespaces(buffer)
+  self:eatWhitespaces(buffer)
   
   obj.endpos = self.filepos
   return obj

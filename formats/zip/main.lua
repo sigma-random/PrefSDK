@@ -5,11 +5,11 @@ local DataType = require("sdk.types.datatype")
 local ZipFormat = FormatDefinition.register("Zip Format", "Compression", "Dax", "1.0")
 
 function ZipFormat:getZipRecordFileName(recordfnfield)
-  return "'" .. buffer:readString(recordfnfield.frFileName:offset(), recordfnfield.frFileNameLength:value()) .. "'"
+  return "'" .. self.databuffer:readString(recordfnfield.frFileName:offset(), recordfnfield.frFileNameLength:value()) .. "'"
 end
 
 function ZipFormat:getZipDirEntryFileName(direntryfnfield)
-  return "'" .. buffer:readString(direntryfnfield.deFileName:offset(), direntryfnfield.deFileNameLength:value()) .. "'"
+  return "'" .. self.databuffer:readString(direntryfnfield.deFileName:offset(), direntryfnfield.deFileNameLength:value()) .. "'"
 end
 
 function ZipFormat:validateFormat()

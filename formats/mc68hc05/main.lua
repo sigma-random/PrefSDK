@@ -9,7 +9,7 @@ function MC68HC05Rom:__ctor(databuffer)
 end
 
 function MC68HC05Rom:validateFormat()
-  -- Ignore validation
+  self.validated = true
 end
 
 function MC68HC05Rom:parseFormat(formattree)
