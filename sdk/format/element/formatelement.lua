@@ -15,9 +15,10 @@ ffi.cdef
 local C = ffi.C
 local FormatElement = oop.class()
 
-function FormatElement:__ctor(cthis, databuffer)
+function FormatElement:__ctor(cthis, databuffer, parentelement)
  self._cthis = cthis
  self._databuffer = databuffer
+ self._parentelement = parentelement
  self.id = ffi.string(C.FormatElement_getId(cthis))
 end
 
@@ -39,6 +40,14 @@ end
 
 function FormatElement:value()
   return nil
+end
+
+function FormatElement:hasParent()
+  return (self._parentelement ~= nil)
+end
+
+function FormatElement:parentElement()
+  return self._parentelement
 end
 
 function FormatElement:dynamicParser(condition, fn)

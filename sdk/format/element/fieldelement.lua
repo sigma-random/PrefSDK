@@ -13,8 +13,8 @@ ffi.cdef
 local C = ffi.C
 local FieldElement = oop.class(FormatElement)
 
-function FieldElement:__ctor(cthis, databuffer)
-  FormatElement.__ctor(self, cthis, databuffer)
+function FieldElement:__ctor(cthis, databuffer, parentelement)
+  FormatElement.__ctor(self, cthis, databuffer, parentelement)
 end
 
 function FieldElement:dataType()

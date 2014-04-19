@@ -70,7 +70,7 @@ end
 
 function PdfFormat:createPdfHeaderStruct(formattree, obj)
   local pdfobj = formattree:addStructure("PDFHEADER", obj.startpos)
-  pdfobj:addField(DataType.Char, "Header", obj.endpos - obj.startpos)
+  pdfobj:addField(DataType.Character, "Header", obj.endpos - obj.startpos)
 end
 
 function PdfFormat:createPdfXRefStruct(formattree, obj)
@@ -80,7 +80,7 @@ end
 
 function PdfFormat:createPdfTrailerStruct(formattree, obj)
   local pdfobj = formattree:addStructure("PDFTRAILER", obj.startpos)
-  pdfobj:addField(DataType.Char, "Trailer", obj.endpos - obj.startpos)
+  pdfobj:addField(DataType.Character, "Trailer", obj.endpos - obj.startpos)
 end
 
 function PdfFormat:findAllKeywords(buffer)

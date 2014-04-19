@@ -42,7 +42,7 @@ end
 function ZipFormat:defineFileRecord(formattree) -- 0x04034B50
   local zipfilerecord = formattree:addStructure("ZipFileRecord")
   
-  zipfilerecord:addField(DataType.Char, "frSignature", 4)
+  zipfilerecord:addField(DataType.Character, "frSignature", 4)
   zipfilerecord:addField(DataType.UInt16_LE, "frVersion")
   zipfilerecord:addField(DataType.UInt16_LE, "frFlags")
   zipfilerecord:addField(DataType.UInt16_LE, "frCompression")
@@ -59,7 +59,7 @@ function ZipFormat:defineFileRecord(formattree) -- 0x04034B50
   local extrafieldlen = zipfilerecord.frExtraFieldLength:value()
   
   if filenamelen > 0 then
-    local ffilename = zipfilerecord:addField(DataType.Char, "frFileName", filenamelen)
+    local ffilename = zipfilerecord:addField(DataType.Character, "frFileName", filenamelen)
     zipfilerecord:dynamicInfo(ZipFormat.getZipRecordFileName)
   end
   
@@ -77,7 +77,7 @@ end
 function ZipFormat:defineDataDescriptor(formattree) -- 0x08074B50
   local zipdatadescriptor = formattree:addStructure("ZipDataDescriptor")
   
-  zipdatadescriptor:addField(DataType.Char, "ddSignature", 4)
+  zipdatadescriptor:addField(DataType.Character, "ddSignature", 4)
   zipdatadescriptor:addField(DataType.UInt32_LE, "ddCrc")
   zipdatadescriptor:addField(DataType.UInt32_LE, "frCompressedSize")
   zipdatadescriptor:addField(DataType.UInt32_LE, "frUncompressedSize")
@@ -88,7 +88,7 @@ end
 function ZipFormat:defineDirEntry(formattree) -- 0x02014B50
   local zipdirectoryentry = formattree:addStructure("ZipDirectoryEntry")
   
-  zipdirectoryentry:addField(DataType.Char, "deSignature", 4)
+  zipdirectoryentry:addField(DataType.Character, "deSignature", 4)
   zipdirectoryentry:addField(DataType.UInt16_LE, "deVersionMadeBy")
   zipdirectoryentry:addField(DataType.UInt16_LE, "deVersionToExtract")
   zipdirectoryentry:addField(DataType.UInt16_LE, "deFlags")
@@ -111,7 +111,7 @@ function ZipFormat:defineDirEntry(formattree) -- 0x02014B50
   local filecommentlength = zipdirectoryentry.deFileCommentLength:value()
   
   if filenamelength > 0 then
-    local ffilename = zipdirectoryentry:addField(DataType.Char, "deFileName", filenamelength)
+    local ffilename = zipdirectoryentry:addField(DataType.Character, "deFileName", filenamelength)
     zipdirectoryentry:dynamicInfo(ZipFormat.getZipDirEntryFileName)
   end
   
@@ -120,7 +120,7 @@ function ZipFormat:defineDirEntry(formattree) -- 0x02014B50
   end
   
   if filecommentlength > 0 then
-    zipdirectoryentry:addField(DataType.Char, "deFileComment", filecommentlength)
+    zipdirectoryentry:addField(DataType.Character, "deFileComment", filecommentlength)
   end
   
   return zipdirectoryentry:size()
@@ -128,7 +128,7 @@ end
 
 function ZipFormat:defineDigitalSignature(formattree) -- 0x05054B50
   local zipdigitalsignature = formattree:addStructure("ZipDigitalSignature")
-  zipdigitalsignature:addField(DataType.Char, "dsSignature", 4)
+  zipdigitalsignature:addField(DataType.Character, "dsSignature", 4)
   zipdigitalsignature:addField(DataType.UInt16_LE, "dsDataLength")
   
   local datalength = zipdigitalsignature.dsDataLength:value()
@@ -142,7 +142,7 @@ end
 
 function ZipFormat:defineEndLocator(formattree) -- 0x06054B50
   local zipendlocator = formattree:addStructure("ZipEndLocator")
-  zipendlocator:addField(DataType.Char, "elSignature", 4)
+  zipendlocator:addField(DataType.Character, "elSignature", 4)
   zipendlocator:addField(DataType.UInt16_LE, "elDiskNumber")
   zipendlocator:addField(DataType.UInt16_LE, "elStartDiskNumber")
   zipendlocator:addField(DataType.UInt16_LE, "elEntriesOnDisk")
@@ -154,7 +154,7 @@ function ZipFormat:defineEndLocator(formattree) -- 0x06054B50
   local commentlength = zipendlocator.elCommentLength:value()
   
   if commentlength > 0 then
-    zipendlocator:addField(DataType.Char, "elComment", commentlength)
+    zipendlocator:addField(DataType.Character, "elComment", commentlength)
   end
   
   return zipendlocator:size()

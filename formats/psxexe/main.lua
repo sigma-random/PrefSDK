@@ -14,7 +14,7 @@ end
     
 function PsxExeFormat:parseFormat(formattree)
   local exeheader = formattree:addStructure("ExeHeader")
-  exeheader:addField(DataType.Char, "id", 8)  
+  exeheader:addField(DataType.Character, "id", 8)  
   exeheader:addField(DataType.UInt32_LE, "text")
   exeheader:addField(DataType.UInt32_LE, "data")
   exeheader:addField(DataType.UInt32_LE, "pc0")

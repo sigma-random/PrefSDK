@@ -12,8 +12,8 @@ ffi.cdef
 local C = ffi.C
 local FieldArray = oop.class(FieldElement)
 
-function FieldArray:__ctor(cthis, databuffer)
-  FieldElement.__ctor(self, cthis, databuffer)
+function FieldArray:__ctor(cthis, databuffer, parentelement)
+  FieldElement.__ctor(self, cthis, databuffer, parentelement)
 end
 
 function FieldArray:itemType()

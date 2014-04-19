@@ -57,12 +57,12 @@ function INesFormat:getMirroring(mirroringfield)
 end
 
 function INesFormat:validateFormat()
-  self:checkData(0, DataType.UInt32, 0x1A53454E) -- "'Nes^Z' Signature"
+  self:checkData(0, DataType.UInt32_LE, 0x1A53454E) -- "'Nes^Z' Signature"
 end
 
 function INesFormat:parseFormat(formattree)
   local inesheader = formattree:addStructure("INesHeader")
-  inesheader:addField(DataType.Char, "Signature", 4)
+  inesheader:addField(DataType.Character, "Signature", 4)
   inesheader:addField(DataType.UInt8, "RomBanksCount"):dynamicInfo(INesFormat.calcRomSize)
   inesheader:addField(DataType.UInt8, "VRomBanksCount"):dynamicInfo(INesFormat.calcVRomSize)
   

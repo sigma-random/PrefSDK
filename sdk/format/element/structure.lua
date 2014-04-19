@@ -14,24 +14,24 @@ ffi.cdef
 local C = ffi.C
 local Structure = oop.class(FormatElement)
 
-function Structure:__ctor(cthis, databuffer)
-  FormatElement.__ctor(self, cthis, databuffer)
+function Structure:__ctor(cthis, databuffer, parentelement)
+  FormatElement.__ctor(self, cthis, databuffer, parentelement)
 end
 
 function Structure:addStructure(name)
-  local s = Structure(C.Structure_addStructure(self._cthis, name), self._databuffer)
+  local s = Structure(C.Structure_addStructure(self._cthis, name), self._databuffer, self)
   self[name] = s
   return s
 end
 
 function Structure:addField(datatype, name, count)
   local f = nil
-  local cfield = C.Structure_addField(self._cthis, datatype, name, count and count or 1)
+  local cfield = C.Structure_addField(self._cthis, datatype, name, count or 1)
   
   if count and count > 1 then
-    f = FieldArray(cfield, self._databuffer)
+    f = FieldArray(cfield, self._databuffer, self)
   else
-    f = Field(cfield, self._databuffer)
+    f = Field(cfield, self._databuffer, self)
   end
   
   self[name] = f

@@ -24,9 +24,9 @@ end
 
 function RiffFormat:parseFormat(formattree)
   local riffheader = formattree:addStructure("RiffHeader")
-  riffheader:addField(DataType.Char, 4, "ChunkID", 4)
+  riffheader:addField(DataType.Character, 4, "ChunkID", 4)
   riffheader:addField(DataType.UInt32_LE, "ChunkDataSize")
-  riffheader:addField(DataType.Char, "RiffType", 4)
+  riffheader:addField(DataType.Character, "RiffType", 4)
   
   local pos = riffheader:endOffset()
   
@@ -55,7 +55,7 @@ end
 
 function RiffFormat:defineFmtChunk(formattree)
   local formatchunk = formattree:addStructure("FormatChunk")
-  formatchunk:addField(DataType.Char, "ChunkID", 4)
+  formatchunk:addField(DataType.Character, "ChunkID", 4)
   formatchunk:addField(DataType.UInt32_LE, "ChunkDataSize")
   formatchunk:addField(DataType.UInt16_LE, "CompressionCode"):dynamicInfo(RiffFormat.getWaveCompressionType)
   formatchunk:addField(DataType.UInt16_LE, "NumberOfChannels")
@@ -75,7 +75,7 @@ end
 
 function RiffFormat:defineDataChunk(formattree)
   local datachunk = formattree:addStructure("DataChunk")
-  datachunk:addField(DataType.Char, "ChunkID", 4)
+  datachunk:addField(DataType.Character, "ChunkID", 4)
   datachunk:addField(DataType.UInt32_LE, "ChunkDataSize")  
   datachunk:addField(DataType.Blob, datachunk.ChunkDataSize:value(), "SampleData")
   
@@ -84,7 +84,7 @@ end
 
 function RiffFormat:defineFactChunk(formattree)
   local factchunk = formattree:addStructure("FactChunk")
-  factchunk:addField(DataType.Char, "ChunkID", 4)
+  factchunk:addField(DataType.Character, "ChunkID", 4)
   factchunk:addField(DataType.UInt32_LE, "ChunkDataSize")
   factchunk:addField(DataType.Blob, factchunk.ChunkDataSize:value(), "FormatData")
   

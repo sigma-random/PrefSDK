@@ -12,8 +12,8 @@ ffi.cdef
 local C = ffi.C
 local BitField = oop.class(FieldElement)
 
-function BitField:__ctor(cthis, databuffer)
-  FieldElement.__ctor(self, cthis, databuffer)
+function BitField:__ctor(cthis, databuffer, parentelement)
+  FieldElement.__ctor(self, cthis, databuffer, parentelement)
 end
 
 function BitField:bitStart()
@@ -22,6 +22,13 @@ end
 
 function BitField:bitEnd()
   return C.BitField_getBitEnd(self._cthis)
+end
+
+function BitField:value()
+  local mask = C.BitField_getMask(self._cthis)
+  local fieldvalue = self._parentelement:value()
+  
+  return bit.rshift(bit.band(fieldvalue, tonumber(mask)), self:bitStart())
 end
 
 return BitField

@@ -13,12 +13,12 @@ ffi.cdef
 local C = ffi.C
 local Field = oop.class(FieldElement)
 
-function Field:__ctor(cthis, databuffer)
-  FieldElement.__ctor(self, cthis, databuffer)
+function Field:__ctor(cthis, databuffer, parentelement)
+  FieldElement.__ctor(self, cthis, databuffer, parentelement)
 end
 
 function Field:setBitField(name, bitstart, bitend)
-  local bf = BitField(C.Field_setBitField(self._cthis, name, bitstart, bitend or bitstart), self._databuffer)
+  local bf = BitField(C.Field_setBitField(self._cthis, name, bitstart, bitend or bitstart), self._databuffer, self)
   
   self[name] = bf
   return bf

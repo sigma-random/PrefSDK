@@ -9,11 +9,15 @@ function GZipFormat:__ctor(databuffer)
 end
 
 function GZipFormat:getCompressionMethod(comprmethodfield)
-  if comprmethodfield:value() == 0x08 then
+  local value = comprmethodfield:value()
+  
+  if value == 0x08 then
     return "Deflate"
+  elseif value ~= 0x00 then
+    return "Unknown"
   end
   
-  return "Unknown"
+  return ""
 end
 
 function GZipFormat:getExtraFlags(extraflagsfield)
@@ -23,13 +27,17 @@ function GZipFormat:getExtraFlags(extraflagsfield)
     return "Compressor used maximum compression, slowest algorithm"
   elseif value == 0x04 then
     return "Compressor used fastest algorithm"
+  elseif value ~= 0 then
+    return "Unknown"
   end
   
-  return "Unknown"
+  return ""
 end
 
 function GZipFormat:getModificationTime(modtimefield)  
-  if modtimefield:value() ~= 0x00 then
+  local value = modtimefield:value()
+  
+  if value ~= 0x00 then
     return os.date("%Y-%m-%d %H:%M", 10800 + value)
   end
   
@@ -94,7 +102,7 @@ function GZipFormat:defineData(formattree)
   local gzipdata = formattree:addStructure("GZipData")
   local size = self.databuffer:length() - gzipdata:offset() - 8;
   
-  gzipdata:addField(DataType.Blob, size, "Compression")
+  gzipdata:addField(DataType.Blob, "Data", size)
   return gzipdata:size()
 end
 
