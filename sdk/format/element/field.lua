@@ -2,6 +2,7 @@ local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
 local DataType = require("sdk.types.datatype")
 local FieldElement = require("sdk.format.element.fieldelement")
+local BitField = require("sdk.format.element.bitfield")
 
 ffi.cdef
 [[
