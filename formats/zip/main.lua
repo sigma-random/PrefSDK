@@ -20,7 +20,7 @@ function ZipFormat:parseFormat(formattree)
   local pos = 0
   local databuffer = self.databuffer
   
-  while pos < databuffer:size() do
+  while pos < databuffer:length() do
     local tag = databuffer:readUInt32(pos, ByteOrder.LittleEndian)
     
     if tag == 0x04034B50 then

@@ -83,7 +83,7 @@ function TimFormat:validateFormat()
       clutsize = clutsize + (clutelements * 2)
     end
     
-    if clutsize > databuffer:size() then
+    if clutsize > databuffer:length() then
       error("CLUT's size cannot be greater than file size")
     end
     

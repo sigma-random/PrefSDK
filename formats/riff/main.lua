@@ -30,7 +30,7 @@ function RiffFormat:parseFormat(formattree)
   
   local pos = riffheader:endOffset()
   
-  while pos < self.databuffer:size() do
+  while pos < self.databuffer:length() do
     local chunksize = self:verifyChunkType(self.databuffer:readString(pos, 4), formattree)
     
     if chunksize == 0 then

@@ -89,7 +89,7 @@ function PdfFormat:findAllKeywords(buffer)
   
   self.filepos = 0 -- Reset File Cursor
   
-  while self.filepos < buffer:size() do
+  while self.filepos < buffer:length() do
     local ch = buffer:readChar(self.filepos)
     local t = nil -- Single PdfObject (if any)
     

@@ -92,7 +92,7 @@ end
 
 function GZipFormat:defineData(formattree)
   local gzipdata = formattree:addStructure("GZipData")
-  local size = self.databuffer:size() - gzipdata:offset() - 8;
+  local size = self.databuffer:length() - gzipdata:offset() - 8;
   
   gzipdata:addField(DataType.Blob, size, "Compression")
   return gzipdata:size()
