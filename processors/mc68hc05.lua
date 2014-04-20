@@ -59,10 +59,10 @@ local function outoperand(outputbuffer, operand)
   end
 end
 
-local MC68HC05Processor = ProcessorDefinition:new("MC68HC05 MCU (Freescale)", MC68HC05Mnemonics, MC68HC05Features, outoperand)
+local MC68HC05Processor = ProcessorDefinition.register("MC68HC05 MCU (Freescale)", MC68HC05Mnemonics, MC68HC05Features, outoperand)
 
-function MC68HC05Processor:new()
-  return setmetatable({ }, { __index = self} )
+function MC68HC05Processor:__ctor()
+  ProcessorDefinition.__ctor(self)
 end
 
 function MC68HC05Processor:touchArg(addressqueue, referencetable, address, operand, iscall)

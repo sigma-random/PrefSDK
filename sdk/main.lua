@@ -46,8 +46,14 @@ function Sdk.parseFormat(formatid, baseoffset, databuffer, cformattree)
   if f.validated then
     f.formattree = FormatTree(cformattree, databuffer)
     Sdk.loadedformats[databuffer] = f
+    
     f:parseFormat(f.formattree)
+    f.loader = f:generateLoader()
   end
+end
+
+function Sdk.disassembleFormat(databuffer)
+  local f = Sdk.loadedformats[databuffer]
 end
 
 function Sdk.parseDynamic(elementid, databuffer)
