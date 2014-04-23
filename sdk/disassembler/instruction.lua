@@ -18,7 +18,7 @@ function Instruction:__ctor(databuffer, address, virtualaddress)
 end
 
 function Instruction:next(datatype)
-  local val = self.databuffer:readType(self.address, datatype)
+  local val = self.databuffer:readType(self.address + self.size, datatype)
   self.size = self.size + DataType.sizeOf(datatype)
   return tonumber(val)
 end
