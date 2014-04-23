@@ -41,12 +41,13 @@ Sdk = { formatlist = { },
 
 function Sdk.parseFormat(formatid, baseoffset, databuffer, cformattree)
   local formattype = Sdk.formatlist[formatid] -- Get Format's Type from list.
-  local f = formattype(databuffer, baseoffset) -- Create a format's instance
+  local buffer = DataBuffer(databuffer)
+  local f = formattype(buffer, baseoffset) -- Create a format's instance
   
   f:validateFormat()
   
   if f.validated then
-    f.formattree = FormatTree(cformattree, DataBuffer(databuffer))
+    f.formattree = FormatTree(cformattree, buffer)
     Sdk.loadedformats[databuffer] = f
     
     f:parseFormat(f.formattree)

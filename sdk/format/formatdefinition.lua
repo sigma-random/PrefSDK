@@ -29,7 +29,7 @@ local C = ffi.C
 local FormatDefinition = oop.class()
 
 function FormatDefinition:__ctor(databuffer, baseoffset)
-  self.databuffer = DataBuffer(databuffer)
+  self.databuffer = databuffer
   self.baseoffset = baseoffset and baseoffset or 0
   self.validated = false
   self.elementsinfo = { }
@@ -66,28 +66,28 @@ function FormatDefinition:checkData(offset, datatype, value)
   
   for i,v in ipairs(values) do  
     if datatype == DataType.AsciiString then
-      self.validated = C.Format_checkAsciiString(self.databuffer._cthis, offset, v)
+      self.validated = C.Format_checkAsciiString(self.databuffer.cthis, offset, v)
     elseif DataType.isSigned(datatype) then
       if DataType.bitWidth(datatype) == 8 then
-        self.validated = C.Format_checkInt8(self.databuffer._cthis, self.baseoffset + offset, ffi.new("int8_t", v))
+        self.validated = C.Format_checkInt8(self.databuffer.cthis, self.baseoffset + offset, ffi.new("int8_t", v))
       elseif DataType.bitWidth(datatype) == 16 then
-        self.validated = C.Format_checkInt16(self.databuffer._cthis, self.baseoffset + offset, ffi.new("int16_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkInt16(self.databuffer.cthis, self.baseoffset + offset, ffi.new("int16_t", v), DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 32 then
-        self.validated = C.Format_checkInt32(self.databuffer._cthis, self.baseoffset + offset, ffi.new("int32_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkInt32(self.databuffer.cthis, self.baseoffset + offset, ffi.new("int32_t", v), DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 64 then
-        self.validated = C.Format_checkInt64(self.databuffer._cthis, self.baseoffset + offset, ffi.new("int64_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkInt64(self.databuffer.cthis, self.baseoffset + offset, ffi.new("int64_t", v), DataType.byteOrder(datatype))
       else
         error("FormatDefinition:checkData(): Unsupported DataType")
       end
     else
       if DataType.bitWidth(datatype) == 8 then
-        self.validated = C.Format_checkUInt8(self.databuffer._cthis, self.baseoffset + offset, ffi.new("uint8_t", v))
+        self.validated = C.Format_checkUInt8(self.databuffer.cthis, self.baseoffset + offset, ffi.new("uint8_t", v))
       elseif DataType.bitWidth(datatype) == 16 then
-        self.validated = C.Format_checkUInt16(self.databuffer._cthis, self.baseoffset + offset, ffi.new("uint16_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkUInt16(self.databuffer.cthis, self.baseoffset + offset, ffi.new("uint16_t", v), DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 32 then
-        self.validated = C.Format_checkUInt32(self.databuffer._cthis, self.baseoffset + offset, ffi.new("uint32_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkUInt32(self.databuffer.cthis, self.baseoffset + offset, ffi.new("uint32_t", v), DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 64 then
-        self.validated = C.Format_checkUInt64(self.databuffer._cthis, self.baseoffset + offset, ffi.new("uint64_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkUInt64(self.databuffer.cthis, self.baseoffset + offset, ffi.new("uint64_t", v), DataType.byteOrder(datatype))
       else
         error("FormatDefinition:checkData(): Unsupported DataType")
       end

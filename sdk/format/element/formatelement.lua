@@ -52,7 +52,7 @@ end
 
 function FormatElement:dynamicParser(condition, fn)
   if condition == true then
-    local f = Sdk.loadedformats[self._databuffer]
+    local f = Sdk.loadedformats[self._databuffer.cthis]
     f.dynamicelements[self.id] = { element = self, parseprocedure = fn }
   end
   
@@ -61,7 +61,7 @@ function FormatElement:dynamicParser(condition, fn)
 end
 
 function FormatElement:dynamicInfo(fn)
-  local f = Sdk.loadedformats[self._databuffer]
+  local f = Sdk.loadedformats[self._databuffer.cthis]
   f.elementsinfo[self.id] = { element = self, infoprocedure = fn }
   return self
 end
