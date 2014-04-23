@@ -35,7 +35,7 @@ function ProcessorLoader:inSegment(address)
   for i = 1, #self.segments do
     local segment = self.segments[i]
     
-    if (address >= segment.startaddress) or (address < segment.endaddress) then
+    if (address >= segment.startaddress) and (address < segment.endaddress) then
       return true
     end
   end
@@ -47,7 +47,7 @@ function ProcessorLoader:segmentName(address)
   for i = 1, #self.segments do
     local segment = self.segments[i]
     
-    if (address >= segment.startaddress) or (address < segment.endaddress) then
+    if (address >= segment.startaddress) and (address < segment.endaddress) then
       return segment.name
     end
   end
