@@ -18,7 +18,7 @@ function Reference:generatePrefix()
   elseif (self.type == ReferenceType.JumpFar) or (self.type == ReferenceType.JumpNear) then
     self.prefix = "loc_"
   else
-    self.prefix = "" -- Empty Prefix
+    self.prefix = "addr_" -- Generic Address
   end
 end
 

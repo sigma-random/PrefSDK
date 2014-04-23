@@ -1,12 +1,15 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
+local DataType = require("sdk.types.datatype")
 local ReferenceType = require("sdk.disassembler.crossreference.referencetype")
 
 ffi.cdef
 [[
-  void DisassemblerDrawer_drawAddress(void* __this, const char* segmentname, const char* address);
+  void DisassemblerDrawer_drawVirtualAddress(void* __this, const char* segmentname, const char* address);
   void DisassemblerDrawer_drawHexDump(void* __this, uint64_t offset, int dumplength, int maxwidth);
-  void DisassemblerDrawer_drawMnemonic(void* __this, int width, const char* mnemonic);
+  void DisassemblerDrawer_drawMnemonic(void* __this, int width, const char* mnemonic, int instructionfeatures);
+  void DisassemblerDrawer_drawImmediate(void* __this, const char* s);
+  void DisassemblerDrawer_drawAddress(void* __this, const char* s);
   void DisassemblerDrawer_drawString(void* __this, const char* s);
 ]]
 
@@ -20,8 +23,22 @@ function InstructionPrinter:__ctor(drawer, loader, index)
   self.index = index
 end
 
-function InstructionPrinter:outAddress(segmentname, address)
-  C.DisassemblerDrawer_drawAddress(self.drawer, segmentname, address)
+function InstructionPrinter:hexString(datatype, value, prefix, postfix)
+  if DataType.bitWidth(datatype) == 8 then
+    return string.format("%s%02X%s", prefix or "", value, postfix or "")
+  elseif DataType.bitWidth(datatype) == 16 then
+    return string.format("%s%04X%s", prefix or "", value, postfix or "")
+  elseif DataType.bitWidth(datatype) == 32 then
+    return string.format("%s%08X%s", prefix or "", value, postfix or "")
+  elseif DataType.bitWidth(datatype) == 64 then
+    return string.format("%s%16X%s", prefix or "", value, postfix or "")
+  end
+  
+  return string.format("%X", prefix or "", value, postfix or "")
+end
+
+function InstructionPrinter:outVirtualAddress(segmentname, address)
+  C.DisassemblerDrawer_drawVirtualAddress(self.drawer, segmentname, address)
 end
 
 function InstructionPrinter:outHexDump(address, size)
@@ -30,25 +47,35 @@ end
 
 function InstructionPrinter:outMnemonic(width, instruction)
   local mnemonic = self.processor.mnemonics[instruction.type]
+  local features = self.processor.features[instruction.type]
   
   if mnemonic then
-    C.DisassemblerDrawer_drawMnemonic(self.drawer, width, mnemonic)
+    C.DisassemblerDrawer_drawMnemonic(self.drawer, width, mnemonic, features)
   else
-    C.DisassemblerDrawer_drawMnemonic(self.drawer, width, string.format("db %X", instruction.type))
+    C.DisassemblerDrawer_drawMnemonic(self.drawer, width, string.format("db %X", instruction.type), features or 0)
   end
 end
 
-function InstructionPrinter:outValue(value, datatype, isaddress)
-  if isaddress and (isaddress == true) then
-    local referencetable = self.loader.referencetable
+function InstructionPrinter:outImmediate(value, datatype, prefix, postfix)
+  C.DisassemblerDrawer_drawImmediate(self.drawer, self:hexString(datatype, value, prefix, postfix))
+end
+
+function InstructionPrinter:outAddress(value, datatype, prefix, postfix)
+  local referencetable = self.loader.referencetable
+  local segmentname = self.loader:segmentName(value)
+  
+  if referencetable:isReference(value) then
+    local reference = referencetable[value]
     
-    if referencetable:isReference(value) then
-      local reference = referencetable[value]
-      
-      if ReferenceType.isCodeReference(reference.type) then
-        self:out(string.format("%s%08X", reference.prefix, tonumber(value)))
-      end
+    if #segmentname > 0 then
+      C.DisassemblerDrawer_drawAddress(self.drawer, string.format("%s.%s%s", segmentname, reference.prefix, self:hexString(datatype, tonumber(value), prefix, postfix)))
+    else
+      C.DisassemblerDrawer_drawAddress(self.drawer, string.format("%s%s", reference.prefix, self:hexString(datatype, tonumber(value), prefix, postfix)))
     end
+  elseif #segmentname > 0 then
+    C.DisassemblerDrawer_drawAddress(self.drawer, string.format("%s.%s", segmentname, self:hexString(datatype, tonumber(value), prefix, postfix)))
+  else
+    C.DisassemblerDrawer_drawAddress(self.drawer, string.format("%s", self:hexString(datatype, tonumber(value), prefix, postfix)))
   end
 end
 

@@ -56,12 +56,10 @@ local MC68HC05OpCodes = { Dir_BRSET0 = 0x00, Dir_BRCLR0 = 0x01, Dir_BRSET1 = 0x0
                           Ix_SUB     = 0xF0, Ix_CMP     = 0xF1, Ix_SBC     = 0xF2, Ix_CPX     = 0xF3, Ix_AND     = 0xF4, Ix_BIT     = 0xF5, Ix_LDA     = 0xF6, Ix_STA     = 0xF7, Ix_EOR     = 0xF8, Ix_ADC     = 0xF9, Ix_ORA     = 0xFA, Ix_ADD    = 0xFB, Ix_JMP      = 0xFC, Ix_JSR     = 0xFD, Ix_LDX     = 0xFE, Ix_STX     = 0xFF }
 
 local function outoperand(instructionprinter, operand)
-  if operand.type == OperandType.Memory then
-    instructionprinter:out(string.format("#%02X", operand.address))
+  if (operand.type == OperandType.Memory) or (operand.type == OperandType.JumpNear) then
+    instructionprinter:outAddress(operand.address, operand.datatype, "#")
   elseif operand.type == OperandType.Immediate then
-    instructionprinter:out(string.format("#%02X", operand.value))
-  elseif operand.type == OperandType.JumpNear then
-    instructionprinter:outValue(operand.address, operand.type, true)
+    instructionprinter:outImmediate(operand.value, operand.datatype, "#")
   end
 end
 
@@ -116,7 +114,7 @@ function MC68HC05Processor:analyze(instruction)
     instruction.operand1.datatype = DataType.UInt8
     instruction.operand1.address = instruction.address + 2 + Numerics.compl2(instruction:next(DataType.UInt8), DataType.sizeOf(DataType.UInt8))
   elseif (highnibble == 0x4) or (highnibble == 0x5) or (highnibble == 0x7) or (highnibble == 0x8) or (highnibble == 0x9) or (highnibble == 0xF) then
-    instruction.operand1.type = OperandType.Void
+    instruction.operand1.datatype = OperandType.Void
   elseif highnibble == 0x6 then
     instruction.operand1.type = OperandType.Memory
     instruction.operand1.datatype = DataType.UInt8
@@ -162,7 +160,7 @@ function MC68HC05Processor:emulate(addressqueue, referencetable, instruction)
 end
 
 function MC68HC05Processor:output(loader, instructionprinter, instruction)
-  instructionprinter:outAddress(loader:segmentName(instruction.address), string.format("%08X", tonumber(instruction.address)))
+  instructionprinter:outVirtualAddress(loader:segmentName(instruction.address), string.format("%08X", tonumber(instruction.address)))
   instructionprinter:outHexDump(instruction.address, instruction.size)
   instructionprinter:outMnemonic(0, instruction)
   
