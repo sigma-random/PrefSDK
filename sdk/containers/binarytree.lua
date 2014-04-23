@@ -1,3 +1,5 @@
+local oop = require("sdk.lua.oop")
+
 ----------------------------------------------------------------
 ----------------- Binary Tree Helper Functions -----------------
 ----------------------------------------------------------------
@@ -28,25 +30,16 @@ end
 ----------------------------------------------------------------
 ----------------------------------------------------------------
 
-local Node = { tree = nil,
-               parent = nil,
-               left = nil,
-               right = nil,
-               key = 0,
-               value = 0 }
+local Node = oop.class()
 
-function Node.new(key, value, tree, parent)
-  local o = setmetatable({ }, {__index = Node})
-  
-  o.key = key
-  o.value = value
-  o.tree = tree
+function Node:__ctor(key, value, tree, parent)  
+  self.key = key
+  self.value = value
+  self.tree = tree
   
   if parent then
-    o.parent = parent
+    self.parent = parent
   end
-  
-  return o
 end
 
 function Node:predecessor()
@@ -89,17 +82,14 @@ function Node:isLeaf()
   return false
 end
 
-local BinaryTree = { root = nil,
-                     duplicatekeys = false}
+local BinaryTree = oop.class()
 
-function BinaryTree.new(duplicatekeys)
-  local o = setmetatable({ }, {__index = BinaryTree})
-  
+function BinaryTree:__ctor(duplicatekeys)  
   if duplicatekeys then
-    o.duplicatekeys = duplicatekeys
+    self.duplicatekeys = duplicatekeys
+  else
+    self.duplicatekeys = false
   end
-  
-  return o
 end
 
 ----------------------------------------------------------------
@@ -158,13 +148,13 @@ function BinaryTree:internalInsert(node, key, value)
     return
   elseif key < node.key then -- Insert Left
     if node.left == nil then
-      node.left = Node.new(key, value, self, node)
+      node.left = Node(key, value, self, node)
     else
       self:internalInsert(node.left, key, value)
     end
   else -- Insert Right
     if node.right == nil then
-      node.right = Node.new(key, value, self, node)
+      node.right = Node(key, value, self, node)
     else
       self:internalInsert(node.right, key, value)
     end
@@ -196,7 +186,7 @@ end
 
 function BinaryTree:insert(key, value)
   if self.root == nil then
-    self.root = Node.new(key, value, self)
+    self.root = Node(key, value, self)
   else
     self:internalInsert(self.root, key, value)
   end

@@ -29,35 +29,7 @@ function Field:bitFieldCount()
 end
 
 function Field:value()
-  local datatype = self:dataType()
-  
-  if DataType.isInteger(datatype) then
-    if DataType.isSigned(datatype) then
-      if DataType.bitWidth(datatype) == 8 then
-        return C.QHexEditData_readInt8(self._databuffer, self:offset())
-      elseif DataType.bitWidth(datatype) == 16 then
-        return C.QHexEditData_readInt16(self._databuffer, self:offset(), DataType.byteOrder(datatype))
-      elseif DataType.bitWidth(datatype) == 32 then
-        return C.QHexEditData_readInt32(self._databuffer, self:offset(), DataType.byteOrder(datatype))
-      elseif DataType.bitWidth(datatype) == 64 then
-        return C.QHexEditData_readInt64(self._databuffer, self:offset(), DataType.byteOrder(datatype))
-      end
-    else
-      if DataType.bitWidth(datatype) == 8 then
-        return C.QHexEditData_readUInt8(self._databuffer, self:offset())
-      elseif DataType.bitWidth(datatype) == 16 then
-        return C.QHexEditData_readUInt16(self._databuffer, self:offset(), DataType.byteOrder(datatype))
-      elseif DataType.bitWidth(datatype) == 32 then
-        return C.QHexEditData_readUInt32(self._databuffer, self:offset(), DataType.byteOrder(datatype))
-      elseif DataType.bitWidth(datatype) == 64 then
-        return C.QHexEditData_readUInt64(self._databuffer, self:offset(), DataType.byteOrder(datatype))
-      end
-    end
-  elseif datatype == DataType.Character then
-    return tostring(ffi.cast("char", C.QHexEditData_readUInt8(self._databuffer, self:offset())))
-  end
-  
-  return FieldElement:value()
+  return self._databuffer:readType(self:offset(), self:dataType())
 end
 
 return Field

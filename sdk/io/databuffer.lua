@@ -1,6 +1,7 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
 local ByteOrder = require("sdk.types.byteorder")
+local DataType = require("sdk.types.datatype")
 
 local C = ffi.C
 local DataBuffer = oop.class()
@@ -83,6 +84,36 @@ end
 
 function DataBuffer:readInt64(pos, endian)
   return C.QHexEditData_readInt64(self._cthis, pos, endian or ByteOrder.PlatformEndian)
+end
+
+function DataBuffer:readType(pos, datatype)
+  if DataType.isInteger(datatype) then
+    if DataType.isSigned(datatype) then
+      if DataType.bitWidth(datatype) == 8 then
+        return self:readInt8(pos)
+      elseif DataType.bitWidth(datatype) == 16 then
+        return self:readInt16(pos, DataType.byteOrder(datatype))
+      elseif DataType.bitWidth(datatype) == 32 then
+        return self:readInt32(pos, DataType.byteOrder(datatype))
+      elseif DataType.bitWidth(datatype) == 64 then
+        return self:readInt64(pos, DataType.byteOrder(datatype))
+      end
+    else
+      if DataType.bitWidth(datatype) == 8 then
+        return self:readUInt8(pos)
+      elseif DataType.bitWidth(datatype) == 16 then
+        return self:readUInt16(pos, DataType.byteOrder(datatype))
+      elseif DataType.bitWidth(datatype) == 32 then
+        return self:readUInt32(pos, DataType.byteOrder(datatype))
+      elseif DataType.bitWidth(datatype) == 64 then
+        return self:readUInt64(pos, DataType.byteOrder(datatype))
+      end
+    end
+  elseif datatype == DataType.Character then
+    return tostring(ffi.cast("char", self:readUInt8(self._databuffer, pos)))
+  end
+  
+  error("DataBuffer:readType(): Unsupported DataType")
 end
 
 return DataBuffer

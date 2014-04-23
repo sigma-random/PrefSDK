@@ -1,13 +1,4 @@
-local ffi = require("ffi")
-
-ffi.cdef
-[[
-  const uint64_t SegmentType_Data;
-  const uint64_t SegmentType_Code;
-]]
-
-local C = ffi.C
-local SegmentType = { Data = C.SegmentType_Data,
-                      Code = C.SegmentType_Code }
+local SegmentType = { Data    = 1,
+                      Code    = 2 }
 
 return SegmentType

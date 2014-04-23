@@ -26,4 +26,8 @@ function Numerics.toString(n, b)
   return sign .. table.concat(t, "")
 end
 
+function Numerics.compl2(n)
+  return bit.bnot(n) + 1
+end
+
 return Numerics

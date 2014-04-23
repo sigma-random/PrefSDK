@@ -1,4 +1,10 @@
+local oop = require("sdk.lua.oop")
+local Numerics = require("sdk.math.numerics")
+local DataType = require("sdk.types.datatype")
 local ProcessorDefinition = require("sdk.disassembler.processor.processordefinition")
+local ReferenceType = require("sdk.disassembler.crossreference.referencetype")
+local InstructionFeatures = require("sdk.disassembler.instructionfeatures")
+local OperandType = require("sdk.disassembler.operandtype")
 
 local MC68HC05Mnemonics = { [0x00] = "BRSET0", [0x01] = "BRCLR0", [0x02] = "BRSET1", [0x03] = "BRCLR1", [0x04] = "BRSET2", [0x05] = "BRCLR2", [0x06] = "BRSET3", [0x07] = "BRCLR3", [0x08] = "BRSET4", [0x09] = "BRCLR4", [0x0A] = "BRSET5", [0x0B] = "BRCLR5", [0x0C] = "BRSET6", [0x0D] = "BRCLR6", [0x0E] = "BRSET7", [0x0F] = "BRCLR7",
                             [0x10] = "BSET0",  [0x11] = "BCLR0",  [0x12] = "BSET1",  [0x13] = "BCLR1",  [0x14] = "BSET2",  [0x15] = "BCLR2",  [0x16] = "BSET3",  [0x17] = "BCLR3",  [0x18] = "BSET4",  [0x19] = "BCLR4",  [0x1A] = "BSET5",  [0x1B] = "BCLR5",  [0x1C] = "BSET6",  [0x1D] = "BCLR6",  [0x1E] = "BSET7",  [0x1F] = "BCLR7",
@@ -30,7 +36,7 @@ local MC68HC05Features = { [0x00] = bit.bor(InstructionFeatures.Jump,Instruction
                            [0xA0] = InstructionFeatures.Use1, [0xA1] = InstructionFeatures.Use1, [0xA2] = InstructionFeatures.Use1, [0xA3] = InstructionFeatures.Use1, [0xA4] = InstructionFeatures.Use1, [0xA5] = InstructionFeatures.Use1, [0xA6] = InstructionFeatures.Use1, [0xA8] = InstructionFeatures.Use1, [0xA9] = InstructionFeatures.Use1, [0xAA] = InstructionFeatures.Use1, [0xAB] = InstructionFeatures.Use1, [0xAD] = bit.bor(InstructionFeatures.Call,InstructionFeatures.Use1), [0xAE] = InstructionFeatures.Use1,
                            [0xB0] = InstructionFeatures.Use1, [0xB1] = InstructionFeatures.Use1, [0xB2] = InstructionFeatures.Use1, [0xB3] = InstructionFeatures.Use1, [0xB4] = InstructionFeatures.Use1, [0xB5] = InstructionFeatures.Use1, [0xB6] = InstructionFeatures.Use1, [0xB7] = InstructionFeatures.Use1, [0xB8] = InstructionFeatures.Use1, [0xB9] = InstructionFeatures.Use1, [0xBA] = InstructionFeatures.Use1, [0xBB] = InstructionFeatures.Use1, [0xBC] = bit.bor(InstructionFeatures.Jump, InstructionFeatures.Use1), [0xBD] = bit.bor(InstructionFeatures.Call, InstructionFeatures.Use1), [0xBE] = InstructionFeatures.Use1, [0xBF] = InstructionFeatures.Use1, 
                            [0xC0] = InstructionFeatures.Use1, [0xC1] = InstructionFeatures.Use1, [0xC2] = InstructionFeatures.Use1, [0xC3] = InstructionFeatures.Use1, [0xC4] = InstructionFeatures.Use1, [0xC5] = InstructionFeatures.Use1, [0xC6] = InstructionFeatures.Use1, [0xC7] = InstructionFeatures.Use1, [0xC8] = InstructionFeatures.Use1, [0xC9] = InstructionFeatures.Use1, [0xCA] = InstructionFeatures.Use1, [0xCB] = InstructionFeatures.Use1, [0xCC] = bit.bor(InstructionFeatures.Jump, InstructionFeatures.Use1), [0xCD] = bit.bor(InstructionFeatures.Call, InstructionFeatures.Use1), [0xCE] = InstructionFeatures.Use1, [0xCF] = InstructionFeatures.Use1,
-                           [0xD0] = InstructionFeatures.Use1, [0xD1] = InstructionFeatures.Use1, [0xD2] = InstructionFeatures.Use1, [0xD3] = InstructionFeatures.Use1,[0xD4] = InstructionFeatures.Use1, [0xD5] = InstructionFeatures.Use1, [0xD6] = InstructionFeatures.Use1, [0xD7] = InstructionFeatures.Use1, [0xD8] = InstructionFeatures.Use1, [0xD9] = InstructionFeatures.Use1, [0xDA] = InstructionFeatures.Use1, [0xDB] = InstructionFeatures.Use1, [0xDC] = bit.bor(InstructionFeatures.Jump, InstructionFeatures.Use1), [0xDD] = bit.bor(InstructionFeatures.Call, InstructionFeatures.Use1), [0xDE] = InstructionFeatures.Use1, [0xDF] = InstructionFeatures.Use1,
+                           [0xD0] = InstructionFeatures.Use1, [0xD1] = InstructionFeatures.Use1, [0xD2] = InstructionFeatures.Use1, [0xD3] = InstructionFeatures.Use1, [0xD4] = InstructionFeatures.Use1, [0xD5] = InstructionFeatures.Use1, [0xD6] = InstructionFeatures.Use1, [0xD7] = InstructionFeatures.Use1, [0xD8] = InstructionFeatures.Use1, [0xD9] = InstructionFeatures.Use1, [0xDA] = InstructionFeatures.Use1, [0xDB] = InstructionFeatures.Use1, [0xDC] = bit.bor(InstructionFeatures.Jump, InstructionFeatures.Use1), [0xDD] = bit.bor(InstructionFeatures.Call, InstructionFeatures.Use1), [0xDE] = InstructionFeatures.Use1, [0xDF] = InstructionFeatures.Use1,
                            [0xE0] = InstructionFeatures.Use1, [0xE1] = InstructionFeatures.Use1, [0xE2] = InstructionFeatures.Use1, [0xE3] = InstructionFeatures.Use1, [0xE4] = InstructionFeatures.Use1, [0xE5] = InstructionFeatures.Use1,[0xE6] = InstructionFeatures.Use1, [0xE7] = InstructionFeatures.Use1, [0xE8] = InstructionFeatures.Use1, [0xE9] = InstructionFeatures.Use1, [0xEA] = InstructionFeatures.Use1, [0xEB] = InstructionFeatures.Use1, [0xEC] = bit.bor(InstructionFeatures.Jump, InstructionFeatures.Use1), [0xED] = bit.bor(InstructionFeatures.Call, InstructionFeatures.Use1), [0xEE] = InstructionFeatures.Use1, [0xEF] = InstructionFeatures.Use1,
                            [0xF0] = 0, [0xF1] = 0, [0xF2] = 0, [0xF3] = 0, [0xF4] = 0, [0xF5] = 0, [0xF6] = 0, [0xF7] = 0, [0xF8] = 0, [0xF9] = 0, [0xFA] = 0, [0xFB] = 0, [0xFC] = 0, [0xFD] = InstructionFeatures.Call, [0xFE] = 0, [0xFF] = 0 }
 
@@ -49,33 +55,33 @@ local MC68HC05OpCodes = { Dir_BRSET0 = 0x00, Dir_BRCLR0 = 0x01, Dir_BRSET1 = 0x0
                           Ix1_SUB    = 0xE0, Ix1_CMP    = 0xE1, Ix1_SBC    = 0xE2, Ix1_CPX    = 0xE3, Ix1_AND    = 0xE4, Ix1_BIT    = 0xE5, Ix1_LDA    = 0xE6, Ix1_STA    = 0xE7, Ix1_EOR    = 0xE8, Ix1_ADC    = 0xE9, Ix1_ORA    = 0xEA, Ix1_ADD   = 0xEB, Ix1_JMP     = 0xEC, Ix1_JSR    = 0xED, Ix1_LDX    = 0xEE, Ix1_STX    = 0xEF,
                           Ix_SUB     = 0xF0, Ix_CMP     = 0xF1, Ix_SBC     = 0xF2, Ix_CPX     = 0xF3, Ix_AND     = 0xF4, Ix_BIT     = 0xF5, Ix_LDA     = 0xF6, Ix_STA     = 0xF7, Ix_EOR     = 0xF8, Ix_ADC     = 0xF9, Ix_ORA     = 0xFA, Ix_ADD    = 0xFB, Ix_JMP      = 0xFC, Ix_JSR     = 0xFD, Ix_LDX     = 0xFE, Ix_STX     = 0xFF }
 
-local function outoperand(outputbuffer, operand)
-  if operand.type == OperandTypes.Memory then
-    outputbuffer:out(string.format("%X", operand.address))
-  elseif operand.type == OperandTypes.Immediate then
-    outputbuffer:out(string.format("#%X", operand.value))
-  elseif operand.type == OperandTypes.JumpNear then
-    outputbuffer:outValue(operand.address, operand.type, OutputValues.Address)
+local function outoperand(instructionprinter, operand)
+  if operand.type == OperandType.Memory then
+    instructionprinter:out(string.format("#%02X", operand.address))
+  elseif operand.type == OperandType.Immediate then
+    instructionprinter:out(string.format("#%02X", operand.value))
+  elseif operand.type == OperandType.JumpNear then
+    instructionprinter:outValue(operand.address, operand.type, true)
   end
 end
 
-local MC68HC05Processor = ProcessorDefinition.register("MC68HC05 MCU (Freescale)", MC68HC05Mnemonics, MC68HC05Features, outoperand)
+local MC68HC05Processor = oop.class(ProcessorDefinition)
 
 function MC68HC05Processor:__ctor()
-  ProcessorDefinition.__ctor(self)
+  ProcessorDefinition.__ctor(self, "MC68HC05 MCU (Freescale)", MC68HC05Mnemonics, MC68HC05Features, outoperand)
 end
 
 function MC68HC05Processor:touchArg(addressqueue, referencetable, address, operand, iscall)
-  if operand.type == OperandTypes.JumpNear then
-    local reftype = CodeReference.JumpNear
+  if operand.type == OperandType.JumpNear then
+    local reftype = ReferenceType.JumpNear
     
     if iscall then
-      reftype = CodeReference.CallNear
+      reftype = ReferenceType.CallNear
     end
         
-    referencetable:codeRef(operand.address, address, reftype)
-    addressqueue:pushBack(operand.address)
-  -- elseif operand.type == OperandTypes.Memory then
+    referencetable:makeReference(operand.address, address, reftype)
+    -- FIXME: Genera Loop Infinito -> addressqueue:pushFront(operand.address)
+  -- elseif operand.type == OperandType.Memory then
   end
 end
 
@@ -90,80 +96,82 @@ function MC68HC05Processor:analyze(instruction)
   local lownibble = bit.band(instruction.type, 0x0F)
   
   if highnibble == 0x0 then
-    instruction.operand1.type = OperandTypes.Memory
+    instruction.operand1.type = OperandType.Memory
     instruction.operand1.datatype = DataType.UInt8
     instruction.operand1.address = instruction:next(DataType.UInt8)
-    instruction.operand2.type = OperandTypes.JumpNear
+    instruction.operand2.type = OperandType.JumpNear
     instruction.operand2.datatype = DataType.UInt8
-    instruction.operand2.address = instruction:address() + 3 + bit.compl2(instruction:next(DataType.UInt8), DataType:sizeOf(DataType.UInt8))
+    instruction.operand2.address = instruction.address + 3 + Numerics.compl2(instruction:next(DataType.UInt8), DataType.sizeOf(DataType.UInt8))
   elseif (highnibble == 0x1) or (highnibble == 0x3) or (highnibble == 0xB) or (highnibble == 0xE) then
     if (highnibble == 0xB) and (lownibble == 0xC) then
-      instruction.operand1.type = OperandTypes.JumpNear
+      instruction.operand1.type = OperandType.JumpNear
     else
-      instruction.operand1.type = OperandTypes.Memory
+      instruction.operand1.type = OperandType.Memory
     end
     
     instruction.operand1.datatype = DataType.UInt8
     instruction.operand1.address = instruction:next(DataType.UInt8)
   elseif highnibble == 0x2 then
-    instruction.operand1.type = OperandTypes.JumpNear
+    instruction.operand1.type = OperandType.JumpNear
     instruction.operand1.datatype = DataType.UInt8
-    instruction.operand1.address = instruction:address() + 2 + bit.compl2(instruction:next(DataType.UInt8), DataType:sizeOf(DataType.UInt8))
+    instruction.operand1.address = instruction.address + 2 + Numerics.compl2(instruction:next(DataType.UInt8), DataType.sizeOf(DataType.UInt8))
   elseif (highnibble == 0x4) or (highnibble == 0x5) or (highnibble == 0x7) or (highnibble == 0x8) or (highnibble == 0x9) or (highnibble == 0xF) then
-    instruction.operand1.type = OperandTypes.Void
+    instruction.operand1.type = OperandType.Void
   elseif highnibble == 0x6 then
-    instruction.operand1.type = OperandTypes.Memory
+    instruction.operand1.type = OperandType.Memory
     instruction.operand1.datatype = DataType.UInt8
     instruction.operand1.address = instruction:next(DataType.UInt8)
   elseif (highnibble == 0xA) then
     instruction.operand1.datatype = DataType.UInt8
     
     if lownibble == 0xD then
-      instruction.operand1.type = OperandTypes.JumpNear
-      instruction.operand1.address = instruction:address() + 2 + instruction:next(DataType.UInt8)
+      instruction.operand1.type = OperandType.JumpNear
+      instruction.operand1.address = instruction.address + 2 + instruction:next(DataType.UInt8)
     else
-      instruction.operand1.type = OperandTypes.Immediate
+      instruction.operand1.type = OperandType.Immediate
       instruction.operand1.value = instruction:next(DataType.UInt8)
     end
   elseif (highnibble == 0xC) or (highnibble == 0xD) then
      if (highnibble == 0xC) and ((lownibble == 0xC) or (lownibble == 0xD)) then
-       instruction.operand1.type = OperandTypes.JumpNear
+       instruction.operand1.type = OperandType.JumpNear
      else
-       instruction.operand1.type = OperandTypes.Memory
+       instruction.operand1.type = OperandType.Memory
      end
     
     instruction.operand1.datatype = DataType.UInt16
     instruction.operand1.address = instruction:next(DataType.UInt16)
   end
   
-  return instruction:size()
+  return instruction.size
 end
 
-function MC68HC05Processor:emulate(addressqueue, referencetable, instruction)
+function MC68HC05Processor:emulate(addressqueue, referencetable, instruction)  
   if self.features[instruction.type] ~= InstructionFeatures.Stop then
     local features = self.features[instruction.type]
         
     if bit.band(features, InstructionFeatures.Use1) then
-      self:touchArg(addressqueue, referencetable, instruction:address(), instruction.operand1, bit.band(features, InstructionFeatures.Call) ~= 0)
+      self:touchArg(addressqueue, referencetable, instruction.address, instruction.operand1, bit.band(features, InstructionFeatures.Call) ~= 0)
     end
     
     if bit.band(features, InstructionFeatures.Use2) then
-      self:touchArg(addressqueue, referencetable, instruction:address(), instruction.operand2, bit.band(features, InstructionFeatures.Call) ~= 0)
+      self:touchArg(addressqueue, referencetable, instruction.address, instruction.operand2, bit.band(features, InstructionFeatures.Call) ~= 0)
     end
     
-    addressqueue:pushBack(instruction:address() + instruction:size())
+    addressqueue:pushFront(instruction.address + instruction.size)
   end
 end
 
-function MC68HC05Processor:output(outputbuffer, instruction)
-  self:outmnemonic(0, outputbuffer, instruction)
+function MC68HC05Processor:output(loader, instructionprinter, instruction)
+  instructionprinter:outAddress(loader:segmentName(instruction.address), string.format("%08X", tonumber(instruction.address)))
+  instructionprinter:outHexDump(instruction.address, instruction.size)
+  instructionprinter:outMnemonic(0, instruction)
   
-  if instruction.operand1.type ~= OperandTypes.Void then
-    self:outnoperand(1, outputbuffer, instruction)
+  if instruction.operand1.type ~= OperandType.Void then
+    instructionprinter:outnOperand(1, instruction)
     
-    if instruction.operand2.type ~= OperandTypes.Void then
-      outputbuffer:out(", ")
-      self:outnoperand(2, outputbuffer, instruction)
+    if instruction.operand2.type ~= OperandType.Void then
+      instructionprinter:out(", ")
+      instructionprinter:outnOperand(2, instruction)
     end
   end
 end

@@ -1,6 +1,8 @@
 require("sdk.strict")
+require("sdk.lua.table") -- Add Table Enhancements
 local ffi = require("ffi")
 local DataBuffer = require("sdk.io.databuffer")
+local InstructionPrinter = require("sdk.disassembler.instructionprinter")
 
 ffi.cdef
 [[  
@@ -44,7 +46,7 @@ function Sdk.parseFormat(formatid, baseoffset, databuffer, cformattree)
   f:validateFormat()
   
   if f.validated then
-    f.formattree = FormatTree(cformattree, databuffer)
+    f.formattree = FormatTree(cformattree, DataBuffer(databuffer))
     Sdk.loadedformats[databuffer] = f
     
     f:parseFormat(f.formattree)
@@ -54,6 +56,30 @@ end
 
 function Sdk.disassembleFormat(databuffer)
   local f = Sdk.loadedformats[databuffer]
+  
+  if f.loader then
+    return f.loader:disassemble()
+  end
+  
+  return 0
+end
+
+function Sdk.printInstruction(drawer, databuffer, index)
+  local f = Sdk.loadedformats[databuffer]
+    
+  if f.loader then
+    local loader = f.loader
+    local processor = loader.processor
+    local instructionprinter = InstructionPrinter(drawer, loader, index)
+    local instruction = loader.instructions[index]
+    
+    if instruction then
+      processor:output(loader, instructionprinter, instruction)
+      return true
+    end
+  end
+  
+  return false
 end
 
 function Sdk.parseDynamic(elementid, databuffer)

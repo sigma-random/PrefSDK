@@ -1,8 +1,8 @@
 local DataType = require("sdk.types.datatype")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local SegmentType = require("sdk.disassembler.segmenttype")
-local ProcessorLoader = require("sdk.disassembler.processorloader")
--- local MC68HC05Processor = require("processors.mc68hc05")
+local ProcessorLoader = require("sdk.disassembler.processor.processorloader")
+local MC68HC05Processor = require("processors.mc68hc05")
 
 local MC68HC05Rom = FormatDefinition.register("MC68HC05 Microcontroller ROM", "ICs (Freescale)", "Dax", "1.0")
 
@@ -33,13 +33,13 @@ function MC68HC05Rom:parseFormat(formattree)
 end
 
 function MC68HC05Rom:generateLoader()
-  local loader = ProcessorLoader(self)
+  local loader = ProcessorLoader(self, MC68HC05Processor())
   local ramfield = self.formattree.MC68HC05.InternalRAM
   local romfield = self.formattree.MC68HC05.MaskROM
   
   loader:addSegment("Ram", SegmentType.Data, ramfield:offset(), ramfield:endOffset())
   loader:addSegment("Rom", SegmentType.Code, romfield:offset(), romfield:endOffset())
   
-  loader:addEntryPoint("main", romfield:offset())
+  loader:addEntry("main", romfield:offset())
   return loader
 end

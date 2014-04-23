@@ -1,8 +1,9 @@
-local Stack = { }
+local oop = require("sdk.lua.oop")
 
-function Stack:new()
-  local o = setmetatable({ }, { __index = Stack })
-  return o
+local Stack = oop.class()
+
+function Stack:__ctor()
+  
 end
 
 function Stack:push(...)

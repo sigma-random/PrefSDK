@@ -1,40 +1,12 @@
-local ProcessorDefinition = { mnemonics = nil,
-                              features = nil,
-                              outoperand = nil,
-                              name = "" } 
+local oop = require("sdk.lua.oop")
 
-ProcessorDefinition.__index = ProcessorDefinition
+local ProcessorDefinition = oop.class()
 
-function ProcessorDefinition:new(name, mnemonics, features, outoperand)
-  local o = setmetatable({ }, { __index = self })
-  
-  o.mnemonics = mnemonics
-  o.features = features
-  o.outoperand = outoperand
-  o.name = name
-  
-  return o
-end
-
-function ProcessorDefinition:outmnemonic(width, outputbuffer, instruction)
-  local line = " "
-  local mnemonic = self.mnemonics[instruction.type]
-  
-  for i = 1, width do
-    line = line .. " "
-  end
-  
-  if mnemonic then
-    line = line .. mnemonic
-  else
-    line = line .. string.format("db %X", instruction.type)
-  end
-  
-  outputbuffer:out(line .. " ");
-end
-
-function ProcessorDefinition:outnoperand(n, outputbuffer, instruction)
-  self.outoperand(outputbuffer, instruction[string.format("operand%d", n)])
+function ProcessorDefinition:__ctor(name, mnemonics, features, outoperand)
+  self.name = name
+  self.mnemonics = mnemonics
+  self.features = features
+  self.outoperand = outoperand
 end
 
 function ProcessorDefinition:analyze(instruction)
@@ -45,7 +17,7 @@ function ProcessorDefinition:emulate(addressqueue, referencetable, instruction)
   return 1 -- This Method Must Be Redefined!
 end
 
-function ProcessorDefinition:output(outputbuffer, instruction)
+function ProcessorDefinition:output(loader, instructionprinter, instruction)
   -- This Method Must Be Redefined!
 end
 
