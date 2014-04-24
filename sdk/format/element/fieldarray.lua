@@ -1,5 +1,6 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
+local DataType = require("sdk.types.datatype")
 local FieldElement = require("sdk.format.element.fieldelement")
 local BitField = require("sdk.format.element.bitfield")
 
@@ -21,7 +22,15 @@ function FieldArray:itemType()
 end
 
 function FieldArray:itemCount()
-return C.FieldArray_getItemCount(self._cthis)
+  return C.FieldArray_getItemCount(self._cthis)
+end
+
+function FieldArray:value()
+  if self:itemType() == DataType.Character then
+    return self._databuffer:readString(self:offset(), self:size())
+  end
+  
+  error("FieldArray.value(): Cannot Read a non string array")
 end
 
 return FieldArray
