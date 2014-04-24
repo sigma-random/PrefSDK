@@ -57,9 +57,9 @@ local MC68HC05OpCodes = { Dir_BRSET0 = 0x00, Dir_BRCLR0 = 0x01, Dir_BRSET1 = 0x0
 
 local function outoperand(instructionprinter, operand)
   if (operand.type == OperandType.Memory) or (operand.type == OperandType.JumpNear) then
-    instructionprinter:outAddress(operand.address, operand.datatype, "#")
+    instructionprinter:outAddress("#%s", operand)
   elseif operand.type == OperandType.Immediate then
-    instructionprinter:outImmediate(operand.value, operand.datatype, "#")
+    instructionprinter:outImmediate("#%s", operand)
   end
 end
 

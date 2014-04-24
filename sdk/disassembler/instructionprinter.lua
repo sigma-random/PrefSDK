@@ -1,6 +1,7 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
 local DataType = require("sdk.types.datatype")
+local SegmentType = require("sdk.disassembler.segmenttype")
 local ReferenceType = require("sdk.disassembler.crossreference.referencetype")
 
 ffi.cdef
@@ -23,18 +24,18 @@ function InstructionPrinter:__ctor(drawer, loader, index)
   self.index = index
 end
 
-function InstructionPrinter:hexString(datatype, value, prefix, postfix)
+function InstructionPrinter:hexString(value, datatype)
   if DataType.bitWidth(datatype) == 8 then
-    return string.format("%s%02X%s", prefix or "", value, postfix or "")
+    return string.format("%02X", value)
   elseif DataType.bitWidth(datatype) == 16 then
-    return string.format("%s%04X%s", prefix or "", value, postfix or "")
+    return string.format("%04X", value)
   elseif DataType.bitWidth(datatype) == 32 then
-    return string.format("%s%08X%s", prefix or "", value, postfix or "")
+    return string.format("%08X", value)
   elseif DataType.bitWidth(datatype) == 64 then
-    return string.format("%s%16X%s", prefix or "", value, postfix or "")
+    return string.format("%16X", value)
   end
   
-  return string.format("%X", prefix or "", value, postfix or "")
+  return string.format("%X", value)
 end
 
 function InstructionPrinter:outVirtualAddress(segmentname, address)
@@ -56,27 +57,32 @@ function InstructionPrinter:outMnemonic(width, instruction)
   end
 end
 
-function InstructionPrinter:outImmediate(value, datatype, prefix, postfix)
-  C.DisassemblerDrawer_drawImmediate(self.drawer, self:hexString(datatype, value, prefix, postfix))
+function InstructionPrinter:outImmediate(formatstring, operand)
+  local hexval = self:hexString(tonumber(operand.value), operand.datatype)
+  C.DisassemblerDrawer_drawImmediate(self.drawer, string.format(formatstring, hexval))
 end
 
-function InstructionPrinter:outAddress(value, datatype, prefix, postfix)
+function InstructionPrinter:outAddress(formatstring, operand)
   local referencetable = self.loader.referencetable
-  local segmentname = self.loader:segmentName(value)
+  local segment = self.loader:segment(operand.address)
+  local addrstring = (segment and segment.name or "???") -- Start with segment's name (if any)
+  local addrvalue = string.format(formatstring, self:hexString(tonumber(operand.address), operand.datatype))
   
-  if referencetable:isReference(value) then
-    local reference = referencetable[value]
+  if referencetable:isReference(operand.address) then
+    local reference = referencetable[operand.address]
     
-    if #segmentname > 0 then
-      C.DisassemblerDrawer_drawAddress(self.drawer, string.format("%s.%s%s", segmentname, reference.prefix, self:hexString(datatype, tonumber(value), prefix, postfix)))
+    if segment and (segment.type == SegmentType.Code) then
+      addrstring = addrstring .. string.format(".%s%s", reference.prefix, addrvalue)
     else
-      C.DisassemblerDrawer_drawAddress(self.drawer, string.format("%s%s", reference.prefix, self:hexString(datatype, tonumber(value), prefix, postfix)))
+      addrstring = addrstring .. string.format("[%s%s]", reference.prefix, addrvalue)      
     end
-  elseif #segmentname > 0 then
-    C.DisassemblerDrawer_drawAddress(self.drawer, string.format("%s.%s", segmentname, self:hexString(datatype, tonumber(value), prefix, postfix)))
+  elseif segment and (segment.type == SegmentType.Code) then
+    addrstring = addrstring .. string.format(".%s", addrvalue)
   else
-    C.DisassemblerDrawer_drawAddress(self.drawer, string.format("%s", self:hexString(datatype, tonumber(value), prefix, postfix)))
+    addrstring = addrstring .. string.format("[%s]", addrvalue)
   end
+  
+  C.DisassemblerDrawer_drawAddress(self.drawer, addrstring)
 end
 
 function InstructionPrinter:outRegister(registeridx)

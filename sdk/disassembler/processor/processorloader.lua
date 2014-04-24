@@ -31,6 +31,18 @@ function ProcessorLoader:addSegment(segmentname, segmenttype, segmentstartaddres
   table.insert(self.segments, segment)
 end
 
+function ProcessorLoader:segment(address)
+  for i = 1, #self.segments do
+    local segment = self.segments[i]
+    
+    if (address >= segment.startaddress) and (address < segment.endaddress) then
+      return segment
+    end
+  end
+  
+  return nil
+end
+
 function ProcessorLoader:inSegment(address)
   for i = 1, #self.segments do
     local segment = self.segments[i]
