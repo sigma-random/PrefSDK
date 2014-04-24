@@ -34,10 +34,18 @@ end
 
 function MC68HC05Rom:generateLoader()
   local loader = ProcessorLoader(self, MC68HC05Processor())
-  local ramfield = self.formattree.MC68HC05.InternalRAM
+  local stackfield = self.formattree.MC68HC05.InternalRAM.Stack
+  local lowramfield = self.formattree.MC68HC05.InternalRAM.LowRam
+  local highramfield = self.formattree.MC68HC05.InternalRAM.HighRam
+  local dmioregsfield = self.formattree.MC68HC05.DualMapIORegs
+  local gpioregsfield = self.formattree.MC68HC05.GenericIORegs
   local romfield = self.formattree.MC68HC05.MaskROM
-  
-  loader:addSegment("Ram", SegmentType.Data, ramfield:offset(), ramfield:endOffset())
+    
+  loader:addSegment("Stack", SegmentType.Data, stackfield:offset(), stackfield:endOffset())
+  loader:addSegment("LowRam", SegmentType.Data, lowramfield:offset(), lowramfield:endOffset())
+  loader:addSegment("HighRam", SegmentType.Data, highramfield:offset(), highramfield:endOffset())
+  loader:addSegment("DMIO", SegmentType.Data, dmioregsfield:offset(), dmioregsfield:endOffset())
+  loader:addSegment("GPIO", SegmentType.Data, gpioregsfield:offset(), gpioregsfield:endOffset())
   loader:addSegment("Rom", SegmentType.Code, romfield:offset(), romfield:endOffset())
   
   loader:addEntry("main", romfield:offset())
