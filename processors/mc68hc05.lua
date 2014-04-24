@@ -99,7 +99,7 @@ function MC68HC05Processor:analyze(instruction)
     instruction.operand1.address = instruction:next(DataType.UInt8)
     instruction.operand2.type = OperandType.JumpNear
     instruction.operand2.datatype = DataType.UInt8
-    instruction.operand2.address = instruction.address + 3 + Numerics.compl2(instruction:next(DataType.Int8))
+    instruction.operand2.address = instruction.address + 3 + instruction:next(DataType.Int8)
   elseif (highnibble == 0x1) or (highnibble == 0x3) or (highnibble == 0xB) or (highnibble == 0xE) then
     if (highnibble == 0xB) and (lownibble == 0xC) then
       instruction.operand1.type = OperandType.JumpNear
@@ -112,7 +112,7 @@ function MC68HC05Processor:analyze(instruction)
   elseif highnibble == 0x2 then
     instruction.operand1.type = OperandType.JumpNear
     instruction.operand1.datatype = DataType.UInt8
-    instruction.operand1.address = instruction.address + 2 + Numerics.compl2(instruction:next(DataType.Int8))
+    instruction.operand1.address = instruction.address + 2 + instruction:next(DataType.Int8)
   elseif (highnibble == 0x4) or (highnibble == 0x5) or (highnibble == 0x7) or (highnibble == 0x8) or (highnibble == 0x9) or (highnibble == 0xF) then
     instruction.operand1.datatype = OperandType.Void
   elseif highnibble == 0x6 then
@@ -159,8 +159,8 @@ function MC68HC05Processor:emulate(addressqueue, referencetable, instruction)
   end
 end
 
-function MC68HC05Processor:output(loader, instructionprinter, instruction)
-  instructionprinter:outVirtualAddress(loader:segmentName(instruction.address), string.format("%08X", tonumber(instruction.address)))
+function MC68HC05Processor:output(instructionprinter, instruction)
+  instructionprinter:outVirtualAddress("%04X", instruction.address)
   instructionprinter:outHexDump(instruction.address, instruction.size)
   instructionprinter:outMnemonic(0, instruction)
   

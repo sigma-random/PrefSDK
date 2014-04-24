@@ -75,7 +75,7 @@ function Sdk.printInstruction(drawer, databuffer, index)
     local instruction = loader.instructions[index]
     
     if instruction then
-      processor:output(loader, instructionprinter, instruction)
+      processor:output(instructionprinter, instruction)
       return true
     end
   end
