@@ -99,20 +99,20 @@ function MC68HC05Processor:analyze(instruction)
     instruction.operand1.address = instruction:next(DataType.UInt8)
     instruction.operand2.type = OperandType.JumpNear
     instruction.operand2.datatype = DataType.UInt8
-    instruction.operand2.address = instruction.address + 3 + Numerics.compl2(instruction:next(DataType.UInt8), DataType.sizeOf(DataType.UInt8))
+    instruction.operand2.address = instruction.address + 3 + Numerics.compl2(instruction:next(DataType.Int8))
   elseif (highnibble == 0x1) or (highnibble == 0x3) or (highnibble == 0xB) or (highnibble == 0xE) then
     if (highnibble == 0xB) and (lownibble == 0xC) then
       instruction.operand1.type = OperandType.JumpNear
     else
       instruction.operand1.type = OperandType.Memory
+      instruction.operand1.address = instruction:next(DataType.UInt8)
     end
     
     instruction.operand1.datatype = DataType.UInt8
-    instruction.operand1.address = instruction:next(DataType.UInt8)
   elseif highnibble == 0x2 then
     instruction.operand1.type = OperandType.JumpNear
     instruction.operand1.datatype = DataType.UInt8
-    instruction.operand1.address = instruction.address + 2 + Numerics.compl2(instruction:next(DataType.UInt8), DataType.sizeOf(DataType.UInt8))
+    instruction.operand1.address = instruction.address + 2 + Numerics.compl2(instruction:next(DataType.Int8))
   elseif (highnibble == 0x4) or (highnibble == 0x5) or (highnibble == 0x7) or (highnibble == 0x8) or (highnibble == 0x9) or (highnibble == 0xF) then
     instruction.operand1.datatype = OperandType.Void
   elseif highnibble == 0x6 then
