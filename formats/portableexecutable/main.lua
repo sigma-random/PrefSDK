@@ -1,138 +1,39 @@
--- require("sdk.math.address")
--- local FormatDefinition = require("sdk.format.formatdefinition")
--- local PeDefs = require("formats.portableexecutable.pedefs")
--- local PeSection = require("formats.portableexecutable.pesection")
--- local PeInfo = require("formats.portableexecutable.peinfo")
--- 
--- local PeFormat = FormatDefinition.register("Portable Executable Format", "Windows", "Dax", "1.0")
--- 
--- function PeFormat:__ctor(databuffer)
---   FormatDefinition.__ctor(self, databuffer)
--- end
--- 
--- function PeFormat:createDosHeader(formattree)
---   local dosheader = formattree:addStructure("DosHeader")
---   dosheader:addField(DataType.UInt16_LE, "e_magic")
---   dosheader:addField(DataType.UInt16_LE, "e_cblp")
---   dosheader:addField(DataType.UInt16_LE, "e_cp")
---   dosheader:addField(DataType.UInt16_LE, "e_crlc")
---   dosheader:addField(DataType.UInt16_LE, "e_cparhdr")
---   dosheader:addField(DataType.UInt16_LE, "e_minalloc")
---   dosheader:addField(DataType.UInt16_LE, "e_maxalloc")
---   dosheader:addField(DataType.UInt16_LE, "e_ss")
---   dosheader:addField(DataType.UInt16_LE, "e_sp")
---   dosheader:addField(DataType.UInt16_LE, "e_csum")
---   dosheader:addField(DataType.UInt16_LE, "e_ip")
---   dosheader:addField(DataType.UInt16_LE, "e_cs")
---   dosheader:addField(DataType.UInt16_LE, "e_lfarlc")
---   dosheader:addField(DataType.UInt16_LE, "e_ovno")
---   dosheader:addField(DataType.UInt16_LE, "e_res", 4)
---   dosheader:addField(DataType.UInt16_LE, "e_oemid")
---   dosheader:addField(DataType.UInt16_LE, "e_oeminfo")
---   dosheader:addField(DataType.UInt16_LE, "e_res2", 10)
---   dosheader:addField(DataType.UInt32_LE, "e_lfanew")
---   
---   return dosheader
--- end
--- 
--- function PeFormat:createNtHeaders(dosheader, formattree)
---   local ntheaders = formattree:addStructure("NtHeaders", dosheader.e_lfanew:value())  
---   ntheaders:addField(DataType.UInt32_LE, "Signature")
---   
---   local fileheader = ntheaders:addStructure("FileHeader")
---   fileheader:addField(DataType.UInt16_LE, "Machine"):dynamicInfo(PeInfo.getMachine)
---   fileheader:addField(DataType.UInt16_LE, "NumberOfSections")
---   fileheader:addField(DataType.UInt32_LE, "TimeDateStamp")
---   fileheader:addField(DataType.UInt32_LE, "PointerToSymbolTable")
---   fileheader:addField(DataType.UInt32_LE, "NumberOfSymbols")
---   fileheader:addField(DataType.UInt16_LE, "SizeOfOptionalHeader")
---   fileheader:addField(DataType.UInt16_LE, "Characteristics")
---   
---   local optionalheader = ntheaders:addStructure("OptionalHeader")
---   optionalheader:addField(DataType.UInt16_LE, "Magic"):dynamicInfo(PeInfo.getOptionalHeaderMagic)
---   optionalheader:addField(DataType.UInt8, "MajorLinkerVersion")
---   optionalheader:addField(DataType.UInt8, "MinorLinkerVersion")
---   optionalheader:addField(DataType.UInt32_LE, "SizeOfCode")
---   optionalheader:addField(DataType.UInt32_LE, "SizeOfInitializedData")
---   optionalheader:addField(DataType.UInt32_LE, "SizeOfUninitializedData")
---   optionalheader:addField(DataType.UInt32_LE, "AddressOfEntryPoint"):dynamicInfo(PeInfo.getOptionalHeaderFieldSection)
---   optionalheader:addField(DataType.UInt32_LE, "BaseOfCode")
---   optionalheader:addField(DataType.UInt32_LE, "BaseOfData")
---   optionalheader:addField(DataType.UInt32_LE, "ImageBase")
---   optionalheader:addField(DataType.UInt32_LE, "SectionAlignment")
---   optionalheader:addField(DataType.UInt32_LE, "FileAlignment")
---   optionalheader:addField(DataType.UInt16_LE, "MajorOperatingSystemVersion")
---   optionalheader:addField(DataType.UInt16_LE, "MinorOperatingSystemVersion")
---   optionalheader:addField(DataType.UInt16_LE, "MajorImageVersion")
---   optionalheader:addField(DataType.UInt16_LE, "MinorImageVersion")
---   optionalheader:addField(DataType.UInt16_LE, "MajorSubsystemVersion")
---   optionalheader:addField(DataType.UInt16_LE, "MinorSubsystemVersion")
---   optionalheader:addField(DataType.UInt32_LE, "Win32VersionValue")
---   optionalheader:addField(DataType.UInt32_LE, "SizeOfImage")
---   optionalheader:addField(DataType.UInt32_LE, "SizeOfHeaders")
---   optionalheader:addField(DataType.UInt32_LE, "CheckSum")
---   optionalheader:addField(DataType.UInt16_LE, "Subsystem")
---   optionalheader:addField(DataType.UInt16_LE, "DllCharacteristics")
---   optionalheader:addField(DataType.UInt32_LE, "SizeOfStackReserve")
---   optionalheader:addField(DataType.UInt32_LE, "SizeOfStackCommit")
---   optionalheader:addField(DataType.UInt32_LE, "SizeOfHeapReserve")
---   optionalheader:addField(DataType.UInt32_LE, "SizeOfHeapCommit")
---   optionalheader:addField(DataType.UInt32_LE, "LoaderFlags")
---   optionalheader:addField(DataType.UInt32_LE, "NumberOfRvaAndSizes")
---   local datadirectory = optionalheader:addStructure("DataDirectory")
---   
---   for i = 1, PeDefs.NumberOfDirectoryEntries do
---     local directoryentry = datadirectory:addStructure(PeDefs.DirectoryNames[i])
---     directoryentry:addField(DataType.UInt32_LE, "VirtualAddress")
---     directoryentry:addField(DataType.UInt32_LE, "Size")
---     directoryentry:dynamicInfo(PeInfo.getDirectoryEntrySection)
---   end
---   
---   return ntheaders
--- end
--- 
--- function PeFormat:createSectionTable(ntheaders, formattree)
---   local numberofsections = ntheaders.FileHeader.NumberOfSections:value()
---   local sectiontable = formattree:addStructure("SectionTable", PeSection.imageFirstSection(ntheaders))
---   
---   for i = 1, numberofsections do
---     local section = sectiontable:addStructure("Section" .. i):dynamicInfo(PeInfo.getSectionName)
---     section:addField(DataType.Char, "Name", 8)
---     section:addField(DataType.UInt32_LE, "VirtualSize")
---     section:addField(DataType.UInt32_LE, "VirtualAddress")
---     section:addField(DataType.UInt32_LE, "SizeOfRawData")
---     section:addField(DataType.UInt32_LE, "PointerToRawData")
---     section:addField(DataType.UInt32_LE, "PointertoRelocations")
---     section:addField(DataType.UInt32_LE, "PointertoLineNumbers")
---     section:addField(DataType.UInt16_LE, "NumberOfRelocations")
---     section:addField(DataType.UInt16_LE, "NumberOfLineNumbers")
---     section:addField(DataType.UInt32_LE, "Characteristics")
---   end
---   
---   return sectiontable, numberofsections
--- end
--- 
--- function PeFormat:validateFormat()
---   self:checkData(0, DataType.UInt16_LE, 0x5A4D)
---   self:checkData(0x3C, DataType.UInt32_LE, 0x00004550)
--- end
--- 
--- function PeFormat:parseFormat(formattree)
---   local dosheader = self:createDosHeader(formattree)
---   local ntheaders = self:createNtHeaders(dosheader, formattree)
---   local sectiontable, numberofsections = self:createSectionTable(ntheaders, formattree)
---   
---   if numberofsections > 0 then
---     local sectiondata = formattree:addStructure("SectionData", sectiontable.Section1.PointerToRawData:value())
---     
---     for i = 1, numberofsections do
---       local sectionheader = sectiontable["Section" .. i]
---       
---       if (sectionheader.PointerToRawData:value() ~= 0) and (sectionheader.SizeOfRawData:value() ~= 0) then -- Check if the section exists In-Memory only
---         local name = PeSection.sectionDisplayName(sectionheader.VirtualAddress:value(), ntheaders, buffer)
---         local section = sectiondata:addStructure(name, sectionheader.PointerToRawData:value())
---         PeSection.analyzeSection(sectionheader, section, ntheaders, buffer)
---       end
---     end
---   end
--- end
+local FormatDefinition = require("sdk.format.formatdefinition")
+local DataType = require("sdk.types.datatype")
+local DosHeader = require("formats.portableexecutable.dosheader")
+local NtHeaders = require("formats.portableexecutable.ntheaders")
+local SectionTable = require("formats.portableexecutable.sectiontable")
+local DataDirectory = require("formats.portableexecutable.datadirectory")
+
+local PeFormat = FormatDefinition.register("Portable Executable Format", "Windows", "Dax", "1.0")
+
+function PeFormat:__ctor(databuffer)
+  FormatDefinition.__ctor(self, databuffer)
+  self.peheaders = { } -- Store Headers' definition
+end
+
+function PeFormat:validateFormat()
+  self:checkData(0, DataType.UInt16_LE, 0x5A4D)
+  
+  local peheaderoffset = self.databuffer:readType(0x3C, DataType.UInt32_LE) -- Get NtHeaders' offset
+  self:checkData(peheaderoffset, DataType.UInt32_LE, 0x00004550)
+end
+
+function PeFormat:parseFormat(formattree)
+  local dosheader = DosHeader(formattree)
+  dosheader:parse()
+
+  local ntheaders = NtHeaders(formattree)
+  ntheaders:parse()
+  
+  local sectiontable = SectionTable(formattree, ntheaders)
+  sectiontable:parse()
+  
+  local datadirectory = DataDirectory(formattree, ntheaders, sectiontable)
+  datadirectory:parse()
+  
+  self.peheaders["DosHeader"] = dosheader
+  self.peheaders["NtHeaders"] = ntheaders
+  self.peheaders["SectionTable"] = sectiontable
+  self.peheaders["DataDirectory"] = datadirectory
+end
