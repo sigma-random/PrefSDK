@@ -1,0 +1,20 @@
+local MapItemTypes = { [0x0000] = "Header",
+                       [0x0001] = "String ID",
+                       [0x0002] = "Type ID",
+                       [0x0003] = "Proto ID",
+                       [0x0004] = "Field ID",
+                       [0x0005] = "Method ID",
+                       [0x0006] = "Class Definition",
+                       [0x1000] = "Map List",
+                       [0x1001] = "Type List",
+                       [0x1002] = "Annotation Set Ref",
+                       [0x1003] = "Annotation Set",
+                       [0x2000] = "Class Data",
+                       [0x2001] = "Code",
+                       [0x2002] = "String Data",
+                       [0x2003] = "Debug Info",
+                       [0x2004] = "Annotation",
+                       [0x2005] = "Encoded Array",
+                       [0x2006] = "Annotation Directory" }
+
+return MapItemTypes
