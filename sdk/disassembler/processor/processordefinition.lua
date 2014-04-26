@@ -2,10 +2,11 @@ local oop = require("sdk.lua.oop")
 
 local ProcessorDefinition = oop.class()
 
-function ProcessorDefinition:__ctor(name, mnemonics, features, outoperand)
+function ProcessorDefinition:__ctor(name, mnemonics, features, registers, outoperand)
   self.name = name
   self.mnemonics = mnemonics
   self.features = features
+  self.registers = registers
   self.outoperand = outoperand
 end
 

@@ -11,6 +11,7 @@ ffi.cdef
   void DisassemblerDrawer_drawMnemonic(void* __this, int width, const char* mnemonic, int instructionfeatures);
   void DisassemblerDrawer_drawImmediate(void* __this, const char* s);
   void DisassemblerDrawer_drawAddress(void* __this, const char* s);
+  void DisassemblerDrawer_drawRegister(void* __this, const char* s);
   void DisassemblerDrawer_drawString(void* __this, const char* s);
 ]]
 
@@ -89,7 +90,14 @@ function InstructionPrinter:outAddress(formatstring, operand)
 end
 
 function InstructionPrinter:outRegister(registeridx)
-  -- TODO: To Be Implemented
+  local regidx = ((type(registeridx) == "cdata") and tonumber(registeridx) or registeridx)
+  local regname = self.processor.registers[regidx]
+  
+  if regname == nil then
+    error("Invalid Register Index")
+  end
+  
+  C.DisassemblerDrawer_drawRegister(self.drawer, regname)
 end
 
 function InstructionPrinter:out(s)
