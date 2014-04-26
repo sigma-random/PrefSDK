@@ -1,50 +1,53 @@
-local Pointer = { }
+local DataType = require("sdk.types.datatype")
 
-function Pointer:new(value, datatype, buffer)
-  local o = setmetatable({ }, Pointer)
+local PointerMeta = { }
+
+function PointerMeta.__tostring(table)
+  return string.format("%X", rawget(table, "address"))
+end
+
+function PointerMeta.__len(table)
+  return DataType.sizeOf(rawget(table, "datatype"))
+end
+
+function PointerMeta.__index(table, key)
+  assert(type(key) == "number", "j = Pointer[i] expects a number")
   
-  rawset(o, "value", value)
-  rawset(o, "ptype", datatype)
-  rawset(o, "buffer", buffer)
-  return o
+  local address = rawget(table, "address") + (key * DataType.sizeOf(rawget(table, "datatype")))
+  return rawget(table, "databuffer"):readType(address, rawget(table, "datatype"))
 end
 
-function Pointer.__tostring(table)
-  return string.format("%X", rawget(table, "value"))
-end
-
-function Pointer.__len(table)
-  return DataType.sizeOf(rawget(table, "ptype"))
-end
-
-function Pointer.__index(table, key)
-  assert(type(key) == "number", "Pointer[i] expects a number")
-  
-  local value = rawget(table, "value") + (key * DataType.sizeOf(rawget(table, "ptype")))
-  return rawget(table, "buffer"):readType(value, rawget(table, "ptype"))
-end
-
-function Pointer.__newindex(table, key, value)
+function PointerMeta.__newindex(table, key, value)
   assert((type(key) == "number") and (type(value) == "number"), "Pointer[i] = j expects a number")
   
-  local value = rawget(table, "value") + (key * DataType.sizeOf(rawget(table, "ptype")))
-  rawget(table, "buffer"):write(value, rawget(table, "ptype"), value)
+  local address = rawget(table, "address") + (key * DataType.sizeOf(rawget(table, "datatype")))
+  rawget(table, "databuffer"):writeType(address, rawget(table, "datatype"), value)
 end
 
-function Pointer.__add(table, base, span)
-  assert((type(base) == "number") and (type(span) == "number"), "Pointer[i] = j expects a number")
+function PointerMeta.__add(table, base, span)
+  assert((type(base) == "number") and (type(span) == "number"), "Pointer[i] += j expects a number")
   
-  local value = base + (span * DataType.sizeOf(rawget(table, "ptype")))
-  rawset(table, "value", value)
+  local address = base + (span * DataType.sizeOf(rawget(table, "datatype")))
+  rawset(table, "address", address)
   return table
 end
 
-function Pointer.__sub(table, base, span)
-  assert((type(base) == "number") and (type(span) == "number"), "Pointer[i] = j expects a number")
+function PointerMeta.__sub(table, base, span)
+  assert((type(base) == "number") and (type(span) == "number"), "Pointer[i] -= j expects a number")
   
-  local value = base - (span * DataType.sizeOf(rawget(table, "ptype")))
-  rawset(table, "value", value)
+  local address = base - (span * DataType.sizeOf(rawget(table, "datatype")))
+  rawset(table, "address", address)
   return table
+end
+
+function Pointer(address, datatype, databuffer)
+  local self = setmetatable({ }, PointerMeta)
+  
+  rawset(self, "address", address)
+  rawset(self, "datatype", datatype)
+  rawset(self, "databuffer", databuffer)
+  
+  return self
 end
 
 return Pointer
