@@ -47,7 +47,7 @@ function DataBuffer:readChar(pos)
 end
 
 function DataBuffer:readString(pos, len)
-  return ffi.string(C.QHexEditData_readString(self.cthis, pos, len))
+  return ffi.string(C.QHexEditData_readString(self.cthis, pos, len or -1))
 end
 
 function DataBuffer:readLine(pos)
