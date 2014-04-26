@@ -1,6 +1,6 @@
 local Address = { }
 
-function Address.rebaseaddress(address, oldbase, newbase)
+function Address.rebase(address, oldbase, newbase)
   return (address - oldbase) + newbase
 end
 
