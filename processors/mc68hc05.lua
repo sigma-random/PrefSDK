@@ -55,9 +55,24 @@ local MC68HC05OpCodes = { Dir_BRSET0 = 0x00, Dir_BRCLR0 = 0x01, Dir_BRSET1 = 0x0
                           Ix1_SUB    = 0xE0, Ix1_CMP    = 0xE1, Ix1_SBC    = 0xE2, Ix1_CPX    = 0xE3, Ix1_AND    = 0xE4, Ix1_BIT    = 0xE5, Ix1_LDA    = 0xE6, Ix1_STA    = 0xE7, Ix1_EOR    = 0xE8, Ix1_ADC    = 0xE9, Ix1_ORA    = 0xEA, Ix1_ADD   = 0xEB, Ix1_JMP     = 0xEC, Ix1_JSR    = 0xED, Ix1_LDX    = 0xEE, Ix1_STX    = 0xEF,
                           Ix_SUB     = 0xF0, Ix_CMP     = 0xF1, Ix_SBC     = 0xF2, Ix_CPX     = 0xF3, Ix_AND     = 0xF4, Ix_BIT     = 0xF5, Ix_LDA     = 0xF6, Ix_STA     = 0xF7, Ix_EOR     = 0xF8, Ix_ADC     = 0xF9, Ix_ORA     = 0xFA, Ix_ADD    = 0xFB, Ix_JMP      = 0xFC, Ix_JSR     = 0xFD, Ix_LDX     = 0xFE, Ix_STX     = 0xFF }
 
+local MC68HC05Registers = { [0x0000] = "PORTA",  [0x0001] = "PORTB",  [0x0002] = "PORTC",  [0x0003] = "PORTD",  [0x0004] = "PORTE",
+                            [0x0008] = "INTSR",  [0x000A] = "SPCR",   [0x000B] = "SPSR",   [0x000C] = "SPDR",   [0x0010] = "TBCR1",
+                            [0x0011] = "TBCR2",  [0x0012] = "TCR",    [0x0013] = "TSR",    [0x0014] = "ICH",    [0x0015] = "ICL",
+                            [0x0016] = "OC1H",   [0x0017] = "OC1L",   [0x0018] = "TCNTH",  [0x0019] = "TCNTL",  [0x001A] = "ACNTH",
+                            [0x001B] = "ACNTL",  [0x001C] = "TCR2",   [0x001D] = "TSR2",   [0x001E] = "TSR2",   [0x001E] = "OC2",
+                            [0x001F] = "TCNT2",  [0x0020] = "LCDCR",  [0x0021] = "LCDR1",  [0x0022] = "LCDR2",  [0x0023] = "LCDR3", 
+                            [0x0024] = "LCDR4",  [0x0025] = "LCDR5",  [0x0026] = "LCDR6",  [0x0027] = "LCDR7",  [0x0028] = "LCDR8", 
+                            [0x0029] = "LCDR9",  [0x002A] = "LCDR10", [0x002B] = "LCDR11", [0x002C] = "LCDR12", [0x002D] = "LCDR13", 
+                            [0x002E] = "LCDR14", [0x002F] = "LCDR15", [0x0030] = "LCDR16", [0x0031] = "LCDR17", [0x0032] = "LCDR18", 
+                            [0x0033] = "LCDR19", [0x0034] = "LCDR20", [0x003E] = "MISC" }
+                          
 local function outoperand(instructionprinter, operand)
   if (operand.type == OperandType.Memory) or (operand.type == OperandType.JumpNear) then
-    instructionprinter:outAddress("#%s", operand)
+    if (operand.type == OperandType.Memory) and instructionprinter.processor.registers[tonumber(operand.address)] then -- This Processor uses memory mapped registers
+      instructionprinter:outRegister(operand.address)
+    else
+      instructionprinter:outAddress("#%s", operand)
+    end
   elseif operand.type == OperandType.Immediate then
     instructionprinter:outImmediate("#%s", operand)
   end
@@ -66,7 +81,7 @@ end
 local MC68HC05Processor = oop.class(ProcessorDefinition)
 
 function MC68HC05Processor:__ctor()
-  ProcessorDefinition.__ctor(self, "MC68HC05 MCU (Freescale)", MC68HC05Mnemonics, MC68HC05Features, outoperand)
+  ProcessorDefinition.__ctor(self, "MC68HC05 MCU (Freescale)", MC68HC05Mnemonics, MC68HC05Features, MC68HC05Registers, outoperand)
 end
 
 function MC68HC05Processor:touchArg(addressqueue, referencetable, address, operand, iscall)
