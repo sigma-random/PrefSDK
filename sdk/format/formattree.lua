@@ -4,9 +4,8 @@ local ElementType = require("sdk.format.element.elementtype")
 local Structure = require("sdk.format.element.structure")
 
 ffi.cdef
-[[  
-  void* FormatTree_addStructure(void* __this, const char* name);
-  void* FormatTree_addStructureAtOffset(void* __this, const char* name, uint64_t offset);
+[[
+  void* FormatTree_addStructure(void* __this, const char* name, uint64_t offset);
   void* FormatTree_getStructure(void* __this, uint64_t i);
   uint64_t FormatTree_getStructureCount(void* __this);
 ]]
@@ -29,13 +28,8 @@ function FormatTree:structure(i)
 end
 
 function FormatTree:addStructure(name, offset)
-  local cstruct = nil
-  
-  if offset then
-    cstruct = C.FormatTree_addStructureAtOffset(self._cthis, name, offset)
-  else
-    cstruct = C.FormatTree_addStructure(self._cthis, name)
-  end
+  local baseoffset = self._databuffer.baseoffset
+  local cstruct = C.FormatTree_addStructure(self._cthis, name, (offset and baseoffset + offset or baseoffset))
   
   local s = Structure(cstruct, self._databuffer)
   self[name] = s

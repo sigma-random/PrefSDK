@@ -41,8 +41,8 @@ Sdk = { formatlist = { },
 
 function Sdk.parseFormat(formatid, baseoffset, databuffer, cformattree)
   local formattype = Sdk.formatlist[formatid] -- Get Format's Type from list.
-  local buffer = DataBuffer(databuffer)
-  local f = formattype(buffer, baseoffset) -- Create a format's instance
+  local buffer = DataBuffer(databuffer, baseoffset)
+  local f = formattype(buffer) -- Create a format's instance
   
   f:validateFormat()
   
@@ -97,7 +97,8 @@ function Sdk.executeOption(optionidx, databuffer, startoffset, endoffset)
   
   if f.options[optionidx] then
     local option = f.options[optionidx]
-    option.action(f, startoffset, endoffset)
+    local buffer = f.databuffer
+    option.action(f, buffer.baseoffset + startoffset, buffer.baseoffset + endoffset)
   end
 end
 

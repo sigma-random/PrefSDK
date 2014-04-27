@@ -28,10 +28,9 @@ ffi.cdef
 local C = ffi.C
 local FormatDefinition = oop.class()
 
-function FormatDefinition:__ctor(databuffer, baseoffset)
-  self.databuffer = databuffer
-  self.baseoffset = baseoffset and baseoffset or 0
+function FormatDefinition:__ctor(databuffer)
   self.validated = false
+  self.databuffer = databuffer
   self.elementsinfo = { }
   self.dynamicelements = { }
 end
@@ -64,30 +63,32 @@ function FormatDefinition:checkData(offset, datatype, value)
     table.insert(values, value)
   end
   
+  local baseoffset = self.databuffer.baseoffset
+  
   for i,v in ipairs(values) do  
     if datatype == DataType.AsciiString then
       self.validated = C.Format_checkAsciiString(self.databuffer.cthis, offset, v)
     elseif DataType.isSigned(datatype) then
       if DataType.bitWidth(datatype) == 8 then
-        self.validated = C.Format_checkInt8(self.databuffer.cthis, self.baseoffset + offset, ffi.new("int8_t", v))
+        self.validated = C.Format_checkInt8(self.databuffer.cthis, baseoffset + offset, ffi.new("int8_t", v))
       elseif DataType.bitWidth(datatype) == 16 then
-        self.validated = C.Format_checkInt16(self.databuffer.cthis, self.baseoffset + offset, ffi.new("int16_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkInt16(self.databuffer.cthis, baseoffset + offset, ffi.new("int16_t", v), DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 32 then
-        self.validated = C.Format_checkInt32(self.databuffer.cthis, self.baseoffset + offset, ffi.new("int32_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkInt32(self.databuffer.cthis, baseoffset + offset, ffi.new("int32_t", v), DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 64 then
-        self.validated = C.Format_checkInt64(self.databuffer.cthis, self.baseoffset + offset, ffi.new("int64_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkInt64(self.databuffer.cthis, baseoffset + offset, ffi.new("int64_t", v), DataType.byteOrder(datatype))
       else
         error("FormatDefinition:checkData(): Unsupported DataType")
       end
     else
       if DataType.bitWidth(datatype) == 8 then
-        self.validated = C.Format_checkUInt8(self.databuffer.cthis, self.baseoffset + offset, ffi.new("uint8_t", v))
+        self.validated = C.Format_checkUInt8(self.databuffer.cthis, baseoffset + offset, ffi.new("uint8_t", v))
       elseif DataType.bitWidth(datatype) == 16 then
-        self.validated = C.Format_checkUInt16(self.databuffer.cthis, self.baseoffset + offset, ffi.new("uint16_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkUInt16(self.databuffer.cthis, baseoffset + offset, ffi.new("uint16_t", v), DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 32 then
-        self.validated = C.Format_checkUInt32(self.databuffer.cthis, self.baseoffset + offset, ffi.new("uint32_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkUInt32(self.databuffer.cthis, baseoffset + offset, ffi.new("uint32_t", v), DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 64 then
-        self.validated = C.Format_checkUInt64(self.databuffer.cthis, self.baseoffset + offset, ffi.new("uint64_t", v), DataType.byteOrder(datatype))
+        self.validated = C.Format_checkUInt64(self.databuffer.cthis, baseoffset + offset, ffi.new("uint64_t", v), DataType.byteOrder(datatype))
       else
         error("FormatDefinition:checkData(): Unsupported DataType")
       end
@@ -100,9 +101,9 @@ function FormatDefinition:checkData(offset, datatype, value)
   
   if self.validated == false then
     if type(value) ~= "table" and DataType.isInteger(datatype) then
-      error(string.format("Expected %X at offset %08X", value, self.baseoffset + offset))
+      error(string.format("Expected %X at offset %08X", value, baseoffset + offset))
     else
-      error(string.format("Expected %s at offset %08X", value, self.baseoffset + offset))
+      error(string.format("Expected %s at offset %08X", value, baseoffset + offset))
     end
   end
 end
