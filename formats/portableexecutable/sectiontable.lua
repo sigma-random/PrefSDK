@@ -51,7 +51,7 @@ function SectionTable:sectionName(rva)
     return section.Name:value()
   end
   
-  return ""
+  return "INVALID"
 end
 
 function SectionTable.getSectionName(formatdefinition, section)

@@ -27,7 +27,7 @@ function NtHeaders.getSectionName(formatdefinition, field)
     return string.format("%q", sectionname)
   end
   
-  return ""
+  return "INVALID"
 end
 
 function NtHeaders:parseFileHeader(ntheaders)

@@ -29,7 +29,7 @@ function PeFormat:parseFormat(formattree)
   local sectiontable = SectionTable(formattree, ntheaders)
   sectiontable:parse()
   
-  local datadirectory = DataDirectory(formattree, ntheaders, sectiontable)
+  local datadirectory = DataDirectory(self.databuffer, formattree, ntheaders, sectiontable)
   datadirectory:parse()
   
   self.peheaders["DosHeader"] = dosheader
