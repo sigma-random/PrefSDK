@@ -41,13 +41,14 @@ function PointerMeta.__sub(table, base, span)
 end
 
 function Pointer(address, datatype, databuffer)
-  local self = setmetatable({ }, PointerMeta)
+  local o = setmetatable({ }, PointerMeta)
   
-  rawset(self, "address", address)
-  rawset(self, "datatype", datatype)
-  rawset(self, "databuffer", databuffer)
-  
-  return self
+  rawset(o, "address", address)
+  rawset(o, "datatype", datatype)
+  rawset(o, "databuffer", databuffer)
+  rawset(o, "value", function(self) return self[0] end) -- Syntax Sugar
+    
+  return o
 end
 
 return Pointer
