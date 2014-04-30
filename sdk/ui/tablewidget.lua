@@ -1,10 +1,10 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
-local PrefWidget = require("sdk.ui.prefwidget")
+local Widget = require("sdk.ui.widget")
 
 ffi.cdef
 [[
-  void* PrefUI_createTableWidget(const char* title);
+  void* TableWidget_create();
   void TableWidget_setColumnCount(void* __this, int count);
   void TableWidget_setRowCount(void* __this, int count);
   void TableWidget_setHeaderItem(void *__this, int column, const char* text);
@@ -12,10 +12,10 @@ ffi.cdef
 ]]
 
 local C = ffi.C
-local TableWidget = oop.class(PrefWidget)
+local TableWidget = oop.class(Widget)
 
-function TableWidget:__ctor(title)
-  PrefWidget.__ctor(self, C.PrefUI_createTableWidget(title))
+function TableWidget:__ctor()
+  Widget.__ctor(self, C.TableWidget_create())
 end
 
 function TableWidget:setColumnCount(count)

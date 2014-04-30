@@ -4,13 +4,13 @@ local DosHeader = require("formats.portableexecutable.dosheader")
 local NtHeaders = require("formats.portableexecutable.ntheaders")
 local SectionTable = require("formats.portableexecutable.sectiontable")
 local DataDirectory = require("formats.portableexecutable.datadirectory")
-local SectionTableView = require("formats.portableexecutable.ui.sectiontableview")
+local SectionTableDialog = require("formats.portableexecutable.ui.sectiontabledialog")
 
 local PeFormat = FormatDefinition.register("Portable Executable Format", "Windows", "Dax", "1.0")
 
 function PeFormat:showSectionTable(startoffset, endoffset)
-  local sectiontableview = SectionTableView(self.formattree)
-  sectiontableview:show()
+  local sectiontabledialog = SectionTableDialog(self.formattree)
+  sectiontabledialog:show()
 end
 
 PeFormat:registerOption("Section Table", "Display the Section Table", PeFormat.showSectionTable)
