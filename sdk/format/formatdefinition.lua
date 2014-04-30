@@ -11,7 +11,7 @@ ffi.cdef
   typedef const char* FormatId;
   
   void Format_register(const char* name, const char* category, const char* author, const char* version, FormatId formatid);
-  void Format_registerOption(FormatId formatid, int optionidx, const char* name, const char* description);
+  void Format_registerOption(FormatId formatid, int optionidx, const char* name);
   void Format_enableDisassembler(FormatId formatid);
   
   bool Format_checkUInt8(void* hexeditdata, uint64_t offset,  uint8_t value);
@@ -47,11 +47,11 @@ function FormatDefinition.register(name, category, author, version)
   return formattype
 end
 
-function FormatDefinition:registerOption(name, description, action)
-  local opt = FormatOption(name, description, action)
+function FormatDefinition:registerOption(name, action)
+  local opt = FormatOption(name, action)
   
   table.insert(self.options, opt)
-  C.Format_registerOption(self.id, #self.options, name, description)
+  C.Format_registerOption(self.id, #self.options, name)
 end
 
 function FormatDefinition:checkData(offset, datatype, value)  

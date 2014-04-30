@@ -2,9 +2,8 @@ local oop = require("sdk.lua.oop")
 
 local FormatOption = oop.class()
 
-function FormatOption:__ctor(name, description, action)
+function FormatOption:__ctor(name, action)
   self.name = name
-  self.description = description
   self.action = action
 end
 

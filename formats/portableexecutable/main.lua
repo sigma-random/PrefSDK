@@ -13,7 +13,7 @@ function PeFormat:showSectionTable(startoffset, endoffset)
   sectiontabledialog:show()
 end
 
-PeFormat:registerOption("Section Table", "Display the Section Table", PeFormat.showSectionTable)
+PeFormat:registerOption("Section Table", PeFormat.showSectionTable)
 
 function PeFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
