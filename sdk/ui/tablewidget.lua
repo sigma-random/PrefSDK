@@ -4,26 +4,16 @@ local Widget = require("sdk.ui.widget")
 
 ffi.cdef
 [[
-  void* TableWidget_create();
-  void TableWidget_setColumnCount(void* __this, int count);
-  void TableWidget_setRowCount(void* __this, int count);
+  void* TableWidget_create(int rows, int columns);
   void TableWidget_setHeaderItem(void *__this, int column, const char* text);
-  void TableWidget_setItem(void*__this, int row, int column, const char* text);
+  void TableWidget_setItem(void*__this, int row, int column, void* element);
 ]]
 
 local C = ffi.C
 local TableWidget = oop.class(Widget)
 
-function TableWidget:__ctor()
-  Widget.__ctor(self, C.TableWidget_create())
-end
-
-function TableWidget:setColumnCount(count)
-  C.TableWidget_setColumnCount(self.cthis, count)
-end
-
-function TableWidget:setRowCount(count)
-  C.TableWidget_setRowCount(self.cthis, count)
+function TableWidget:__ctor(rows, columns)
+  Widget.__ctor(self, C.TableWidget_create(rows, columns))
 end
 
 function TableWidget:setHeaderItems(values)
@@ -42,8 +32,8 @@ function TableWidget:setItems(row, values)
   end
 end
 
-function TableWidget:setItem(row, column, value)
-  C.TableWidget_setItem(self.cthis, row - 1, column - 1, value)
+function TableWidget:setItem(row, column, element)
+  C.TableWidget_setItem(self.cthis, row - 1, column - 1, element._cthis)
 end
 
 return TableWidget

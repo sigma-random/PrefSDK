@@ -7,27 +7,24 @@ local SectionTableDialog = oop.class(Dialog)
 
 function SectionTableDialog:__ctor(formattree)
   Dialog.__ctor(self, "Section Table")
-
-  local vlayout = VerticalLayout()
-  local tablewidget = TableWidget()  
   
   local ntheaders = formattree.NtHeaders
   local sectiontable = formattree.SectionTable
   local numberofsections = ntheaders.FileHeader.NumberOfSections:value()
   
-  tablewidget:setColumnCount(6)
-  tablewidget:setRowCount(numberofsections)
+  local vlayout = VerticalLayout()
+  local tablewidget = TableWidget(numberofsections, 6)
   tablewidget:setHeaderItems({"Name", "VirtualAddress", "VirtualSize", "PointerToRawData", "SizeOfRawData", "Characteristics"})
   
   for i = 1, numberofsections do
     local section = sectiontable["Section" .. i]
-    
-    tablewidget:setItem(i, 1, section.Name:value())
-    tablewidget:setItem(i, 2, string.format("%08X", tonumber(section.VirtualAddress:value())))
-    tablewidget:setItem(i, 3, string.format("%08X", tonumber(section.VirtualSize:value())))
-    tablewidget:setItem(i, 4, string.format("%08X", tonumber(section.PointerToRawData:value())))
-    tablewidget:setItem(i, 5, string.format("%08X", tonumber(section.SizeOfRawData:value())))
-    tablewidget:setItem(i, 6, string.format("%08X", tonumber(section.Characteristics:value())))
+
+    tablewidget:setItem(i, 1, section.Name)
+    tablewidget:setItem(i, 2, section.VirtualAddress)
+    tablewidget:setItem(i, 3, section.VirtualSize)
+    tablewidget:setItem(i, 4, section.PointerToRawData)
+    tablewidget:setItem(i, 5, section.SizeOfRawData)
+    tablewidget:setItem(i, 6, section.Characteristics)
   end
   
   vlayout:setMargins(0, 0, 0, 0)
