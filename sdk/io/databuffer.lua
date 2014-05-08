@@ -8,6 +8,8 @@ local DataBuffer = oop.class()
 
 function DataBuffer:__ctor(cthis, baseoffset)
   self.cthis = cthis
+  self.creader = C.QHexEditData_createReader(cthis)
+  self.cwriter = C.QHexEditData_createWriter(cthis)
   self.baseoffset = baseoffset
 end
 
@@ -20,7 +22,7 @@ function DataBuffer:length()
 end
 
 function DataBuffer:indexOf(s, pos)
-  return tonumber(C.QHexEditData_indexOf(self.cthis, (pos and self.baseoffset + pos or 0), s))
+  return tonumber(C.QHexEditDataReader_indexOf(self.creader, (pos and self.baseoffset + pos or 0), s))
 end
 
 function DataBuffer:indexOfEol(pos)
@@ -43,48 +45,48 @@ function DataBuffer:readChar(pos)
     return '\0'
   end
   
-  local s = tostring(C.QHexEditData_readAsciiChar(self.cthis, self.baseoffset + pos))
+  local s = tostring(C.QHexEditDataReader_readAsciiChar(self.creader, self.baseoffset + pos))
   return string.char(s)
 end
 
 function DataBuffer:readString(pos, len)
-  return ffi.string(C.QHexEditData_readString(self.cthis, self.baseoffset + pos, len or -1))
+  return ffi.string(C.QHexEditDataReader_readString(self.creader, self.baseoffset + pos, len or -1))
 end
 
 function DataBuffer:readLine(pos)
-  return ffi.string(C.QHexEditData_readLine(self.cthis, self.baseoffset + pos))
+  return ffi.string(C.QHexEditDataReader_readLine(self.creader, self.baseoffset + pos))
 end
 
 function DataBuffer:readUInt8(pos)
-  return C.QHexEditData_readUInt8(self.cthis, self.baseoffset + pos)
+  return C.QHexEditDataReader_readUInt8(self.creader, self.baseoffset + pos)
 end
 
 function DataBuffer:readUInt16(pos, endian)
-  return C.QHexEditData_readUInt16(self.cthis, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
+  return C.QHexEditDataReader_readUInt16(self.creader, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
 end
 
 function DataBuffer:readUInt32(pos, endian)
-  return C.QHexEditData_readUInt32(self.cthis, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
+  return C.QHexEditDataReader_readUInt32(self.creader, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
 end
 
 function DataBuffer:readUInt64(pos, endian)
-  return C.QHexEditData_readUInt64(self.cthis, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
+  return C.QHexEditDataReader_readUInt64(self.creader, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
 end
 
 function DataBuffer:readInt8(pos)
-  return C.QHexEditData_readInt8(self.cthis, self.baseoffset + pos)
+  return C.QHexEditDataReader_readInt8(self.creader, self.baseoffset + pos)
 end
 
 function DataBuffer:readInt16(pos, endian)
-  return C.QHexEditData_readInt16(self.cthis, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
+  return C.QHexEditDataReader_readInt16(self.creader, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
 end
 
 function DataBuffer:readInt32(pos, endian)
-  return C.QHexEditData_readInt32(self.cthis, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
+  return C.QHexEditDataReader_readInt32(self.creader, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
 end
 
 function DataBuffer:readInt64(pos, endian)
-  return C.QHexEditData_readInt64(self.cthis, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
+  return C.QHexEditDataReader_readInt64(self.creader, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
 end
 
 function DataBuffer:readType(pos, datatype)

@@ -12,20 +12,22 @@ ffi.cdef
   void Debug_println(const char* s);
   void Debug_showDialog();
   
+  void* QHexEditData_createReader(void* __this);
+  void* QHexEditData_createWriter(void* __this);
   void QHexEditData_copyTo(void* __this, void* hexeditdata);
-  int64_t QHexEditData_indexOf(void* __this, int64_t pos, const char* s);
   int64_t QHexEditData_length(void* __this);
-  char QHexEditData_readAsciiChar(void* __this, int64_t pos);
-  const char* QHexEditData_readString(void* __this, int64_t pos, int64_t len);
-  const char* QHexEditData_readLine(void* __this, int64_t pos);
-  uint8_t QHexEditData_readUInt8(void* __this, uint64_t pos);
-  uint16_t QHexEditData_readUInt16(void* __this, uint64_t pos, int endian);
-  uint32_t QHexEditData_readUInt32(void* __this, uint64_t pos, int endian);
-  uint64_t QHexEditData_readUInt64(void* __this, uint64_t pos, int endian);
-  int8_t QHexEditData_readInt8(void* __this, uint64_t pos);
-  int16_t QHexEditData_readInt16(void* __this, uint64_t pos, int endian);
-  int32_t QHexEditData_readInt32(void* __this, uint64_t pos, int endian);
-  int64_t QHexEditData_readInt64(void* __this, uint64_t pos, int endian);
+  int64_t QHexEditDataReader_indexOf(void* __this, int64_t pos, const char* s);
+  char QHexEditDataReader_readAsciiChar(void* __this, int64_t pos);
+  const char* QHexEditDataReader_readString(void* __this, int64_t pos, int64_t len);
+  const char* QHexEditDataReader_readLine(void* __this, int64_t pos);
+  uint8_t QHexEditDataReader_readUInt8(void* __this, uint64_t pos);
+  uint16_t QHexEditDataReader_readUInt16(void* __this, uint64_t pos, int endian);
+  uint32_t QHexEditDataReader_readUInt32(void* __this, uint64_t pos, int endian);
+  uint64_t QHexEditDataReader_readUInt64(void* __this, uint64_t pos, int endian);
+  int8_t QHexEditDataReader_readInt8(void* __this, uint64_t pos);
+  int16_t QHexEditDataReader_readInt16(void* __this, uint64_t pos, int endian);
+  int32_t QHexEditDataReader_readInt32(void* __this, uint64_t pos, int endian);
+  int64_t QHexEditDataReader_readInt64(void* __this, uint64_t pos, int endian);
 ]]
 
 local C = ffi.C

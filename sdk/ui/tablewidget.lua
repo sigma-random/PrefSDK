@@ -5,8 +5,9 @@ local Widget = require("sdk.ui.widget")
 ffi.cdef
 [[
   void* TableWidget_create(int rows, int columns);
-  void TableWidget_setHeaderItem(void *__this, int column, const char* text);
-  void TableWidget_setItem(void*__this, int row, int column, void* element);
+  void TableWidget_setHeaderItem(void*__this, int column, const char* text);
+  void TableWidget_setItemElement(void*__this, int row, int column, void* element);
+  void TableWidget_setItemString(void*__this, int row, int column, const char* s);
 ]]
 
 local C = ffi.C
@@ -32,8 +33,14 @@ function TableWidget:setItems(row, values)
   end
 end
 
-function TableWidget:setItem(row, column, element)
-  C.TableWidget_setItem(self.cthis, row - 1, column - 1, element._cthis)
+function TableWidget:setItem(row, column, item)
+  if type(item) == "string" then
+    C.TableWidget_setItemString(self.cthis, row - 1, column - 1, item)
+  elseif type(item) == "table" then
+    C.TableWidget_setItemElement(self.cthis, row - 1, column - 1, item._cthis)
+  else
+    error("TableWidget:setItem(): Unsupported Type")
+  end
 end
 
 return TableWidget
