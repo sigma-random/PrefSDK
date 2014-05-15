@@ -27,10 +27,10 @@ function SectionTableDialog:__ctor(formattree)
     tablewidget:setItem(i, 6, section.Characteristics)
   end
   
-  vlayout:setMargins(0, 0, 0, 0)
+  vlayout:setMargins(4, 4, 4, 4)
   vlayout:addWidget(tablewidget)
   self:setLayout(vlayout)
-  self:resize(540, 330)
+  self:resize(550, 300)
 end
 
 return SectionTableDialog

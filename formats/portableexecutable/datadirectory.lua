@@ -51,39 +51,51 @@ function DataDirectory:parseResourceDirectory(section, offset)
 end
 
 function DataDirectory:parseExceptionDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parseSecurityDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parseBaseRelocationDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parseDebugDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parseArchDataDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parseGlobalPtrDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parseTlsDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parseLoadConfigurationDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parseBoundImportTableDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parseIatDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parseDelayImportDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parseComDirectory(section, offset)
+  return nil
 end
 
 function DataDirectory:parse()
@@ -98,7 +110,7 @@ function DataDirectory:parse()
       local directoryoffset = Address.rebase(directoryentry.VirtualAddress:value(), section.VirtualAddress:value(), section.PointerToRawData:value())
       
       directoryentry:dynamicInfo(DataDirectory.getDirectoryEntrySection)
-      self.datadirdispatcher[i](self, section, directoryoffset)
+      self[PeConstants.DirectoryNames[1]] = self.datadirdispatcher[i](self, section, directoryoffset)
     end
   end
 end
