@@ -13,8 +13,8 @@ function DataBuffer:__ctor(cthis, baseoffset)
   self.baseoffset = baseoffset
 end
 
-function DataBuffer:copyTo(databuffer)
-  C.QHexEditData_copyTo(self.cthis, databuffer._cthis)
+function DataBuffer:copyTo(databuffer, startoffset, endoffset)
+  C.QHexEditData_copyTo(self.cthis, databuffer.cthis, startoffset or 0, endoffset or self:length())
 end
 
 function DataBuffer:length()

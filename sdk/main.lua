@@ -14,7 +14,7 @@ ffi.cdef
   
   void* QHexEditData_createReader(void* __this);
   void* QHexEditData_createWriter(void* __this);
-  void QHexEditData_copyTo(void* __this, void* hexeditdata);
+  void QHexEditData_copyTo(void* __this, void* hexeditdata, int64_t start, int64_t end);
   int64_t QHexEditData_length(void* __this);
   int64_t QHexEditDataReader_indexOf(void* __this, int64_t pos, const char* s);
   char QHexEditDataReader_readAsciiChar(void* __this, int64_t pos);

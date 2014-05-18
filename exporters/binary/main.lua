@@ -8,5 +8,5 @@ function BinaryExporter:__ctor()
 end
 
 function BinaryExporter:exportData(databufferin, databufferout, startoffset, endoffset)
-  databufferin:copyTo(databufferout)
+  databufferin:copyTo(databufferout, startoffset, endoffset)
 end
