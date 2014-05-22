@@ -39,9 +39,9 @@ function InstructionPrinter:hexString(value, datatype)
   return string.format("%X", value)
 end
 
-function InstructionPrinter:outVirtualAddress(formatstring, address)
-  local va = string.format(formatstring, tonumber(address))
-  local segmentname = self.loader:segmentName(address)
+function InstructionPrinter:outVirtualAddress(formatstring, instruction)
+  local va = string.format(formatstring, tonumber(instruction.virtualaddress))
+  local segmentname = self.loader:segmentName(instruction.address)
   
   C.DisassemblerDrawer_drawVirtualAddress(self.drawer, segmentname, va)
 end

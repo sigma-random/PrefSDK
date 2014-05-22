@@ -8,7 +8,7 @@ local Instruction = oop.class()
 function Instruction:__ctor(databuffer, endian, address, virtualaddress)
   self.databuffer = databuffer
   self.address = address
-  self.virtualaddress = virtualaddress or address
+  self.virtualaddress = virtualaddress
   self.endian = endian
   self.size = 0
   self.type = 0

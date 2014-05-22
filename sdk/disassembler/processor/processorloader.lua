@@ -1,5 +1,6 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
+local Address = require("sdk.math.address")
 local ByteOrder = require("sdk.types.byteorder")
 local AddressQueue = require("sdk.disassembler.addressqueue")
 local Instruction = require("sdk.disassembler.instruction")
@@ -69,6 +70,16 @@ function ProcessorLoader:segmentName(address)
   return "???"
 end
 
+function ProcessorLoader:segmentVirtualAddress(address)
+  local segment = self:segment(address)
+  
+  if segment == nil then
+    return address
+  end
+  
+  return Address.rebase(address, segment.startaddress, segment.baseaddress)
+end
+
 function ProcessorLoader:disassemble()
   local processor = self.processor
   local instructions = self.instructions
@@ -91,7 +102,7 @@ function ProcessorLoader:disassemble()
       if (decaddr[address] == nil) and self:inSegment(address) then
         decaddr[address] = true -- Mark address as disassembled
         
-        local instruction = Instruction(databuffer, self.endian, address)
+        local instruction = Instruction(databuffer, self.endian, address, self:segmentVirtualAddress(address))
         local size = processor:analyze(instruction)
 
         if (size <= 0) and (decaddr[address + 1] == nil) then

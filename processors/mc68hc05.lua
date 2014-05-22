@@ -158,7 +158,7 @@ function MC68HC05Processor:analyze(instruction)
   return instruction.size
 end
 
-function MC68HC05Processor:emulate(addressqueue, referencetable, instruction)  
+function MC68HC05Processor:emulate(addressqueue, referencetable, instruction)
   if self.features[instruction.type] ~= InstructionFeatures.Stop then
     local features = self.features[instruction.type]
         
@@ -175,7 +175,7 @@ function MC68HC05Processor:emulate(addressqueue, referencetable, instruction)
 end
 
 function MC68HC05Processor:output(instructionprinter, instruction)
-  instructionprinter:outVirtualAddress("%04X", instruction.address)
+  instructionprinter:outVirtualAddress("%04X", instruction)
   instructionprinter:outHexDump(instruction.address, instruction.size)
   instructionprinter:outMnemonic(0, instruction)
   
