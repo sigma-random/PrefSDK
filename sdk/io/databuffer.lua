@@ -89,27 +89,27 @@ function DataBuffer:readInt64(pos, endian)
   return C.QHexEditDataReader_readInt64(self.creader, self.baseoffset + pos, endian or ByteOrder.PlatformEndian)
 end
 
-function DataBuffer:readType(pos, datatype)
+function DataBuffer:readType(pos, datatype, endian)
   if DataType.isInteger(datatype) then
     if DataType.isSigned(datatype) then
       if DataType.bitWidth(datatype) == 8 then
-        return self:readInt8(self.baseoffset + pos)
+        return self:readInt8(pos)
       elseif DataType.bitWidth(datatype) == 16 then
-        return self:readInt16(self.baseoffset + pos, DataType.byteOrder(datatype))
+        return self:readInt16(pos, endian or DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 32 then
-        return self:readInt32(self.baseoffset + pos, DataType.byteOrder(datatype))
+        return self:readInt32(pos, endian or DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 64 then
-        return self:readInt64(self.baseoffset + pos, DataType.byteOrder(datatype))
+        return self:readInt64(pos, endian or DataType.byteOrder(datatype))
       end
     else
       if DataType.bitWidth(datatype) == 8 then
-        return self:readUInt8(self.baseoffset + pos)
+        return self:readUInt8(pos)
       elseif DataType.bitWidth(datatype) == 16 then
-        return self:readUInt16(self.baseoffset + pos, DataType.byteOrder(datatype))
+        return self:readUInt16(pos, endian or DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 32 then
-        return self:readUInt32(self.baseoffset + pos, DataType.byteOrder(datatype))
+        return self:readUInt32(pos, endian or DataType.byteOrder(datatype))
       elseif DataType.bitWidth(datatype) == 64 then
-        return self:readUInt64(self.baseoffset + pos, DataType.byteOrder(datatype))
+        return self:readUInt64(pos, endian or DataType.byteOrder(datatype))
       end
     end
   elseif datatype == DataType.Character then

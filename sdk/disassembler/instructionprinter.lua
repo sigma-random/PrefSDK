@@ -94,7 +94,7 @@ function InstructionPrinter:outRegister(registeridx)
   local regname = self.processor.registers[regidx]
   
   if regname == nil then
-    error("Invalid Register Index")
+    regname = "???"
   end
   
   C.DisassemblerDrawer_drawRegister(self.drawer, regname)

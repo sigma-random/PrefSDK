@@ -1,5 +1,6 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
+local ByteOrder = require("sdk.types.byteorder")
 local AddressQueue = require("sdk.disassembler.addressqueue")
 local Instruction = require("sdk.disassembler.instruction")
 local ReferenceTable = require("sdk.disassembler.crossreference.referencetable")
@@ -7,9 +8,10 @@ local ReferenceTable = require("sdk.disassembler.crossreference.referencetable")
 local C = ffi.C
 local ProcessorLoader = oop.class()
 
-function ProcessorLoader:__ctor(formatdefinition, processor)
+function ProcessorLoader:__ctor(formatdefinition, processor, endian)
   self.formatdefinition = formatdefinition
   self.processor = processor
+  self.endian = endian
   self.entrypoints = { }
   self.segments = { }
   self.instructions = { }
@@ -89,20 +91,20 @@ function ProcessorLoader:disassemble()
       if (decaddr[address] == nil) and self:inSegment(address) then
         decaddr[address] = true -- Mark address as disassembled
         
-        local instruction = Instruction(databuffer, address)
+        local instruction = Instruction(databuffer, self.endian, address)
         local size = processor:analyze(instruction)
-      
-        if size > 0 then
-          processor:emulate(addressqueue, referencetable, instruction)
-        elseif decaddr[address + 1] == nil then
+
+        if (size <= 0) and (decaddr[address + 1] == nil) then
           addressqueue:pushFront(address + 1) -- Got an Invalid Instruction: Try To Disassemble Next Byte
-        end
+        else
+          processor:emulate(addressqueue, referencetable, instruction)
+          
+          if instruction.size > maxinstructionsize then
+            maxinstructionsize = instruction.size -- Save largest instruction
+          end
         
-        if instruction.size > maxinstructionsize then
-          maxinstructionsize = instruction.size -- Save largest instruction
+          table.bininsert(instructions, instruction, insbyaddress)
         end
-        
-        table.bininsert(instructions, instruction, insbyaddress)
       end
     end
   end
