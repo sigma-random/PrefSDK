@@ -1,8 +1,9 @@
+local oop = require("sdk.lua.oop")
 local DataType = require("sdk.types.datatype")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local BitmapBPP = require("formats.bitmap.bpp")
 
-local BitmapFormat = FormatDefinition.register("Bitmap Format", "Imaging", "Dax", "1.1")
+local BitmapFormat = oop.class(FormatDefinition)
 
 function BitmapFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -89,3 +90,5 @@ function BitmapFormat:parseBits(bitmapbits)
     line = line + 1
   end
 end
+
+return BitmapFormat

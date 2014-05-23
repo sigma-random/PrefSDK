@@ -1,8 +1,9 @@
--- require("disassembler.mips32")
+local oop = require("sdk.lua.oop")
 local FormatDefinition = require("sdk.format.formatdefinition")
+local ByteOrder = require("sdk.types.byteorder")
 local DataType = require("sdk.types.datatype")
 
-local PsxExeFormat = FormatDefinition.register("PSX-EXE Format", "Sony Playstation 1", "Dax", "1.0")
+local PsxExeFormat = oop.class(FormatDefinition)
 
 function PsxExeFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -40,20 +41,15 @@ function PsxExeFormat:parseFormat(formattree)
   textsection:addField(DataType.Blob, "Data", exeheader.t_size:value())
 end
 
-
--- function PsxExeFormat:generateDisassembler(formattree, buffer)
---  local exeheader = formattree:find("EXE_HEADER")
---  local fpc0 = exeheader:find("pc0")
---  local ft_addr = exeheader:find("t_addr")
---  local ft_size = exeheader:find("t_size")
---  local t_addr = ft_addr:value()
---  local t_size = ft_size:value()
+function PsxExeFormat:generateLoader()
+  local loader = ProcessorLoader(self, MIPS32Processor(), ByteOrder.LittleEndian)
+  local pc0field = self.formattree.ExeHeader.pc0
+  local taddrfield = self.formattree.ExeHeader.t_addr
+  local tsizefield = self.formattree.ExeHeader.t_size
   
---  local d = Mips32Disassembler:new()
---  d.baseva = t_addr 
---  d.baseoffset = 0x800 -- Static Offset of PSX-EXE's Text Section
---  d.startoffset = d:vaToOffset(fpc0:value())
-  -- self.disassembler.segmentprocedure = nil -- getSectionName
-  -- self.disassembler.bytestodisassemble = t_size
---  return d
---end
+  loader:addSegment("TEXT", SegmentType.Code, 0x800, tsizefield:value(), taddrfield:value())
+  loader:addEntry("main", Address.rebase(pc0field:value(), taddrfield:value(), 0x800))
+  return loader
+end
+
+return PsxExeFormat

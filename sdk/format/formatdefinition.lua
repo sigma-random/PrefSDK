@@ -1,7 +1,6 @@
--- local FormatOption = require("sdk.format.formatoption")
+local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
 local uuid = require("sdk.math.uuid")
-local ffi = require("ffi")
 local DataBuffer = require("sdk.io.databuffer")
 local DataType = require("sdk.types.datatype")
 local FormatOption = require("sdk.format.formatoption")
@@ -11,7 +10,7 @@ ffi.cdef
   typedef const char* FormatId;
   
   void Format_register(const char* name, const char* category, const char* author, const char* version, FormatId formatid);
-  void Format_registerOption(FormatId formatid, int optionidx, const char* name);
+  void Format_registerOption(void* hexeditdata, int optionidx, const char* name);
   void Format_enableDisassembler(FormatId formatid);
   
   bool Format_checkUInt8(void* hexeditdata, uint64_t offset,  uint8_t value);
@@ -28,30 +27,23 @@ ffi.cdef
 local C = ffi.C
 local FormatDefinition = oop.class()
 
+function FormatDefinition.register(formattype, name, category, author, version)
+  local formatid = uuid()
+  Sdk.formatlist[formatid] = formattype -- Store Format Definition's type
+  C.Format_register(name, category, author, version, formatid) -- Notify PREF that a new format has been created
+end
+
 function FormatDefinition:__ctor(databuffer)
   self.validated = false
   self.databuffer = databuffer
   self.elementsinfo = { }
   self.dynamicelements = { }
-end
-
-function FormatDefinition.register(name, category, author, version)
-  local formatid = uuid()
-  local formattype = oop.class(FormatDefinition)
-  
-  formattype.id = formatid
-  formattype.options = { }
-  
-  Sdk.formatlist[formatid] = formattype -- Store Format Definition's type
-  C.Format_register(name, category, author, version, formatid) -- Notify PREF that a new format has been created
-  return formattype
+  self.options = { }
 end
 
 function FormatDefinition:registerOption(name, action)
   local opt = FormatOption(name, action)
-  
   table.insert(self.options, opt)
-  C.Format_registerOption(self.id, #self.options, name)
 end
 
 function FormatDefinition:checkData(offset, datatype, value)  

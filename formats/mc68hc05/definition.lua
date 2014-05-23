@@ -1,10 +1,11 @@
+local oop = require("sdk.lua.oop")
 local DataType = require("sdk.types.datatype")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local SegmentType = require("sdk.disassembler.segmenttype")
 local ProcessorLoader = require("sdk.disassembler.processor.processorloader")
 local MC68HC05Processor = require("processors.mc68hc05")
 
-local MC68HC05Rom = FormatDefinition.register("MC68HC05 Microcontroller ROM", "ICs (Freescale)", "Dax", "1.0")
+local MC68HC05Rom = oop.class(FormatDefinition)
 
 function MC68HC05Rom:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -51,3 +52,5 @@ function MC68HC05Rom:generateLoader()
   loader:addEntry("main", romfield:offset())
   return loader
 end
+
+return MC68HC05Rom

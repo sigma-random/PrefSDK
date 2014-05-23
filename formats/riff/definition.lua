@@ -1,8 +1,9 @@
+local oop = require("sdk.lua.oop")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
 local WaveCompressionType = require("formats.riff.wavcompressiontypes")
 
-local RiffFormat = FormatDefinition.register("Resource Interchange Format", "Media", "Dax", "1.0")
+local RiffFormat = oop.class(FormatDefinition)
 
 function RiffFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -90,3 +91,5 @@ function RiffFormat:defineFactChunk(formattree)
   
   return factchunk:size()
 end
+
+return RiffFormat

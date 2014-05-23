@@ -1,8 +1,9 @@
+local oop = require("sdk.lua.oop")
 local ByteOrder = require("sdk.types.byteorder")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
 
-local ZipFormat = FormatDefinition.register("Zip Format", "Compression", "Dax", "1.0")
+local ZipFormat = oop.class(FormatDefinition)
 
 function ZipFormat:getZipRecordFileName(recordfnfield)
   return "'" .. self.databuffer:readString(recordfnfield.frFileName:offset(), recordfnfield.frFileNameLength:value()) .. "'"
@@ -159,3 +160,5 @@ function ZipFormat:defineEndLocator(formattree) -- 0x06054B50
   
   return zipendlocator:size()
 end
+
+return ZipFormat

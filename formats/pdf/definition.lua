@@ -1,10 +1,11 @@
 -- require("sdk.strings.encoding.escape")
+local oop = require("sdk.lua.oop")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
 local PdfTypes = require("formats.pdf.pdftypes")
 local PdfDebug = require("formats.pdf.pdfdebug")
 
-local PdfFormat = FormatDefinition.register("Portable Document Format", "Documents", "Dax", "1.1b")
+local PdfFormat = oop.class(FormatDefinition)
 
 function PdfFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -194,3 +195,5 @@ function PdfFormat:createXRefObj(buffer)
   obj.endpos = self.filepos
   return obj
 end
+
+return PdfFormat

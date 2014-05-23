@@ -1,3 +1,4 @@
+local oop = require("sdk.lua.oop")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
 
@@ -31,7 +32,7 @@ local DataType = require("sdk.types.datatype")
 --  end
 -- end
 
-local VagFormat = FormatDefinition.register("VAG Format", "Sony Playstation 1", "Dax", "1.0")
+local VagFormat = oop.class(FormatDefinition)
 -- VagFormat:registerOption("Save as WAV", saveAsWav)
 
 function VagFormat:__ctor(databuffer)
@@ -55,3 +56,5 @@ function VagFormat:parseFormat(formatmodel, buffer)
   local vagdata = formatmodel:addStructure("VagData")
   vagdata:addField(DataType.Blob, "WaveformData", vagheader.DataSize:value())
 end
+
+return VagFormat

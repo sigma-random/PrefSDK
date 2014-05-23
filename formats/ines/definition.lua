@@ -1,8 +1,9 @@
+local oop = require("sdk.lua.oop")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
 local MapperTypes = require("formats.ines.mappers")
 
-local INesFormat = FormatDefinition.register("iNES Format", "Nintendo", "Dax", "1.0")
+local INesFormat = oop.class(FormatDefinition)
 
 function INesFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -91,3 +92,5 @@ function INesFormat:parseFormat(formattree)
   
   inesheader:addField(DataType.UInt8, "Reserved", 2)
 end
+
+return INesFormat

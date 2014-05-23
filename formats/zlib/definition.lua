@@ -1,10 +1,11 @@
 -- ZLib Data Structure: http://software.intel.com/sites/products/documentation/hpc/ipp/ipps/ipps_ch13/ch13_22_ZLIB.html#fig13-1
 
+local oop = require("sdk.lua.oop")
 local ZLib = require("sdk.compression.zlib")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
 
-local ZLibFormat = FormatDefinition.register("ZLib Format", "Compression", "Dax", "1.0")
+local ZLibFormat = oop.class(FormatDefinition)
 
 function ZLibFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -92,3 +93,5 @@ function ZLibFormat:parseFormat(formattree)
   fflag:setBitField("Dict", 5):dynamicInfo(ZLibFormat.checkDictionary)
   fflag:setBitField("Level", 6, 7):dynamicInfo(ZLibFormat.compressionLevel)
 end
+
+return ZLibFormat

@@ -1,9 +1,10 @@
+local oop = require("sdk.lua.oop")
 local DataType = require("sdk.types.datatype")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local MapItemTypes = require("formats.dex.mapitemtypes")
 local MapItemParser = require("formats.dex.mapitemparser")
 
-local DexFormat = FormatDefinition.register("Dalvik Executable Format", "Android", "Dax", "1.0") 
+local DexFormat = oop.class(FormatDefinition)
 
 function DexFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -86,3 +87,5 @@ function DexFormat:parseMapList(formattree, mapoffset)
     mapitemparser:parseItem()
   end
 end
+
+return DexFormat

@@ -46,6 +46,10 @@ function Sdk.parseFormat(formatid, baseoffset, databuffer, cformattree)
   local buffer = DataBuffer(databuffer, baseoffset)
   local f = formattype(buffer) -- Create a format's instance
   
+  for k, v in pairs(f.options) do
+    C.Format_registerOption(databuffer, k, v.name)
+  end
+  
   f:validateFormat()
   
   if f.validated then

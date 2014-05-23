@@ -1,3 +1,4 @@
+local oop = require("sdk.lua.oop")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
 local DosHeader = require("formats.portableexecutable.dosheader")
@@ -6,18 +7,17 @@ local SectionTable = require("formats.portableexecutable.sectiontable")
 local DataDirectory = require("formats.portableexecutable.datadirectory")
 local SectionTableDialog = require("formats.portableexecutable.ui.sectiontabledialog")
 
-local PeFormat = FormatDefinition.register("Portable Executable Format", "Windows", "Dax", "1.0")
+local PeFormat = oop.class(FormatDefinition)
+
+function PeFormat:__ctor(databuffer)
+  FormatDefinition.__ctor(self, databuffer)
+  self:registerOption("Section Table", PeFormat.showSectionTable)
+  self.peheaders = { } -- Store Headers' definition
+end
 
 function PeFormat:showSectionTable(startoffset, endoffset)
   local sectiontabledialog = SectionTableDialog(self.formattree)
   sectiontabledialog:show()
-end
-
-PeFormat:registerOption("Section Table", PeFormat.showSectionTable)
-
-function PeFormat:__ctor(databuffer)
-  FormatDefinition.__ctor(self, databuffer)
-  self.peheaders = { } -- Store Headers' definition
 end
 
 function PeFormat:validateFormat()
@@ -45,3 +45,5 @@ function PeFormat:parseFormat(formattree)
   self.peheaders["SectionTable"] = sectiontable
   self.peheaders["DataDirectory"] = datadirectory
 end
+
+return PeFormat

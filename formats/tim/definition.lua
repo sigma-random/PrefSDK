@@ -1,9 +1,10 @@
+local oop = require("sdk.lua.oop")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
 local ByteOrder = require("sdk.types.byteorder")
 
 local TimBpp = { [0] = "4-Bit CLUT", [1] = "8-Bit CLUT", [2] = "15-Bit Direct", [3] = "24-Bit Direct", [4] = "Mixed" } 
-local TimFormat = FormatDefinition.register("TIM Format", "Sony Playstation 1", "Dax", "1.0")
+local TimFormat = oop.class(FormatDefinition) 
 
 function TimFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -154,3 +155,5 @@ function TimFormat:createClutBlocks(formattree, bpp)
     colors:addField(DataType.Blob, "Clut" .. (i - 1), clutelements * 2)
   end
 end
+
+return TimFormat

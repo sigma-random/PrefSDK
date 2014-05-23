@@ -1,10 +1,11 @@
+local oop = require("sdk.lua.oop")
 local MathFunctions = require("sdk.math.functions")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local ByteOrder = require("sdk.types.byteorder")
 local DataType = require("sdk.types.datatype")
 local LZma = require("sdk.compression.lzma")
 
-local LZmaFormat = FormatDefinition.register("LZMA Format", "Compression", "Dax", "1.0")
+local LZmaFormat = oop.class(FormatDefinition)
 
 function LZmaFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -54,3 +55,5 @@ function LZmaFormat:parseFormat(formattree)
   lzmaheader:addField(DataType.UInt32_LE, "DictionarySize"):dynamicInfo(LZmaFormat.getDictionarySize)
   lzmaheader:addField(DataType.Int64_LE, "UncompressedSize"):dynamicInfo(LZmaFormat.checkUncompressedSize)
 end 
+
+return LZmaFormat

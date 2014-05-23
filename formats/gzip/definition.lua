@@ -1,8 +1,9 @@
+local oop = require("sdk.lua.oop")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
 local OperatingSystems = require("formats.gzip.gziptypes")
 
-local GZipFormat = FormatDefinition.register("GZip Format", "Compression", "Karl", "1.1")
+local GZipFormat = oop.class(FormatDefinition)
 
 function GZipFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -113,3 +114,5 @@ function GZipFormat:defineTrailer(formattree)
   
   return gziptrailer:size()
 end
+
+return GZipFormat

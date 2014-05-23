@@ -1,7 +1,8 @@
+local oop = require("sdk.lua.oop")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
 
-local Ecma130Format = FormatDefinition.register("ECMA-130 Format", "File System", "Dax", "1.0")
+local Ecma130Format = oop.class(FormatDefinition)
 
 function Ecma130Format:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
@@ -65,3 +66,5 @@ function Ecma130Format:parseFormat(formattree)
     sectoridx = sectoridx + 1
   end
 end
+
+return Ecma130Format
