@@ -17,8 +17,6 @@ function ProcessorLoader:__ctor(formatdefinition, processor, endian)
   self.segments = { }
   self.instructions = { }
   self.referencetable = ReferenceTable()
-  
-  C.Format_enableDisassembler(formatdefinition.id)
 end
 
 function ProcessorLoader:addEntry(entryname, entryaddress)

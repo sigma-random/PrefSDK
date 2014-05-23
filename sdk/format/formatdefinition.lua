@@ -11,7 +11,6 @@ ffi.cdef
   
   void Format_register(const char* name, const char* category, const char* author, const char* version, FormatId formatid);
   void Format_registerOption(void* hexeditdata, int optionidx, const char* name);
-  void Format_enableDisassembler(FormatId formatid);
   
   bool Format_checkUInt8(void* hexeditdata, uint64_t offset,  uint8_t value);
   bool Format_checkUInt16(void* hexeditdata, uint64_t offset, uint16_t value, int byteorder);
@@ -106,10 +105,6 @@ end
 
 function FormatDefinition:parseFormat(formattree)
   -- This method must be reimplemented
-end
-
-function FormatDefinition:generateLoader()
-  return nil
 end
 
 return FormatDefinition
