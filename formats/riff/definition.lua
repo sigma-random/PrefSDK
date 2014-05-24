@@ -19,11 +19,11 @@ function RiffFormat:getWaveCompressionType(compressiontypefield)
   return "Unknown"
 end
 
-function RiffFormat:validateFormat()
+function RiffFormat:validate()
   self:checkData(0, DataType.AsciiString, "RIFF")
 end
 
-function RiffFormat:parseFormat(formattree)
+function RiffFormat:parse(formattree)
   local riffheader = formattree:addStructure("RiffHeader")
   riffheader:addField(DataType.Character, "ChunkID", 4)
   riffheader:addField(DataType.UInt32_LE, "ChunkDataSize")

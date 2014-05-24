@@ -49,12 +49,12 @@ function GZipFormat:getOperatingSystem(osfield)
   return OperatingSystems[osfield:value()]
 end
 
-function GZipFormat:validateFormat()
+function GZipFormat:validate()
   self:checkData(0, DataType.UInt16_LE, 0x8B1F)
   self:checkData(2, DataType.UInt8, 0x08)
 end
     
-function GZipFormat:parseFormat(formattree)  
+function GZipFormat:parse(formattree)  
   self:defineHeader(formattree)
   self:defineData(formattree)
   self:defineTrailer(formattree)

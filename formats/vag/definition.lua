@@ -39,11 +39,11 @@ function VagFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
 end
 
-function VagFormat:validateFormat()
+function VagFormat:validate()
   self:checkData(0, DataType.AsciiString, "VAGp")
 end
     
-function VagFormat:parseFormat(formatmodel, buffer)
+function VagFormat:parse(formatmodel, buffer)
   local vagheader = formatmodel:addStructure("VagHeader")
   vagheader:addField(DataType.Character, "Id", 4)
   vagheader:addField(DataType.UInt32_BE, "Version")

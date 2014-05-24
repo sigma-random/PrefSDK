@@ -5,6 +5,7 @@ local Structure = require("sdk.format.element.structure")
 
 ffi.cdef
 [[
+  void* FormatTree_create(void* hexeditdata, int64_t baseoffset);
   void* FormatTree_addStructure(void* __this, const char* name);
   void* FormatTree_insertStructure(void* __this, const char* name, uint64_t offset);
   void* FormatTree_getStructure(void* __this, uint64_t i);
@@ -15,30 +16,30 @@ local C = ffi.C
 local FormatTree = oop.class()
 
 function FormatTree:__ctor(cthis, databuffer)
-  self._cthis = cthis
-  self._databuffer = databuffer
+  self.cthis = cthis or C.FormatTree_create(databuffer.cthis, databuffer.baseoffset)
+  self.databuffer = databuffer
 end
 
 function FormatTree:structureCount()
-  return C.FormatTree_getStructureCount(self._cthis)
+  return C.FormatTree_getStructureCount(self.cthis)
 end
 
 function FormatTree:structure(i)  
-  local cstruct = C.FormatTree_getStructure(self._cthis, i)
+  local cstruct = C.FormatTree_getStructure(self.cthis, i)
   return Structure(cstruct)
 end
 
 function FormatTree:addStructure(name, offset)
   local cstruct = nil
-  local baseoffset = self._databuffer.baseoffset
+  local baseoffset = self.databuffer.baseoffset
   
   if offset then
-    cstruct = C.FormatTree_insertStructure(self._cthis, name, offset)
+    cstruct = C.FormatTree_insertStructure(self.cthis, name, offset)
   else
-    cstruct = C.FormatTree_addStructure(self._cthis, name)
+    cstruct = C.FormatTree_addStructure(self.cthis, name)
   end
   
-  local s = Structure(cstruct, self._databuffer)
+  local s = Structure(cstruct, self.databuffer)
   self[name] = s
   return s
 end

@@ -13,13 +13,13 @@ function DexFormat:__ctor(databuffer)
   self.reverseendianconstant = 0x78563412 -- Big Endian DEX
 end
 
-function DexFormat:validateFormat()
+function DexFormat:validate()
   self:checkData(0x00000000, DataType.AsciiString, "dex")
   self:checkData(0x00000003, DataType.UInt8, 0x0A)
   self:checkData(0x00000007, DataType.UInt8, 0x00)
 end
 
-function DexFormat:parseFormat(formattree)
+function DexFormat:parse(formattree)
   local headeritem = formattree:addStructure("HeaderItem"):dynamicInfo(DexFormat.displayDexInfo)
   headeritem:addField(DataType.Character, "Magic", 8)
   headeritem:addField(DataType.UInt32_LE, "Checksum")

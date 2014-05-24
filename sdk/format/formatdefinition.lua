@@ -3,6 +3,7 @@ local oop = require("sdk.lua.oop")
 local uuid = require("sdk.math.uuid")
 local DataBuffer = require("sdk.io.databuffer")
 local DataType = require("sdk.types.datatype")
+local FormatTree = require("sdk.format.formattree")
 local FormatOption = require("sdk.format.formatoption")
 
 ffi.cdef
@@ -99,11 +100,11 @@ function FormatDefinition:checkData(offset, datatype, value)
   end
 end
 
-function FormatDefinition:validateFormat()
+function FormatDefinition:validate()
   -- This method must be reimplemented
 end
 
-function FormatDefinition:parseFormat(formattree)
+function FormatDefinition:parse(formattree)
   -- This method must be reimplemented
 end
 

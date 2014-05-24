@@ -20,7 +20,7 @@ function TimFormat:getBpp(bppfield)
   return "Unknown"
 end
 
-function TimFormat:validateFormat()
+function TimFormat:validate()
   local databuffer = self.databuffer
   local id = databuffer:readUInt32(0, ByteOrder.LittleEndian)
   
@@ -105,7 +105,7 @@ function TimFormat:validateFormat()
   self.validated = true
 end
     
-function TimFormat:parseFormat(formattree)
+function TimFormat:parse(formattree)
   local timheader = formattree:addStructure("TimHeader")
   
   local fid = timheader:addField(DataType.UInt32_LE, "Id")

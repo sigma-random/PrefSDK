@@ -1,22 +1,53 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
+local uuid = require("sdk.math.uuid")
 local Address = require("sdk.math.address")
 local ByteOrder = require("sdk.types.byteorder")
+local FormatTree = require("sdk.format.formattree")
 local AddressQueue = require("sdk.disassembler.addressqueue")
 local Instruction = require("sdk.disassembler.instruction")
 local ReferenceTable = require("sdk.disassembler.crossreference.referencetable")
 
+ffi.cdef
+[[
+  typedef const char* LoaderId;
+  
+  void Loader_register(const char* name, const char* author, const char* version, LoaderId loaderid);
+]]
+
 local C = ffi.C
 local ProcessorLoader = oop.class()
 
-function ProcessorLoader:__ctor(formatdefinition, processor, endian)
-  self.formatdefinition = formatdefinition
+function ProcessorLoader.register(loadertype, name, author, version)
+  local loaderid = uuid()
+  Sdk.loaderlist[loaderid] = loadertype  -- Store Loader Definition's type
+  C.Loader_register(name, author, version, loaderid) -- Notify PREF that a new loader has been created
+end
+
+function ProcessorLoader:__ctor(databuffer, format, processor, endian)
+  self.databuffer = databuffer
+  self.format = format
   self.processor = processor
   self.endian = endian
   self.entrypoints = { }
   self.segments = { }
   self.instructions = { }
   self.referencetable = ReferenceTable()
+  self.isvalid = self:validate()
+  
+  if self.isvalid then
+    self.format.tree = FormatTree(nil, databuffer)
+    self.format:parse(self.format.tree)
+    self:createSegments(self.format.tree)
+  end
+end
+
+function ProcessorLoader:validate()
+  return pcall(self.format.validate, self.format)
+end
+
+function ProcessorLoader:createSegments(formattree)
+  -- This method must be reimplemented
 end
 
 function ProcessorLoader:addEntry(entryname, entryaddress)
@@ -82,7 +113,7 @@ function ProcessorLoader:disassemble()
   local processor = self.processor
   local instructions = self.instructions
   local referencetable = self.referencetable
-  local databuffer = self.formatdefinition.databuffer
+  local databuffer = self.format.databuffer
   local decaddr = { }
   local maxinstructionsize = 0
   

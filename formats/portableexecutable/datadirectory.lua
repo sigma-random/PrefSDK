@@ -10,7 +10,7 @@ local DataDirectory = oop.class()
 
 function DataDirectory:__ctor(databuffer, formattree, ntheaders, sectiontable)
   self.databuffer = databuffer
-  self.formattree = formattree
+  self.tree = formattree
   self.ntheaders = ntheaders
   self.sectiontable = sectiontable
   
@@ -33,19 +33,19 @@ function DataDirectory.getDirectoryEntrySection(formatdefinition, directoryentry
 end
 
 function DataDirectory:parseExportDirectory(section, offset)
-  local exportdirectory = ExportDirectory(self.databuffer, self.formattree, section, offset)
+  local exportdirectory = ExportDirectory(self.databuffer, self.tree, section, offset)
   exportdirectory:parse()
   return exportdirectory
 end
 
 function DataDirectory:parseImportDirectory(section, offset)
-  local importdirectory = ImportDirectory(self.databuffer, self.formattree, section, offset)
+  local importdirectory = ImportDirectory(self.databuffer, self.tree, section, offset)
   importdirectory:parse()
   return importdirectory
 end
 
 function DataDirectory:parseResourceDirectory(section, offset)
-  local resourcedirectory = ResourceDirectory(self.databuffer, self.formattree, section, offset)
+  local resourcedirectory = ResourceDirectory(self.databuffer, self.tree, section, offset)
   resourcedirectory:parse()
   return resourcedirectory
 end
@@ -100,7 +100,7 @@ end
 
 function DataDirectory:parse()
   local sectiontable = self.sectiontable
-  local datadirectory = self.formattree.NtHeaders.OptionalHeader.DataDirectory
+  local datadirectory = self.tree.NtHeaders.OptionalHeader.DataDirectory
   
   for i = 1, PeConstants.NumberOfDirectoryEntries do
     local directoryentry = datadirectory[PeConstants.DirectoryNames[i]]

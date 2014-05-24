@@ -38,7 +38,7 @@ function ZLibFormat:checkDictionary(hasdictfield, buffer)
 end
 
 function ZLibFormat:validateCheckFlag(checksumfield)
-  local zlibheader = self.formattree.ZLibHeader
+  local zlibheader = self.tree.ZLibHeader
   
   if ZLib.isChecksumValid(zlibheader.Compression:value(), zlibheader.Flag:value()) == true then
     return "Checksum OK"
@@ -51,7 +51,7 @@ function ZLibFormat:compressionLevel(comprlevelfield)
   return string.format("Compression Level: %d", comprlevelfield:value())
 end
 
-function ZLibFormat:validateFormat()
+function ZLibFormat:validate()
   local compression = self.databuffer:readUInt8(0)
   local cm = bit.band(compression, 0xF)
   local cinfo = bit.rshift(bit.band(compression, 0xF0), 4)
@@ -78,7 +78,7 @@ function ZLibFormat:validateFormat()
   self.validated = true
 end
 
-function ZLibFormat:parseFormat(formattree)
+function ZLibFormat:parse(formattree)
   local zlibheader = formattree:addStructure("ZLibHeader")
   local fcompression = zlibheader:addField(DataType.UInt8, "Compression")
   fcompression:setBitField("Method", 0, 3):dynamicInfo(ZLibFormat.compressionMethod)

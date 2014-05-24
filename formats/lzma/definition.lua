@@ -29,7 +29,7 @@ function LZmaFormat:checkUncompressedSize(uncomprsizefield)
   return ""
 end
 
-function LZmaFormat:validateFormat()  
+function LZmaFormat:validate()  
   self:checkData(0, DataType.UInt8, 0x5D)
   
   local databuffer = self.databuffer
@@ -49,7 +49,7 @@ function LZmaFormat:validateFormat()
   end
 end
     
-function LZmaFormat:parseFormat(formattree)
+function LZmaFormat:parse(formattree)
   local lzmaheader = formattree:addStructure("LZmaHeader")
   lzmaheader:addField(DataType.UInt8, "Properties"):dynamicInfo(LZmaFormat.analyzeProperties)
   lzmaheader:addField(DataType.UInt32_LE, "DictionarySize"):dynamicInfo(LZmaFormat.getDictionarySize)

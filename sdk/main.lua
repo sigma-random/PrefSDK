@@ -5,7 +5,9 @@ local DataBuffer = require("sdk.io.databuffer")
 local InstructionPrinter = require("sdk.disassembler.instructionprinter")
 
 ffi.cdef
-[[  
+[[
+  typedef const char* LoaderId;
+  
   void Pref_setSdkVersion(int8_t major, int8_t minor, int8_t revision, const char* custom);
   
   void Debug_print(const char* s);
@@ -28,6 +30,8 @@ ffi.cdef
   int16_t QHexEditDataReader_readInt16(void* __this, uint64_t pos, int endian);
   int32_t QHexEditDataReader_readInt32(void* __this, uint64_t pos, int endian);
   int64_t QHexEditDataReader_readInt64(void* __this, uint64_t pos, int endian);
+  
+  void LoaderModel_setValid(void* __this, LoaderId loaderid);
 ]]
 
 local C = ffi.C
@@ -39,6 +43,8 @@ C.Pref_setSdkVersion(1, 5, 0, nil)
 -- This table store the SDK's state and it is available everywhere.
 Sdk = { formatlist = { },
         loadedformats = { },
+        loaderlist = { },
+        loadedloaders = { },
         exporterlist = { } }
 
 function Sdk.parseFormat(formatid, baseoffset, databuffer, cformattree)
@@ -50,40 +56,32 @@ function Sdk.parseFormat(formatid, baseoffset, databuffer, cformattree)
     C.Format_registerOption(databuffer, k, v.name)
   end
   
-  f:validateFormat()
+  f:validate()
   
   if f.validated then
-    f.formattree = FormatTree(cformattree, buffer)
+    f.tree = FormatTree(cformattree, buffer)
     Sdk.loadedformats[databuffer] = f
-    
-    f:parseFormat(f.formattree)
-    f.loader = f:generateLoader()
+    f:parse(f.tree)
   end
 end
 
-function Sdk.disassembleFormat(databuffer)
-  local f = Sdk.loadedformats[databuffer]
+function Sdk.disassembleData(databuffer, loaderid)
+  local loadertype = Sdk.loaderlist[loaderid]
+  local l = loadertype(DataBuffer(databuffer))
   
-  if f.loader then
-    return f.loader:disassemble()
-  end
-  
-  return 0
+  Sdk.loadedloaders[databuffer] = l
+  return l:disassemble()
 end
 
 function Sdk.printInstruction(drawer, databuffer, index)
-  local f = Sdk.loadedformats[databuffer]
+  local l = Sdk.loadedloaders[databuffer]
+  local processor = l.processor
+  local instructionprinter = InstructionPrinter(drawer, l, index)
+  local instruction = l.instructions[index]
     
-  if f.loader then
-    local loader = f.loader
-    local processor = loader.processor
-    local instructionprinter = InstructionPrinter(drawer, loader, index)
-    local instruction = loader.instructions[index]
-    
-    if instruction then
-      processor:output(instructionprinter, instruction)
-      return true
-    end
+  if instruction then
+    processor:output(instructionprinter, instruction)
+    return true
   end
   
   return false
@@ -117,6 +115,18 @@ function Sdk.getFormatElementInfo(elementid, databuffer)
   end
   
   return ""
+end
+
+function Sdk.validateLoaders(loadermodel, databuffer)
+  local buffer = DataBuffer(databuffer)
+  
+  for k, v in pairs(Sdk.loaderlist) do
+    local l = v(buffer)
+    
+    if l.isvalid then
+      C.LoaderModel_setValid(loadermodel, k)
+    end
+  end
 end
 
 function Sdk.exportData(exporterid, databufferin, databufferout, startoffset, endoffset)

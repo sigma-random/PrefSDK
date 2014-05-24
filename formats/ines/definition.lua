@@ -29,14 +29,14 @@ end
 
 function INesFormat:getMapperTypeFromLow(mappertypelowfield)
   local lowpart = mappertypelowfield:value()
-  local highpart = self.formattree.INesHeader.SystemFlags2.HighROMMapperType:value()
+  local highpart = self.tree.INesHeader.SystemFlags2.HighROMMapperType:value()
   local mt = bit.bor(bit.lshift(highpart, 4), lowpart)
   return MapperTypes[mt]
 end
 
 function INesFormat:getMapperTypeFromHigh(mappertypehighfield)
   local highpart = mappertypehighfield:value()
-  local lowpart = self.formattree.INesHeader.SystemFlags1.LowROMMapperType:value()
+  local lowpart = self.tree.INesHeader.SystemFlags1.LowROMMapperType:value()
   local mt = bit.bor(bit.lshift(highpart, 4), lowpart)
   return MapperTypes[mt]
 end
@@ -57,11 +57,11 @@ function INesFormat:getMirroring(mirroringfield)
   return "Horizontal"
 end
 
-function INesFormat:validateFormat()
+function INesFormat:validate()
   self:checkData(0, DataType.UInt32_LE, 0x1A53454E) -- "'Nes^Z' Signature"
 end
 
-function INesFormat:parseFormat(formattree)
+function INesFormat:parse(formattree)
   local inesheader = formattree:addStructure("INesHeader")
   inesheader:addField(DataType.Character, "Signature", 4)
   inesheader:addField(DataType.UInt8, "RomBanksCount"):dynamicInfo(INesFormat.calcRomSize)

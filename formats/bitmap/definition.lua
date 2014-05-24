@@ -9,7 +9,7 @@ function BitmapFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
 end
 
-function BitmapFormat:validateFormat()
+function BitmapFormat:validate()
   self:checkData(0, DataType.AsciiString, "BM")                 -- Bitmap's Signature
   self:checkData(14, DataType.UInt32_LE, 40)                    -- BitmapInfoHeader.biSize
   self:checkData(26, DataType.UInt16_LE, 0x00000001)            -- BitmapInfoHseader.biPlanes
@@ -24,7 +24,7 @@ function BitmapFormat:displaySize(sizefield)
   return string.format("%dpx", sizefield:value())
 end
 
-function BitmapFormat:parseFormat(formattree)
+function BitmapFormat:parse(formattree)
   local bitmapfileheader = formattree:addStructure("BitmapFileHeader")
   bitmapfileheader:addField(DataType.UInt16_LE, "bfType")
   bitmapfileheader:addField(DataType.UInt32_LE, "bfSize")
@@ -73,7 +73,7 @@ function BitmapFormat:displayColorHex(colorentry)
 end
 
 function BitmapFormat:parseBits(bitmapbits)
-  local tree = self.formattree
+  local tree = self.tree
   local w = tree.BitmapInfoHeader.biWidth:value()
   local h = tree.BitmapInfoHeader.biHeight:value()
   local bpp = tree.BitmapInfoHeader.biBitCount:value()

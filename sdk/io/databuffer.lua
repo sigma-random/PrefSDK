@@ -10,7 +10,7 @@ function DataBuffer:__ctor(cthis, baseoffset)
   self.cthis = cthis
   self.creader = C.QHexEditData_createReader(cthis)
   self.cwriter = C.QHexEditData_createWriter(cthis)
-  self.baseoffset = baseoffset
+  self.baseoffset = baseoffset or 0
 end
 
 function DataBuffer:copyTo(databuffer, startoffset, endoffset)

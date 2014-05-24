@@ -13,11 +13,11 @@ function ZipFormat:getZipDirEntryFileName(direntryfnfield)
   return "'" .. self.databuffer:readString(direntryfnfield.deFileName:offset(), direntryfnfield.deFileNameLength:value()) .. "'"
 end
 
-function ZipFormat:validateFormat()
+function ZipFormat:validate()
   self:checkData(0, DataType.UInt32_LE, 0x04034B50)
 end
     
-function ZipFormat:parseFormat(formattree)  
+function ZipFormat:parse(formattree)  
   local pos = 0
   local databuffer = self.databuffer
   

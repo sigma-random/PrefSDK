@@ -11,11 +11,11 @@ function MC68HC05Rom:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
 end
 
-function MC68HC05Rom:validateFormat()
+function MC68HC05Rom:validate()
   self.validated = true
 end
 
-function MC68HC05Rom:parseFormat(formattree)
+function MC68HC05Rom:parse(formattree)
   local mc68hc05 = formattree:addStructure("MC68HC05")
   mc68hc05:addField(DataType.Blob, "DualMapIORegs", 0x10)
   mc68hc05:addField(DataType.Blob, "GenericIORegs", 0x30)
@@ -35,12 +35,12 @@ end
 
 function MC68HC05Rom:generateLoader()
   local loader = ProcessorLoader(self, MC68HC05Processor())
-  local stackfield = self.formattree.MC68HC05.InternalRAM.Stack
-  local lowramfield = self.formattree.MC68HC05.InternalRAM.LowRam
-  local highramfield = self.formattree.MC68HC05.InternalRAM.HighRam
-  local dmioregsfield = self.formattree.MC68HC05.DualMapIORegs
-  local gpioregsfield = self.formattree.MC68HC05.GenericIORegs
-  local romfield = self.formattree.MC68HC05.MaskROM
+  local stackfield = self.tree.MC68HC05.InternalRAM.Stack
+  local lowramfield = self.tree.MC68HC05.InternalRAM.LowRam
+  local highramfield = self.tree.MC68HC05.InternalRAM.HighRam
+  local dmioregsfield = self.tree.MC68HC05.DualMapIORegs
+  local gpioregsfield = self.tree.MC68HC05.GenericIORegs
+  local romfield = self.tree.MC68HC05.MaskROM
     
   loader:addSegment("Stack", SegmentType.Data, stackfield:offset(), stackfield:endOffset())
   loader:addSegment("LowRam", SegmentType.Data, lowramfield:offset(), lowramfield:endOffset())

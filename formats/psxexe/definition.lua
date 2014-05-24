@@ -9,11 +9,11 @@ function PsxExeFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
 end
 
-function PsxExeFormat:validateFormat()
+function PsxExeFormat:validate()
   self:checkData(0, DataType.AsciiString, "PS-X EXE")
 end
     
-function PsxExeFormat:parseFormat(formattree)
+function PsxExeFormat:parse(formattree)
   local exeheader = formattree:addStructure("ExeHeader")
   exeheader:addField(DataType.Character, "id", 8)  
   exeheader:addField(DataType.UInt32_LE, "text")
@@ -39,17 +39,6 @@ function PsxExeFormat:parseFormat(formattree)
   
   local textsection = formattree:addStructure("TextSection", 0x800)
   textsection:addField(DataType.Blob, "Data", exeheader.t_size:value())
-end
-
-function PsxExeFormat:generateLoader()
-  local loader = ProcessorLoader(self, MIPS32Processor(), ByteOrder.LittleEndian)
-  local pc0field = self.formattree.ExeHeader.pc0
-  local taddrfield = self.formattree.ExeHeader.t_addr
-  local tsizefield = self.formattree.ExeHeader.t_size
-  
-  loader:addSegment("TEXT", SegmentType.Code, 0x800, tsizefield:value(), taddrfield:value())
-  loader:addEntry("main", Address.rebase(pc0field:value(), taddrfield:value(), 0x800))
-  return loader
 end
 
 return PsxExeFormat

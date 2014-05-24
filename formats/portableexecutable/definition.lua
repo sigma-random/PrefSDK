@@ -16,18 +16,18 @@ function PeFormat:__ctor(databuffer)
 end
 
 function PeFormat:showSectionTable(startoffset, endoffset)
-  local sectiontabledialog = SectionTableDialog(self.formattree)
+  local sectiontabledialog = SectionTableDialog(self.tree)
   sectiontabledialog:show()
 end
 
-function PeFormat:validateFormat()
+function PeFormat:validate()
   self:checkData(0, DataType.UInt16_LE, 0x5A4D)
   
   local peheaderoffset = self.databuffer:readType(0x3C, DataType.UInt32_LE) -- Get NtHeaders' offset
   self:checkData(peheaderoffset, DataType.UInt32_LE, 0x00004550)
 end
 
-function PeFormat:parseFormat(formattree)
+function PeFormat:parse(formattree)
   local dosheader = DosHeader(formattree)
   dosheader:parse()
 

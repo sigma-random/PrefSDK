@@ -22,11 +22,11 @@ function PdfFormat:getObjectName(objstruct)
   return "Object(Number, Revision): " .. self.databuffer:readString(offset, (objpos - offset) - 1)
 end
 
-function PdfFormat:validateFormat()
+function PdfFormat:validate()
   self:checkData(0, DataType.AsciiString, "%PDF-")
 end
 
-function PdfFormat:parseFormat(formattree)  
+function PdfFormat:parse(formattree)  
   local objtable = self:findAllKeywords(self.databuffer)
   -- PdfDebug.printObjectTable(objtable)
 
