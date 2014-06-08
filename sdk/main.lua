@@ -1,8 +1,8 @@
 require("sdk.strict")
 require("sdk.lua.table") -- Add Table Enhancements
 local ffi = require("ffi")
+local DataType = require("sdk.types.datatype")
 local DataBuffer = require("sdk.io.databuffer")
-local InstructionPrinter = require("sdk.disassembler.instructionprinter")
 
 ffi.cdef
 [[
@@ -36,6 +36,7 @@ ffi.cdef
 
 local C = ffi.C
 local FormatTree = require("sdk.format.formattree")
+local DisassemblerListing = require("sdk.disassembler.disassemblerlisting")
 
 -- Notify PrefSDK's version.
 C.Pref_setSdkVersion(1, 5, 0, nil)
@@ -44,7 +45,6 @@ C.Pref_setSdkVersion(1, 5, 0, nil)
 Sdk = { formatlist = { },
         loadedformats = { },
         loaderlist = { },
-        loadedloaders = { },
         exporterlist = { } }
 
 function Sdk.parseFormat(formatid, baseoffset, databuffer, cformattree)
@@ -65,26 +65,37 @@ function Sdk.parseFormat(formatid, baseoffset, databuffer, cformattree)
   end
 end
 
-function Sdk.disassembleData(databuffer, loaderid)
-  local loadertype = Sdk.loaderlist[loaderid]
-  local l = loadertype(DataBuffer(databuffer))
+function Sdk.validateLoaders(loadermodel, databuffer)
+  local buffer = DataBuffer(databuffer)
   
-  Sdk.loadedloaders[databuffer] = l
-  return l:disassemble()
+  for k, v in pairs(Sdk.loaderlist) do
+    local l = v(nil, buffer) -- Test Loader
+    
+    if l.validated then
+      C.LoaderModel_setValid(loadermodel, k)
+    end
+  end
 end
 
-function Sdk.printInstruction(drawer, databuffer, index)
-  local l = Sdk.loadedloaders[databuffer]
-  local processor = l.processor
-  local instructionprinter = InstructionPrinter(drawer, l, index)
-  local instruction = l.instructions[index]
-    
-  if instruction then
-    processor:output(instructionprinter, instruction)
-    return true
+function Sdk.disassembleData(clisting, databuffer, loaderid)
+  local errorhandler = function(loader, msg)
+    local currentinstr = loader.currentinstruction
+
+    if currentinstr then
+      Sdk.dbgprint(string.format("Disassembler in panic state: %s\n  Current Address: %X\n  Last Instruction: '%s' (Address %X, %d Operands)\n", 
+                                  msg, loader.listing.currentaddress, currentinstr.mnemonic, currentinstr.address, #currentinstr.operands)) 
+    else
+      Sdk.dbgprint("Disassembler in panic state: " .. msg .. "\n")
+    end
   end
   
-  return false
+  local loadertype = Sdk.loaderlist[loaderid]
+  local l = loadertype(DisassemblerListing(clisting), DataBuffer(databuffer))
+  local res, msg = pcall(l.disassemble, l)
+  
+  if res == false then
+    errorhandler(l, msg)
+  end
 end
 
 function Sdk.parseDynamic(elementid, databuffer)
@@ -115,18 +126,6 @@ function Sdk.getFormatElementInfo(elementid, databuffer)
   end
   
   return ""
-end
-
-function Sdk.validateLoaders(loadermodel, databuffer)
-  local buffer = DataBuffer(databuffer)
-  
-  for k, v in pairs(Sdk.loaderlist) do
-    local l = v(buffer)
-    
-    if l.isvalid then
-      C.LoaderModel_setValid(loadermodel, k)
-    end
-  end
 end
 
 function Sdk.exportData(exporterid, databufferin, databufferout, startoffset, endoffset)

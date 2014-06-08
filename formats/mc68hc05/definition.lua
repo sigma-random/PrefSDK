@@ -1,9 +1,9 @@
 local oop = require("sdk.lua.oop")
 local DataType = require("sdk.types.datatype")
 local FormatDefinition = require("sdk.format.formatdefinition")
-local SegmentType = require("sdk.disassembler.segmenttype")
+-- local SegmentType = require("sdk.disassembler.segmenttype")
 local ProcessorLoader = require("sdk.disassembler.processor.processorloader")
-local MC68HC05Processor = require("processors.mc68hc05")
+-- local MC68HC05Processor = require("processors.mc68hc05")
 
 local MC68HC05Rom = oop.class(FormatDefinition)
 
@@ -33,24 +33,24 @@ function MC68HC05Rom:parse(formattree)
   mc68hc05:addField(DataType.Blob, "UserVectors", 0x10)
 end
 
-function MC68HC05Rom:generateLoader()
-  local loader = ProcessorLoader(self, MC68HC05Processor())
-  local stackfield = self.tree.MC68HC05.InternalRAM.Stack
-  local lowramfield = self.tree.MC68HC05.InternalRAM.LowRam
-  local highramfield = self.tree.MC68HC05.InternalRAM.HighRam
-  local dmioregsfield = self.tree.MC68HC05.DualMapIORegs
-  local gpioregsfield = self.tree.MC68HC05.GenericIORegs
-  local romfield = self.tree.MC68HC05.MaskROM
-    
-  loader:addSegment("Stack", SegmentType.Data, stackfield:offset(), stackfield:endOffset())
-  loader:addSegment("LowRam", SegmentType.Data, lowramfield:offset(), lowramfield:endOffset())
-  loader:addSegment("HighRam", SegmentType.Data, highramfield:offset(), highramfield:endOffset())
-  loader:addSegment("DMIO", SegmentType.Data, dmioregsfield:offset(), dmioregsfield:endOffset())
-  loader:addSegment("GPIO", SegmentType.Data, gpioregsfield:offset(), gpioregsfield:endOffset())
-  loader:addSegment("Rom", SegmentType.Code, romfield:offset(), romfield:endOffset())
-  
-  loader:addEntry("main", romfield:offset())
-  return loader
-end
+-- function MC68HC05Rom:generateLoader()
+--   local loader = ProcessorLoader(self, MC68HC05Processor())
+--   local stackfield = self.tree.MC68HC05.InternalRAM.Stack
+--   local lowramfield = self.tree.MC68HC05.InternalRAM.LowRam
+--   local highramfield = self.tree.MC68HC05.InternalRAM.HighRam
+--   local dmioregsfield = self.tree.MC68HC05.DualMapIORegs
+--   local gpioregsfield = self.tree.MC68HC05.GenericIORegs
+--   local romfield = self.tree.MC68HC05.MaskROM
+--     
+--   loader:addSegment("Stack", SegmentType.Data, stackfield:offset(), stackfield:endOffset())
+--   loader:addSegment("LowRam", SegmentType.Data, lowramfield:offset(), lowramfield:endOffset())
+--   loader:addSegment("HighRam", SegmentType.Data, highramfield:offset(), highramfield:endOffset())
+--   loader:addSegment("DMIO", SegmentType.Data, dmioregsfield:offset(), dmioregsfield:endOffset())
+--   loader:addSegment("GPIO", SegmentType.Data, gpioregsfield:offset(), gpioregsfield:endOffset())
+--   loader:addSegment("Rom", SegmentType.Code, romfield:offset(), romfield:endOffset())
+--   
+--   loader:addEntry("main", romfield:offset())
+--   return loader
+-- end
 
 return MC68HC05Rom

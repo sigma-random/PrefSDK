@@ -2,13 +2,13 @@ local oop = require("sdk.lua.oop")
 
 local Stack = oop.class()
 
-function Stack:__ctor()
-  
-end
-
 function Stack:push(...)
-  for _, v in ipairs{...} do
-    self[#self + 1] = v
+  if ... then
+    local args = { ... }
+  
+    for _, v in ipairs(args) do
+      table.insert(self, v)
+    end
   end
 end
 
@@ -19,13 +19,22 @@ function Stack:pop(count)
     error("Stack Underflow")
   end
   
-  local ret = { }
+  local entries = { }
   
-  for i = num, 1, -1 do
-    ret[#ret + 1] = table.remove(self)
+  for i = 1, num do
+    if #self ~= 0 then
+      table.insert(entries, self[#self])
+      table.remove(self)
+    else
+      break
+    end
   end
   
-  return unpack(ret)
+  return unpack(entries)
+end
+
+function Stack:isEmpty()
+  return #self <= 0
 end
 
 return Stack

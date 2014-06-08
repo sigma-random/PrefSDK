@@ -1,0 +1,133 @@
+local ffi = require("ffi")
+local oop = require("sdk.lua.oop")
+local Address = require("sdk.math.address")
+local Stack = require("sdk.containers.stack")
+local Segment = require("sdk.disassembler.blocks.segment")
+local InstructionType = require("sdk.disassembler.instructions.instructiontype")
+local ReferenceType = require("sdk.disassembler.blocks.referencetype")
+local FunctionType = require("sdk.disassembler.blocks.functiontype")
+
+ffi.cdef
+[[
+  void DisassemblerListing_addSegment(void* __this, void* segment);
+]]
+
+local C = ffi.C
+local DisassemblerListing = oop.class()
+
+function DisassemblerListing:__ctor(cthis)
+  self.cthis = cthis
+  self.stack = Stack()
+  self.currentaddress = 0
+  self.currentinstruction = nil
+  self.segments = { }
+  self.instructions = { }
+  
+  self.sortsegments = function(seg1, seg2)
+    return seg1.startaddress < seg2.startaddress
+  end
+  
+  self.sortinstructions = function(instr1, instr2)
+    return instr1.address < instr2.address
+  end
+end
+
+function DisassemblerListing:addSegment(segmentname, segmenttype, startaddress, endaddress, baseoffset)
+  local segment = Segment(segmentname, segmenttype, startaddress, endaddress, baseoffset)
+  table.bininsert(self.segments, segment, self.sortsegments)
+end
+
+function DisassemblerListing:addEntry(name, address)
+  local segment = self:segmentAt(address)  
+  segment:addFunction(FunctionType.EntryPoint, address, name)
+  self.stack:push(address)
+end
+
+function DisassemblerListing:addInstruction(instruction)
+  self.currentinstruction = instruction
+  self.instructions[instruction.address] = instruction
+end
+
+function DisassemblerListing:segmentAt(address)
+  for _, seg in pairs(self.segments) do    
+    if (address >= seg.startaddress) and (address <= seg.endaddress) then
+      return seg
+    end
+  end
+  
+  error(string.format("Segment not found at: %08X", address))
+end
+
+function DisassemblerListing:inSegment(address)
+  local segment = self:segmentAt(address)
+  
+  if segment then
+    return true
+  end
+  
+  return false
+end
+
+function DisassemblerListing:segmentOffset(address)
+  local segment = self:segmentAt(address)  
+  
+  if segment then
+    return Address.rebase(address, segment.startaddress, segment.baseoffset)
+  end
+  
+  return address
+end
+
+function DisassemblerListing:hasMoreInstructions()
+  return (not self.stack:isEmpty())
+end
+ 
+function DisassemblerListing:pop()
+  -- Pop until we find a not decoded instruction
+  repeat
+    self.currentaddress = self.stack:pop()
+  until self.instructions[self.currentaddress] == nil
+  
+  return self.currentaddress
+end
+
+function DisassemblerListing:push(address, referencetype)
+  if self.instructions[address] then -- Instruction already disassembled, ignore it
+    return
+  end
+  
+  if ReferenceType.isCall(referencetype) then
+    local segment = self:segmentAt(address)      
+    local f = segment:checkFunction(FunctionType.Function, address)
+    f:addReference(self.currentaddress, referencetype)
+  end
+  
+  self.stack:push(address)
+end
+
+function DisassemblerListing:populateFunction(func, processor)
+  local instruction = nil
+  local currentaddress = func.startaddress
+  
+  repeat
+    instruction = self.instructions[currentaddress]
+    currentaddress = currentaddress + instruction.size
+    func:addInstruction(instruction)
+  until (instruction ~= nil) and (bit.band(instruction.type, InstructionType.Stop) ~= 0)
+  
+  func.instructions = processor:analyzeInstructions(func.instructions)
+end
+
+function DisassemblerListing:compile(loader)
+  for _, segment in pairs(self.segments) do
+    for __, func in pairs(segment.functions) do      
+      self:populateFunction(func, loader.processor)
+      loader:elaborateFunction(func) -- HACK: Horrible hack in order to do post function processing
+    end
+    
+    C.DisassemblerListing_addSegment(self.cthis, segment.cthis)
+    segment:compile()
+  end
+end
+
+return DisassemblerListing

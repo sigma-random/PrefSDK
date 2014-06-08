@@ -2,24 +2,24 @@ local oop = require("sdk.lua.oop")
 
 local ProcessorDefinition = oop.class()
 
-function ProcessorDefinition:__ctor(name, mnemonics, features, registers, outoperand)
+function ProcessorDefinition:__ctor(name, instructionset, opcodes, registers, regnames)
   self.name = name
-  self.mnemonics = mnemonics
-  self.features = features
+  self.instructionset = instructionset
+  self.opcodes = opcodes
   self.registers = registers
-  self.outoperand = outoperand
+  self.registernames = regnames
 end
 
 function ProcessorDefinition:analyze(instruction)
   return 0 -- This Method Must Be Redefined!
 end
 
-function ProcessorDefinition:emulate(addressqueue, referencetable, instruction)
-  return 1 -- This Method Must Be Redefined!
+function ProcessorDefinition:emulate(referencetable, instruction)
+  -- This Method Must Be Redefined!
 end
 
-function ProcessorDefinition:output(loader, instructionprinter, instruction)
-  -- This Method Must Be Redefined!
+function ProcessorDefinition:analyzeInstructions(instructions)
+  return instructions -- This Method Must Be Redefined!
 end
 
 return ProcessorDefinition
