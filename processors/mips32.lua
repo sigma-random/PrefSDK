@@ -133,6 +133,29 @@ local MIPS32Processor = oop.class(ProcessorDefinition)
 function MIPS32Processor:__ctor()
   ProcessorDefinition.__ctor(self, "MIPS32", MIPS32InstructionSet, MIPS32OpCodes, MIPS32Registers, MIPS32RegisterNames)
   
+  local offsetbaseformat = function(instruction)
+    local operand = instruction.operands
+    return string.format("%s, %s(%s)", operand[2].displayvalue, operand[3].displayvalue, operand[1].displayvalue)
+  end
+  
+  self:overrideInstructionFormat(self.opcodes.Priv_CACHE, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_LB, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_LBU, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_LH, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_LHU, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_LL, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_LW, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Cop_LWC2, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_LWL, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_LWR, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_SB, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_SC, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_SH, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_SW, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Cop_SWC2, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_SWL, offsetbaseformat)
+  self:overrideInstructionFormat(self.opcodes.Mem_SWR, offsetbaseformat)
+  
   self.constantdispatcher = { [0x00000000] = MIPS32Processor.parseSpecial,
                               [0x04000000] = MIPS32Processor.parseRegimm,
                               [0x40000000] = MIPS32Processor.parseCop0,

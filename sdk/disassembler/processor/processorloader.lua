@@ -74,6 +74,11 @@ function ProcessorLoader:disassembleInstruction(listing)
     instruction.operands = { }   -- No Operands
   else
     local instructiondef = processor.instructionset[instruction.opcode]
+    local instructionformatfunc = processor.instructionformat[instruction.opcode]
+    
+    if instructionformatfunc then
+      instruction.instructionformat = instructionformatfunc
+    end
   
     instruction.mnemonic = instructiondef.mnemonic
     instruction.category = instructiondef.category

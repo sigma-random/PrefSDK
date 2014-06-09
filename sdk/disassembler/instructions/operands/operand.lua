@@ -23,10 +23,14 @@ function Operand:__ctor(processor, type, value)
   elseif (type == OperandType.Immediate) or (type == OperandType.Address) then
     self.displayvalue = string.format("%08Xh", value)
   end
+  
+  if self.displayvalue == nil then
+    self.displayvalue = "???" -- If something wrong display question marks
+  end
 end
 
 function Operand:compile()
-  C.Operand_setDisplayValue(self.cthis, self.displayvalue or "")
+  C.Operand_setDisplayValue(self.cthis, self.displayvalue)
 end
 
 return Operand

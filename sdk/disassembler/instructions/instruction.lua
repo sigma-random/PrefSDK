@@ -13,6 +13,7 @@ ffi.cdef
   void Instruction_setMnemonic(void* __this, const char* mnemonic);
   void Instruction_setCategory(void* __this, int category);
   void Instruction_setType(void* __this, int type);
+  void Instruction_formatInstruction(void* __this, const char* s);
 ]]
 
 local C = ffi.C
@@ -31,6 +32,20 @@ function Instruction:__ctor(databuffer, endian, processor, address, offset)
   self.type = InstructionType.Undefined
   self.operands = { }
   self.cthis = C.Instruction_create(self.address, self.offset)
+  
+  self.instructionformat = function(self)
+    local s = ""
+    
+    for k, operand in pairs(self.operands) do
+      if k > 1 then
+        s = s .. ", "
+      end
+      
+      s = s .. operand.displayvalue
+    end
+    
+    return s
+  end
 end
 
 function Instruction:addOperand(type, value)
@@ -81,6 +96,7 @@ function Instruction:compile()
   C.Instruction_setSize(self.cthis, self.size)
   C.Instruction_setCategory(self.cthis, self.category)
   C.Instruction_setType(self.cthis, self.type)
+  C.Instruction_formatInstruction(self.cthis, self:instructionformat())
   
   for _, operand in pairs(self.operands) do
     C.Instruction_addOperand(self.cthis, operand.cthis)

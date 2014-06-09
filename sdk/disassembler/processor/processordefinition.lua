@@ -8,6 +8,11 @@ function ProcessorDefinition:__ctor(name, instructionset, opcodes, registers, re
   self.opcodes = opcodes
   self.registers = registers
   self.registernames = regnames
+  self.instructionformat = { }
+end
+
+function ProcessorDefinition:overrideInstructionFormat(opcode, instructionformatfunc)
+  self.instructionformat[opcode] = instructionformatfunc
 end
 
 function ProcessorDefinition:analyze(instruction)
