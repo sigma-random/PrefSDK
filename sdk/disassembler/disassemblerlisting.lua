@@ -10,6 +10,7 @@ local FunctionType = require("sdk.disassembler.blocks.functiontype")
 ffi.cdef
 [[
   void DisassemblerListing_addSegment(void* __this, void* segment);
+  void DisassemblerListing_addReference(void* __this, uint64_t srcaddress, uint64_t destaddress, int referencetype);
 ]]
 
 local C = ffi.C
@@ -22,6 +23,7 @@ function DisassemblerListing:__ctor(cthis)
   self.currentinstruction = nil
   self.segments = { }
   self.instructions = { }
+  self.references = { }
   
   self.sortsegments = function(seg1, seg2)
     return seg1.startaddress < seg2.startaddress
@@ -38,9 +40,13 @@ function DisassemblerListing:addSegment(segmentname, segmenttype, startaddress, 
 end
 
 function DisassemblerListing:addEntry(name, address)
-  local segment = self:segmentAt(address)  
-  segment:addFunction(FunctionType.EntryPoint, address, name)
+  self:addFunction(FunctionType.EntryPoint, name, address)
   self.stack:push(address)
+end
+
+function DisassemblerListing:addFunction(type, name, address)
+  local segment = self:segmentAt(address)  
+  segment:addFunction(type, address, name)
 end
 
 function DisassemblerListing:addInstruction(instruction)
@@ -81,7 +87,7 @@ end
 function DisassemblerListing:hasMoreInstructions()
   return (not self.stack:isEmpty())
 end
- 
+
 function DisassemblerListing:pop()
   -- Pop until we find a not decoded instruction
   repeat
@@ -96,10 +102,13 @@ function DisassemblerListing:push(address, referencetype)
     return
   end
   
-  if ReferenceType.isCall(referencetype) then
-    local segment = self:segmentAt(address)      
-    local f = segment:checkFunction(FunctionType.Function, address)
-    f:addReference(self.currentaddress, referencetype)
+  if ReferenceType.isCall(referencetype) or ReferenceType.isJump(referencetype) then
+    if ReferenceType.isCall(referencetype) then
+      local segment = self:segmentAt(address)
+      segment:checkFunction(FunctionType.Function, address)
+    end
+    
+    C.DisassemblerListing_addReference(self.cthis, self.currentaddress, address, referencetype)    
   end
   
   self.stack:push(address)

@@ -6,7 +6,7 @@ local FunctionType = require("sdk.disassembler.blocks.functiontype")
 ffi.cdef
 [[
   void* Function_create(int functiontype, const char* name, uint64_t startaddress, uint64_t endaddress);
-  void Function_addReference(void* __this, uint64_t address);
+  void Function_addReference(void* __this, uint64_t address, int referencetype);
   void Function_addInstruction(void* __this, void* instruction);
 ]]
 
@@ -26,8 +26,8 @@ function Function:__ctor(type, startaddress, name)
   end
 end
 
-function Function:addReference(address)
-  C.Function_addReference(self.cthis, address)
+function Function:addReference(address, referencetype)
+  C.Function_addReference(self.cthis, address, referencetype)
 end
 
 function Function:addInstruction(instruction)
