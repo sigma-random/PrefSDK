@@ -23,7 +23,6 @@ function DisassemblerListing:__ctor(cthis)
   self.currentinstruction = nil
   self.segments = { }
   self.instructions = { }
-  self.references = { }
   
   self.sortsegments = function(seg1, seg2)
     return seg1.startaddress < seg2.startaddress

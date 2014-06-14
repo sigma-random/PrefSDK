@@ -79,7 +79,7 @@ end
 
 function Sdk.disassembleData(clisting, databuffer, loaderid)
   local errorhandler = function(loader, msg)
-    local currentinstr = loader.currentinstruction
+    local currentinstr = loader.listing.currentinstruction
 
     if currentinstr then
       Sdk.dbgprint(string.format("Disassembler in panic state: %s\n  Current Address: %X\n  Last Instruction: '%s' (Address %X, %d Operands)\n", 
