@@ -18,8 +18,8 @@ function Operand:__ctor(processor, type, value)
   self.value = value
   self.cthis = C.Operand_create(type)
   
-  if type == OperandType.Register then
-    self.displayvalue = processor.registernames[value]
+  if type == OperandType.Register and processor.registernames[value] then
+    self.displayvalue = "$" .. processor.registernames[value]
   elseif (type == OperandType.Immediate) or (type == OperandType.Address) then
     self.displayvalue = string.format("%08Xh", value)
   end
