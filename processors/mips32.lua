@@ -161,6 +161,16 @@ function MIPS32Processor:__ctor()
   self:overrideInstructionFormat(self.opcodes.Mem_SWL, offsetbaseformat)
   self:overrideInstructionFormat(self.opcodes.Mem_SWR, offsetbaseformat)
   
+  self.noregimmccall = { [self.opcodes.Branch_BEQ]   = true,
+                         [self.opcodes.Branch_BEQL]  = true,
+                         [self.opcodes.Branch_BGTZ]  = true,
+                         [self.opcodes.Branch_BGTZL] = true,
+                         [self.opcodes.Branch_BLEZ]  = true,
+                         [self.opcodes.Branch_BLEZL] = true,
+                         [self.opcodes.Branch_BLEZ]  = true,
+                         [self.opcodes.Branch_BNE]   = true,
+                         [self.opcodes.Branch_BNEL]  = true }
+  
   self.constantdispatcher = { [0x00000000] = MIPS32Processor.parseSpecial,
                               [0x04000000] = MIPS32Processor.parseRegimm,
                               [0x40000000] = MIPS32Processor.parseCop0,
@@ -169,6 +179,14 @@ function MIPS32Processor:__ctor()
                               [0x4C000000] = MIPS32Processor.parseCop1X,
                               [0x70000000] = MIPS32Processor.parseSpecial2,
                               [0x7C000000] = MIPS32Processor.parseSpecial3 }
+end
+
+function MIPS32Processor:signExtend(address)
+  if bit.band(address, 0x8000) ~= 0 then
+    return bit.bor(0xFFFF0000, address)
+  end
+  
+  return address
 end
 
 function MIPS32Processor:parseSpecial(instruction, data)
@@ -180,7 +198,7 @@ function MIPS32Processor:parseSpecial(instruction, data)
 end
 
 function MIPS32Processor:parseRegimm(instruction, data)
-  local offset = tonumber(ffi.cast("int32_t", bit.lshift(bit.band(data, 0x0000FFFF), 2)))
+  local offset = bit.lshift(bit.band(data, 0x0000FFFF), 2)
   instruction.opcode = bit.bor(0x04000000, bit.band(data, 0x001F0000)) -- REGIMM | ... | OPCODE
   
   instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x03E00000), 0x15)) -- rs
@@ -240,11 +258,17 @@ function MIPS32Processor:analyze(instruction)
   end
   
   if (instruction.opcode == self.opcodes.Branch_J) or (instruction.opcode == self.opcodes.Branch_JAL) then
-    instruction:addOperand(OperandType.Address, bit.lshift(bit.band(data, 0x3FFFFFF), 2))                      -- instr_index
+    instruction:addOperand(OperandType.Address, bit.lshift(bit.band(data, 0x3FFFFFF), 2))                            -- instr_index
   else
-    instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x03E00000), 0x15))                 -- rs
-    instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x001F0000), 0x10))                 -- rt
-    instruction:addOperand(OperandType.Immediate, tonumber(ffi.cast("int32_t", bit.band(data, 0x0000FFFF))))   -- immediate
+    instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x03E00000), 0x15))                       -- rs
+    instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x001F0000), 0x10))                       -- rt
+    
+    if self.noregimmccall[instruction.opcode] then
+      local offset = bit.lshift(self:signExtend(bit.band(data, 0x0000FFFF)), 2)      
+      instruction:addOperand(OperandType.Address, instruction.address + DataType.sizeOf(DataType.UInt32) + offset)   -- address
+    else
+      instruction:addOperand(OperandType.Immediate, bit.band(data, 0x0000FFFF))                                      -- immediate
+    end
   end
   
   return DataType.sizeOf(DataType.UInt32) -- Fixed instruction size
@@ -261,8 +285,8 @@ function MIPS32Processor:emulate(listing, instruction)
     listing:push(instruction.operands[1].value, ReferenceType.Call)
   elseif instruction.opcode == self.opcodes.Branch_J then
     listing:push(instruction.operands[1].value, ReferenceType.Jump)
-  elseif (bit.band(instructionset[instruction.opcode].type, InstructionType.Call) ~= 0) or (bit.band(instructionset[instruction.opcode].type, InstructionType.ConditionalCall) ~= 0) then
-    
+  elseif instruction.type == InstructionType.ConditionalCall then
+    -- listing:push(instruction.operands[#instruction.operands].value, ReferenceType.Jump)
   end
     
   listing:push(instruction.address + DataType.sizeOf(DataType.UInt32), ReferenceType.Flow)

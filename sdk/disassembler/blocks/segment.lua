@@ -36,20 +36,10 @@ function Segment:functionAt(address)
   error(string.format("Function not found at: %X", address))
 end
 
-function Segment:addFunction(type, startaddress, name)
-  local f = Function(type, startaddress, name)
+function Segment:addFunction(type, startaddress)
+  local f = Function(type, startaddress)
   table.bininsert(self.functions, f, self.sortbyaddress)  
   return f
-end
-
-function Segment:checkFunction(type, startaddress, name)
-  local res, f = pcall(self.functionAt, self, startaddress)
-  
-  if res == false then
-    return self:addFunction(type, startaddress, name)
-  end
-  
-  return f  
 end
 
 function Segment:compile()

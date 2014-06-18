@@ -4,6 +4,7 @@ local Address = require("sdk.math.address")
 local Stack = require("sdk.containers.stack")
 local Segment = require("sdk.disassembler.blocks.segment")
 local InstructionType = require("sdk.disassembler.instructions.instructiontype")
+local OperandType = require("sdk.disassembler.instructions.operands.operandtype")
 local ReferenceType = require("sdk.disassembler.blocks.referencetype")
 local FunctionType = require("sdk.disassembler.blocks.functiontype")
 
@@ -11,6 +12,9 @@ ffi.cdef
 [[
   void DisassemblerListing_addSegment(void* __this, void* segment);
   void DisassemblerListing_addReference(void* __this, uint64_t srcaddress, uint64_t destaddress, int referencetype);
+  void DisassemblerListing_setSymbol(void* __this, uint64_t address, int datatype, const char* name);
+  bool DisassemblerListing_hasSymbol(void* __this, uint64_t address);
+  const char* DisassemblerListing_getSymbolName(void* __this, uint64_t address);
 ]]
 
 local C = ffi.C
@@ -39,13 +43,26 @@ function DisassemblerListing:addSegment(segmentname, segmenttype, startaddress, 
 end
 
 function DisassemblerListing:addEntry(name, address)
-  self:addFunction(FunctionType.EntryPoint, name, address)
+  self:addFunction(FunctionType.EntryPoint, address, name)
   self.stack:push(address)
 end
 
-function DisassemblerListing:addFunction(type, name, address)
-  local segment = self:segmentAt(address)  
-  segment:addFunction(type, address, name)
+function DisassemblerListing:addFunction(type, address, name)
+  self:setSymbol(address, 0, name or string.format("sub_%X", address))
+  local segment = self:segmentAt(address)
+  segment:addFunction(type, address)
+end
+
+function DisassemblerListing:setSymbol(address, datatype, name)
+  C.DisassemblerListing_setSymbol(self.cthis, address, datatype, name)
+end
+
+function DisassemblerListing:hasSymbol(address)
+  return C.DisassemblerListing_hasSymbol(self.cthis, address)
+end
+
+function DisassemblerListing:symbolName(address)
+  return ffi.string(C.DisassemblerListing_getSymbolName(self.cthis, address))
 end
 
 function DisassemblerListing:addInstruction(instruction)
@@ -102,15 +119,22 @@ function DisassemblerListing:push(address, referencetype)
   end
   
   if ReferenceType.isCall(referencetype) or ReferenceType.isJump(referencetype) then
-    if ReferenceType.isCall(referencetype) then
-      local segment = self:segmentAt(address)
-      segment:checkFunction(FunctionType.Function, address)
+    if ReferenceType.isCall(referencetype) and (not self:hasSymbol(address)) then
+      self:addFunction(FunctionType.Function, address)
     end
     
     C.DisassemblerListing_addReference(self.cthis, self.currentaddress, address, referencetype)    
   end
   
   self.stack:push(address)
+end
+
+function DisassemblerListing:analyzeOperands(instruction)
+  for __, op in ipairs(instruction.operands) do    
+    if (op.type == OperandType.Address) and self:hasSymbol(op.value) then
+      op.displayvalue = self:symbolName(op.value)
+    end
+  end
 end
 
 function DisassemblerListing:populateFunction(func, processor)
@@ -124,9 +148,13 @@ function DisassemblerListing:populateFunction(func, processor)
   until (instruction ~= nil) and (bit.band(instruction.type, InstructionType.Stop) ~= 0)
   
   func.instructions = processor:analyzeInstructions(func.instructions)
+  
+  for _, instr in ipairs(func.instructions) do
+    self:analyzeOperands(instr)
+  end
 end
 
-function DisassemblerListing:compile(loader)
+function DisassemblerListing:compile(loader)  
   for _, segment in pairs(self.segments) do
     for __, func in pairs(segment.functions) do      
       self:populateFunction(func, loader.processor)
