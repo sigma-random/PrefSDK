@@ -1,47 +1,27 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
-local Block = require("sdk.disassembler.blocks.block")
 local FunctionType = require("sdk.disassembler.blocks.functiontype")
+local Instruction = require("sdk.disassembler.instructions.instruction")
 
 ffi.cdef
 [[
-  void* Function_create(int functiontype, uint64_t startaddress, uint64_t endaddress);
-  void Function_addInstruction(void* __this, void* instruction);
+  int Function_getInstructionCount(void* __this);
+  void* Function_getInstruction(void* __this, int idx);
 ]]
 
 local C = ffi.C
-local Function = oop.class(Block)
+local Function = oop.class()
 
-function Function:__ctor(type, startaddress)
-  Block.__ctor(self, startaddress, startaddress)
-  
-  self.type = type
-  self.cthis = C.Function_create(type, startaddress, startaddress)
-  self.instructions = { }
-  
-  self.sortbyaddress = function(instr1, instr2)
-    return instr1.address < instr2.address
-  end
+function Function:__ctor(cthis)
+  self.cthis = cthis
 end
 
-function Function:addReference(address, referencetype)
-  C.Function_addReference(self.cthis, address, referencetype)
+function Function:instructionsCount()
+  return tonumber(C.Function_getInstructionCount(self.cthis))
 end
 
-function Function:addInstruction(instruction)
-  local newendaddress = instruction.address + instruction.size
-  table.bininsert(self.instructions, instruction, self.sortbyaddress)
-  
-  if newendaddress > self.endaddress then
-    self.endaddress = newendaddress
-  end
-end
-
-function Function:compile()  
-  for _, instr in pairs(self.instructions) do
-    C.Function_addInstruction(self.cthis, instr.cthis)
-    instr:compile()
-  end
+function Function:instructionAt(idx)
+  return Instruction(C.Function_getInstruction(self.cthis, idx))
 end
 
 return Function

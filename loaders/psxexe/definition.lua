@@ -20,7 +20,7 @@ end
 
 function PsxExeLoader:createEntryPoints(listing, formattree)
   local pc0field = formattree.ExeHeader.pc0
-  listing:addEntry("main", pc0field:value() - self:baseAddress())
+  listing:addEntryPoint("main", pc0field:value() - self:baseAddress())
 end
 
 function PsxExeLoader:baseAddress()

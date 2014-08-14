@@ -34,7 +34,7 @@ function ProcessorLoader:__ctor(listing, databuffer, formattype, processortype, 
     self.format:parse(self.format.tree)
     self:createSegments(self.listing, self.format.tree)
     
-    if #self.listing.segments > 0 then
+    if self.listing:segmentCount() > 0 then
       self:createEntryPoints(self.listing, self.format.tree)
     end
   end
@@ -62,46 +62,40 @@ end
 
 function ProcessorLoader:disassembleInstruction(listing)
   local processor = self.processor
-  local address = listing.currentaddress
+  local address = listing:pop()
   
-  local instruction = Instruction(self.databuffer, self.endian, processor, address, listing:segmentOffset(address))
+  local instruction = listing:addInstruction(address, self.databuffer, self.endian)
   local size = processor:analyze(instruction)
   
   if size <= 0 then
-    listing:push(address + instruction.size, ReferenceType.Flow) -- Got an Invalid Instruction: Try To Continue analysis
-    
-    instruction.mnemonic = "???" -- No Mnemonic
-    instruction.operands = { }   -- No Operands
+    listing:push(address + instruction:size(), ReferenceType.Flow) -- Got an Invalid Instruction: Try To Continue analysis
   else
-    local instructiondef = processor.instructionset[instruction.opcode]
-    local instructionformatfunc = processor.instructionformat[instruction.opcode]
-    
-    if instructionformatfunc then
-      instruction.instructionformat = instructionformatfunc
-    end
+    local instructiondef = processor.instructionset[instruction:opCode()]
   
-    instruction.mnemonic = instructiondef.mnemonic
-    instruction.category = instructiondef.category
-    instruction.type = instructiondef.type
+    instruction:setMnemonic(instructiondef.mnemonic)
+    instruction:setCategory(instructiondef.category)
+    instruction:setType(instructiondef.type)
   
     processor:emulate(listing, instruction)
   end
-  
-  listing:addInstruction(instruction)
 end
 
 function ProcessorLoader:disassemble()
+  local processor = self.processor
   local listing = self.listing
   
   while listing:hasMoreInstructions() do
-    local segment = listing:segmentAt(listing:pop())
-        
-    if segment then
-      self:disassembleInstruction(listing)
-    end
+    self:disassembleInstruction(listing)
   end
   
-  listing:compile(self)
+  for i = 1, listing:functionsCount() do
+    local func = listing:functionAt(i)
+    
+    if func then
+      processor:analyzeInstructions(listing, func)
+      self:elaborateFunction(func)
+    end
+  end
 end
 
 return ProcessorLoader

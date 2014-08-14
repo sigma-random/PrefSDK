@@ -14,22 +14,22 @@ local MIPS32InstructionSet = { [0x00000020] = { mnemonic = "ADD", category = Ins
                                [0x00000021] = { mnemonic = "ADDU", category = InstructionCategory.Arithmetic, type = InstructionType.Add },
                                [0x00000024] = { mnemonic = "AND", category = InstructionCategory.Logical, type = InstructionType.And },
                                [0x30000000] = { mnemonic = "ANDI", category = InstructionCategory.Logical, type = InstructionType.And },
-                               [0x10000000] = { mnemonic = "BEQ", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
-                               [0x50000000] = { mnemonic = "BEQL", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
-                               [0x04010000] = { mnemonic = "BGEZ", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
+                               [0x10000000] = { mnemonic = "BEQ", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
+                               [0x50000000] = { mnemonic = "BEQL", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
+                               [0x04010000] = { mnemonic = "BGEZ", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
                                [0x04110000] = { mnemonic = "BGEZAL", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
                                [0x04130000] = { mnemonic = "BGEZALL", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
-                               [0x04030000] = { mnemonic = "BGEZL", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
-                               [0x1C000000] = { mnemonic = "BGTZ", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
-                               [0x5C000000] = { mnemonic = "BGTZL", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
-                               [0x18000000] = { mnemonic = "BLEZ", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
-                               [0x58000000] = { mnemonic = "BLEZL", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
-                               [0x04000000] = { mnemonic = "BLTZ", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
+                               [0x04030000] = { mnemonic = "BGEZL", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
+                               [0x1C000000] = { mnemonic = "BGTZ", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
+                               [0x5C000000] = { mnemonic = "BGTZL", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
+                               [0x18000000] = { mnemonic = "BLEZ", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
+                               [0x58000000] = { mnemonic = "BLEZL", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
+                               [0x04000000] = { mnemonic = "BLTZ", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
                                [0x04100000] = { mnemonic = "BLTZAL", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
                                [0x04120000] = { mnemonic = "BLTZALL", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
-                               [0x04020000] = { mnemonic = "BLTZL", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
-                               [0x14000000] = { mnemonic = "BNE", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
-                               [0x54000000] = { mnemonic = "BNEL", category = InstructionCategory.ControlFlow, type = InstructionType.ConditionalCall },
+                               [0x04020000] = { mnemonic = "BLTZL", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
+                               [0x14000000] = { mnemonic = "BNE", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
+                               [0x54000000] = { mnemonic = "BNEL", category = InstructionCategory.ControlFlow, type = InstructionType.Jump },
                                [0x0000000D] = { mnemonic = "BREAK", category = InstructionCategory.InterruptTrap, type = InstructionType.Stop },
                                [0xBC000000] = { mnemonic = "CACHE", category = InstructionCategory.Privileged, type = InstructionType.Undefined },
                                [0x48400000] = { mnemonic = "CFC2", category = InstructionCategory.LoadStore, type = InstructionType.Undefined },
@@ -138,28 +138,23 @@ local MIPS32Processor = oop.class(ProcessorDefinition)
 function MIPS32Processor:__ctor()
   ProcessorDefinition.__ctor(self, "MIPS32", MIPS32InstructionSet, MIPS32OpCodes, MIPS32Registers, MIPS32RegisterNames)
   
-  local offsetbaseformat = function(instruction)
-    local operand = instruction.operands
-    return string.format("%s, %s(%s)", operand[2].displayvalue, operand[3].displayvalue, operand[1].displayvalue)
-  end
-  
-  self:overrideInstructionFormat(self.opcodes.Priv_CACHE, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_LB, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_LBU, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_LH, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_LHU, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_LL, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_LW, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Cop_LWC2, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_LWL, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_LWR, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_SB, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_SC, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_SH, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_SW, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Cop_SWC2, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_SWL, offsetbaseformat)
-  self:overrideInstructionFormat(self.opcodes.Mem_SWR, offsetbaseformat)
+  self.instructionformats = { [self.opcodes.Priv_CACHE] = "%2, %3(%1)",
+                              [self.opcodes.Mem_LB]     = "%2, %3(%1)",
+                              [self.opcodes.Mem_LBU]    = "%2, %3(%1)",
+                              [self.opcodes.Mem_LH]     = "%2, %3(%1)",
+                              [self.opcodes.Mem_LHU]    = "%2, %3(%1)",
+                              [self.opcodes.Mem_LL]     = "%2, %3(%1)",
+                              [self.opcodes.Mem_LW]     = "%2, %3(%1)",
+                              [self.opcodes.Cop_LWC2]   = "%2, %3(%1)",
+                              [self.opcodes.Mem_LWL]    = "%2, %3(%1)",
+                              [self.opcodes.Mem_LWR]    = "%2, %3(%1)",
+                              [self.opcodes.Mem_SB]     = "%2, %3(%1)",
+                              [self.opcodes.Mem_SC]     = "%2, %3(%1)",
+                              [self.opcodes.Mem_SH]     = "%2, %3(%1)",
+                              [self.opcodes.Mem_SW]     = "%2, %3(%1)",
+                              [self.opcodes.Cop_SWC2]   = "%2, %3(%1)",
+                              [self.opcodes.Mem_SWL]    = "%2, %3(%1)",
+                              [self.opcodes.Mem_SWR]    = "%2, %3(%1)" }
   
   self.noregimmccall = { [self.opcodes.Branch_BEQ]   = true,
                          [self.opcodes.Branch_BEQL]  = true,
@@ -170,6 +165,11 @@ function MIPS32Processor:__ctor()
                          [self.opcodes.Branch_BLEZ]  = true,
                          [self.opcodes.Branch_BNE]   = true,
                          [self.opcodes.Branch_BNEL]  = true }
+  
+  self.regimmjumps = { [self.opcodes.Branch_BGEZ]  = true,
+                       [self.opcodes.Branch_BGEZL] = true,
+                       [self.opcodes.Branch_BLTZ]  = true,
+                       [self.opcodes.Branch_BLTZL] = true }
   
   self.constantdispatcher = { [0x00000000] = MIPS32Processor.parseSpecial,
                               [0x04000000] = MIPS32Processor.parseRegimm,
@@ -190,47 +190,47 @@ function MIPS32Processor:signExtend(address)
 end
 
 function MIPS32Processor:parseSpecial(instruction, data)
-  instruction.opcode = bit.bor(0x00000000, bit.band(data, 0x3F)) -- SPECIAL | ... | OPCODE
+  instruction:setOpCode(bit.bor(0x00000000, bit.band(data, 0x3F))) -- SPECIAL | ... | OPCODE
   
-  instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x03E00000), 0x15)) -- rs
-  instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x001F0000), 0x10)) -- rt
-  instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x0000F800), 0x0B)) -- rd
+  instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x03E00000), 0x15), self.registernames) -- rs
+  instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x001F0000), 0x10), self.registernames) -- rt
+  instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x0000F800), 0x0B), self.registernames) -- rd
 end
 
 function MIPS32Processor:parseRegimm(instruction, data)
-  local offset = bit.lshift(bit.band(data, 0x0000FFFF), 2)
-  instruction.opcode = bit.bor(0x04000000, bit.band(data, 0x001F0000)) -- REGIMM | ... | OPCODE
+  local offset = bit.lshift(self:signExtend(bit.band(data, 0x0000FFFF)), 2)  
+  instruction:setOpCode(bit.bor(0x04000000, bit.band(data, 0x001F0000))) -- REGIMM | ... | OPCODE
   
-  instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x03E00000), 0x15)) -- rs
-  instruction:addOperand(OperandType.Address, instruction.address + DataType.sizeOf(DataType.UInt32) + offset)
+  instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x03E00000), 0x15), self.registernames) -- rs
+  instruction:addOperand(OperandType.Address, DataType.UInt32):setValue(instruction:address() + DataType.sizeOf(DataType.UInt32) + offset)
 end
 
 function MIPS32Processor:parseCop0(instruction, data)
   -- NOTE: COP0 Implemented yet
-  instruction.opcode = 0xFFFFFFFF
+  instruction:setOpCode(0xFFFFFFFF)
 end
 
 function MIPS32Processor:parseCop1(instruction, data)
   -- NOTE: COP1 (FPU) Not Implemented yet
-  instruction.opcode = 0xFFFFFFFF
+  instruction:setOpCode(0xFFFFFFFF)
 end
 
 function MIPS32Processor:parseCop2(instruction, data)
   -- NOTE: COP2 Not Implemented yet
-  instruction.opcode = 0xFFFFFFFF
+  instruction:setOpCode(0xFFFFFFFF)
 end
 
 function MIPS32Processor:parseCop1X(instruction, data)
   -- NOTE: COP1X Not Implemented yet
-  instruction.opcode = 0xFFFFFFFF
+  instruction:setOpCode(0xFFFFFFFF)
 end
 
 function MIPS32Processor:parseSpecial2(instruction, data)
-  instruction.opcode = bit.bor(0x70000000, bit.band(data, 0x21))  -- SPECIAL2 | ... | OPCODE
+  instruction:setOpCode(bit.bor(0x70000000, bit.band(data, 0x21)))  -- SPECIAL2 | ... | OPCODE
   
-  instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x03E00000), 0x15)) -- rs
-  instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x001F0000), 0x10)) -- rt
-  instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x0000F800), 0x0B)) -- rd
+  instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x03E00000), 0x15), self.registernames) -- rs
+  instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x001F0000), 0x10), self.registernames) -- rt
+  instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x0000F800), 0x0B), self.registernames) -- rd
 end
 
 function MIPS32Processor:parseSpecial3(instruction, data)
@@ -244,31 +244,35 @@ function MIPS32Processor:analyze(instruction)
   if self.constantdispatcher[constant] ~= nil then
     self.constantdispatcher[constant](self, instruction, data)
     
-    if self.instructionset[instruction.opcode] == nil then
+    if self.instructionset[instruction:opCode()] == nil then
+      return 0 -- Invalid Instruction
+    end
+  else
+    instruction:setOpCode(constant)
+    
+    if self.instructionset[instruction:opCode()] == nil then
       return 0 -- Invalid Instruction
     end
     
-    return DataType.sizeOf(DataType.UInt32) -- Fixed instruction size
-  end
-  
-  instruction.opcode = constant
-  
-  if self.instructionset[instruction.opcode] == nil then
-    return 0 -- Invalid Instruction
-  end
-  
-  if (instruction.opcode == self.opcodes.Branch_J) or (instruction.opcode == self.opcodes.Branch_JAL) then
-    instruction:addOperand(OperandType.Address, bit.lshift(bit.band(data, 0x3FFFFFF), 2))                            -- instr_index
-  else
-    instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x03E00000), 0x15))                       -- rs
-    instruction:addOperand(OperandType.Register, bit.rshift(bit.band(data, 0x001F0000), 0x10))                       -- rt
-    
-    if self.noregimmccall[instruction.opcode] then
-      local offset = bit.lshift(self:signExtend(bit.band(data, 0x0000FFFF)), 2)      
-      instruction:addOperand(OperandType.Address, instruction.address + DataType.sizeOf(DataType.UInt32) + offset)   -- address
+    if (instruction:opCode() == self.opcodes.Branch_J) or (instruction:opCode() == self.opcodes.Branch_JAL) then
+      instruction:addOperand(OperandType.Address, DataType.UInt32):setValue(bit.lshift(bit.band(data, 0x3FFFFFF), 2))                            -- instr_index
     else
-      instruction:addOperand(OperandType.Immediate, bit.band(data, 0x0000FFFF))                                      -- immediate
+      instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x03E00000), 0x15), self.registernames)    -- rs
+      instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x001F0000), 0x10), self.registernames)    -- rt
+      
+      if self.noregimmccall[instruction:opCode()] then
+        local offset = bit.lshift(self:signExtend(bit.band(data, 0x0000FFFF)), 2)      
+        instruction:addOperand(OperandType.Address, DataType.UInt32):setValue(instruction:address() + DataType.sizeOf(DataType.UInt32) + offset) -- address
+      else
+        instruction:addOperand(OperandType.Immediate, DataType.UInt32):setValue(bit.band(data, 0x0000FFFF))                                      -- immediate
+      end
     end
+  end
+  
+  local instrformat = self.instructionformats[instruction:opCode()]
+  
+  if instrformat ~= nil then
+    instruction:setFormat(instrformat)
   end
   
   return DataType.sizeOf(DataType.UInt32) -- Fixed instruction size
@@ -277,74 +281,73 @@ end
 function MIPS32Processor:emulate(listing, instruction)
   local instructionset = self.instructionset
   
-  if bit.band(instructionset[instruction.opcode].type, InstructionType.Stop) ~= 0 then
+  if bit.band(instructionset[instruction:opCode()].type, InstructionType.Stop) ~= 0 then
     return
   end
     
-  if instruction.opcode == self.opcodes.Branch_JAL then
-    listing:push(instruction.operands[1].value, ReferenceType.Call)
-  elseif instruction.opcode == self.opcodes.Branch_J then
-    listing:push(instruction.operands[1].value, ReferenceType.Jump)
-  elseif instruction.type == InstructionType.ConditionalCall then
-    -- listing:push(instruction.operands[#instruction.operands].value, ReferenceType.Jump)
+  if instruction:opCode() == self.opcodes.Branch_JAL then
+    listing:push(instruction:operandAt(1):value(), ReferenceType.Call)
+  elseif instruction:opCode() == self.opcodes.Branch_J then
+    listing:push(instruction:operandAt(1):value(), ReferenceType.Jump)
+  elseif (self.regimmjumps[instruction:opCode()] == true) and (instructionset[instruction:opCode()].type == InstructionType.Jump) then
+    listing:push(instruction:operandAt(instruction:operandsCount()):value(), ReferenceType.Jump)
   end
     
-  listing:push(instruction.address + DataType.sizeOf(DataType.UInt32), ReferenceType.Flow)
+  listing:push(instruction:address() + DataType.sizeOf(DataType.UInt32), ReferenceType.Flow)
 end
 
-function MIPS32Processor:analyzeInstructions(instructions)
+function MIPS32Processor:analyzeInstructions(listing, func)
   local i = 1
-  local analyzedinstructions = { }
   
-  while i <= #instructions do
-    local instruction = instructions[i]
+  while i <= func:instructionsCount() do
+    local instruction = func:instructionAt(i)
     
---     if instruction.opcode == self.opcodes.Log_LUI then
---       local macroinstr, c = self:simplifyLui(i)
---       table.insert(analyzedinstructions, macroinstr)
---       i = i + c
---     else
-    if instruction.opcode == self.opcodes.Log_SLL then
-      table.insert(analyzedinstructions, self:checkNop(instruction))
-    else
-      table.insert(analyzedinstructions, instruction) 
+    if instruction:opCode() == self.opcodes.Mem_LUI then
+      self:simplifyLui(listing, func, instruction, i)
+    elseif instruction:opCode() == self.opcodes.Log_SLL then
+      self:checkNop(instruction)
+    elseif instruction:opCode() == self.opcodes.Branch_JR then
+      instruction:removeOperand(3)
+      instruction:removeOperand(2)
+    elseif instruction:opCode() == self.opcodes.Trap_BREAK then
+      instruction:clearOperands()
     end
     
     i = i + 1
   end
-  
-  return analyzedinstructions
 end
 
-function MIPS32Processor:simplifyLui(f, i)
-  local luiinstr = f.instructions[i]
-  local nextinstr = f.instructions[i + 1]
-  
-  if nextinstr == nil then
-    return luiinstr, 1
+function MIPS32Processor:simplifyLui(listing, func, instruction, i)
+  if (i + 1) > func:instructionsCount() then
+    return
   end
   
-  local luiimmediate = tonumber(ffi.cast("uint32_t", bit.lshift(luiinstr.operands[3].value, 16)))
-  local macroinstr = luiinstr:mergeWith(nextinstr, "LI", InstructionCategory.LoadStore)
-  macroinstr:copyOperand(nextinstr.operands[1])
-  macroinstr:addOperand(OperandType.Address, luiimmediate + nextinstr.operands[3].value)
-  return macroinstr, 2
+  local nextinstruction = func:instructionAt(i + 1)
+  
+  if nextinstruction:opCode() ~= self.opcodes.Math_ADDIU then
+    return
+  end
+  
+  local luiimmediate = bit.lshift(instruction:operandAt(3):value(), 16)
+  local macroinstruction = listing:mergeInstructions(instruction, nextinstruction, "LI", InstructionCategory.LoadStore)
+  
+  macroinstruction:cloneOperand(nextinstruction:operandAt(1))
+  macroinstruction:addOperand(OperandType.Address, DataType.UInt32):setValue(luiimmediate + nextinstruction:operandAt(3):value())
 end
 
 function MIPS32Processor:checkNop(instruction)
-  
-  for _, operand in pairs(instruction.operands) do
-    if operand.value ~= self.registers.Reg_ZERO then
-      return instruction
+  for i = 1, instruction:operandsCount() do
+    local operand = instruction:operandAt(i)
+    
+    if operand:value() ~= self.registers.Reg_ZERO then
+      return
     end
   end
   
-  instruction.mnemonic = "NOP"
-  instruction.category = InstructionCategory.NoOperation
-  instruction.type = InstructionType.Nop
-  instruction.operands = { }
-  
-  return instruction
+  instruction:setMnemonic("NOP")
+  instruction:setCategory(InstructionCategory.NoOperation)
+  instruction:setType(InstructionType.Nop)
+  instruction:clearOperands()
 end
 
 return MIPS32Processor
