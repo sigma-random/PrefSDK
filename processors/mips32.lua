@@ -166,11 +166,6 @@ function MIPS32Processor:__ctor()
                          [self.opcodes.Branch_BNE]   = true,
                          [self.opcodes.Branch_BNEL]  = true }
   
-  self.regimmjumps = { [self.opcodes.Branch_BGEZ]  = true,
-                       [self.opcodes.Branch_BGEZL] = true,
-                       [self.opcodes.Branch_BLTZ]  = true,
-                       [self.opcodes.Branch_BLTZL] = true }
-  
   self.constantdispatcher = { [0x00000000] = MIPS32Processor.parseSpecial,
                               [0x04000000] = MIPS32Processor.parseRegimm,
                               [0x40000000] = MIPS32Processor.parseCop0,
@@ -289,7 +284,7 @@ function MIPS32Processor:emulate(listing, instruction)
     listing:push(instruction:operandAt(1):value(), ReferenceType.Call)
   elseif instruction:opCode() == self.opcodes.Branch_J then
     listing:push(instruction:operandAt(1):value(), ReferenceType.Jump)
-  elseif (self.regimmjumps[instruction:opCode()] == true) and (instructionset[instruction:opCode()].type == InstructionType.Jump) then
+  elseif (instructionset[instruction:opCode()].type == InstructionType.Jump) then
     listing:push(instruction:operandAt(instruction:operandsCount()):value(), ReferenceType.Jump)
   end
     
