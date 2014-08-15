@@ -65,7 +65,7 @@ function ProcessorLoader:disassembleInstruction(listing)
   local address = listing:pop()
   
   local instruction = listing:addInstruction(address, self.databuffer, self.endian)
-  local size = processor:analyze(instruction)
+  local size = processor:analyze(instruction, self:baseAddress())
   
   if size <= 0 then
     listing:push(address + instruction:size(), ReferenceType.Flow) -- Got an Invalid Instruction: Try To Continue analysis

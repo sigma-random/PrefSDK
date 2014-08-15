@@ -237,7 +237,7 @@ function MIPS32Processor:parseSpecial3(instruction, data)
   -- NOTE: Not Implemented yet
 end
 
-function MIPS32Processor:analyze(instruction)
+function MIPS32Processor:analyze(instruction, baseaddress)
   local data = instruction:next(DataType.UInt32)
   local constant = tonumber(ffi.cast("uint32_t", bit.band(data, 0xFC000000))) -- HACK: Force Unsigned Type
   
@@ -255,7 +255,7 @@ function MIPS32Processor:analyze(instruction)
     end
     
     if (instruction:opCode() == self.opcodes.Branch_J) or (instruction:opCode() == self.opcodes.Branch_JAL) then
-      instruction:addOperand(OperandType.Address, DataType.UInt32):setValue(bit.lshift(bit.band(data, 0x3FFFFFF), 2))                            -- instr_index
+      instruction:addOperand(OperandType.Address, DataType.UInt32):setValue(baseaddress + bit.lshift(bit.band(data, 0x3FFFFFF), 2))              -- instr_index
     else
       instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x03E00000), 0x15), self.registernames)    -- rs
       instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x001F0000), 0x10), self.registernames)    -- rt

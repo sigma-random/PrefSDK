@@ -15,12 +15,12 @@ function PsxExeLoader:createSegments(listing, formattree)
   local taddrfield = formattree.ExeHeader.t_addr
   local tsizefield = formattree.ExeHeader.t_size
   
-  listing:addSegment("TEXT", SegmentType.Code, taddrfield:value() - self:baseAddress(), (taddrfield:value() + tsizefield:value()) - self:baseAddress(), 0x800)
+  listing:addSegment("TEXT", SegmentType.Code, taddrfield:value(), taddrfield:value() + tsizefield:value(), 0x800)
 end
 
 function PsxExeLoader:createEntryPoints(listing, formattree)
   local pc0field = formattree.ExeHeader.pc0
-  listing:addEntryPoint("main", pc0field:value() - self:baseAddress())
+  listing:addEntryPoint("main", pc0field:value())
 end
 
 function PsxExeLoader:baseAddress()
