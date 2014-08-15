@@ -10,7 +10,7 @@ function ProcessorDefinition:__ctor(name, instructionset, opcodes, registers, re
   self.registernames = regnames
 end
 
-function ProcessorDefinition:analyze(instruction)
+function ProcessorDefinition:analyze(instruction, baseaddress)
   return 0 -- This Method Must Be Redefined!
 end
 
