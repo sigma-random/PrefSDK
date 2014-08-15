@@ -7,7 +7,7 @@ local Function = require("sdk.disassembler.blocks.function")
 
 ffi.cdef
 [[
-  void DisassemblerListing_addSegment(void* __this, const char *name, int segmenttype, uint64_t startaddress, uint64_t endaddress, uint64_t baseoffset);
+  void DisassemblerListing_addSegment(void* __this, const char *name, int segmenttype, uint64_t startaddress, uint64_t size, uint64_t baseoffset);
   void DisassemblerListing_addEntryPoint(void* __this, const char* name, uint64_t address);
   void *DisassemblerListing_getFunction(void* __this, int idx);
   void* DisassemblerListing_addInstruction(void* __this, uint64_t address);
@@ -30,8 +30,8 @@ function DisassemblerListing:__ctor(cthis)
   self.cthis = cthis
 end
 
-function DisassemblerListing:addSegment(segmentname, segmenttype, startaddress, endaddress, baseoffset)
-  C.DisassemblerListing_addSegment(self.cthis, segmentname, segmenttype, startaddress, endaddress, baseoffset or startaddress)
+function DisassemblerListing:addSegment(segmentname, segmenttype, startaddress, size, baseoffset)
+  C.DisassemblerListing_addSegment(self.cthis, segmentname, segmenttype, startaddress, size, baseoffset or startaddress)
 end
 
 function DisassemblerListing:addEntryPoint(name, address)
