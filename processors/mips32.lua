@@ -136,6 +136,7 @@ local MIPS32Registers = { Reg_ZERO = 0,  Reg_AT   = 1,  Reg_V0   = 2,  Reg_V1   
 local MIPS32Processor = oop.class(ProcessorDefinition)
 
 function MIPS32Processor:__ctor()
+  self.muststop = false
   ProcessorDefinition.__ctor(self, "MIPS32", MIPS32InstructionSet, MIPS32OpCodes, MIPS32Registers, MIPS32RegisterNames)
   
   self.instructionformats = { [self.opcodes.Priv_CACHE] = "%2, %3(%1)",
@@ -189,7 +190,12 @@ function MIPS32Processor:parseSpecial(instruction, data)
   
   instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x03E00000), 0x15), self.registernames) -- rs
   instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x001F0000), 0x10), self.registernames) -- rt
-  instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x0000F800), 0x0B), self.registernames) -- rd
+  
+  if (instruction:opCode() == self.opcodes.Log_SLL) or (instruction:opCode() == self.opcodes.Log_SRL) then
+    instruction:addOperand(OperandType.Immediate, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x000007C0), 0x06))
+  else
+    instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x0000F800), 0x0B), self.registernames) -- rd
+  end
 end
 
 function MIPS32Processor:parseRegimm(instruction, data)
@@ -232,7 +238,7 @@ function MIPS32Processor:parseSpecial3(instruction, data)
   -- NOTE: Not Implemented yet
 end
 
-function MIPS32Processor:analyze(instruction, baseaddress)
+function MIPS32Processor:analyze(instruction, baseaddress)  
   local data = instruction:next(DataType.UInt32)
   local constant = tonumber(ffi.cast("uint32_t", bit.band(data, 0xFC000000))) -- HACK: Force Unsigned Type
   
@@ -277,6 +283,11 @@ function MIPS32Processor:emulate(listing, instruction)
   local instructionset = self.instructionset
   
   if bit.band(instructionset[instruction:opCode()].type, InstructionType.Stop) ~= 0 then
+    if instruction:opCode() == self.opcodes.Branch_JR then
+      listing:push(instruction:address() + DataType.sizeOf(DataType.UInt32), ReferenceType.Flow)
+      self.muststop = true
+    end
+    
     return
   end
     
@@ -287,18 +298,22 @@ function MIPS32Processor:emulate(listing, instruction)
   elseif (instructionset[instruction:opCode()].type == InstructionType.Jump) then
     listing:push(instruction:operandAt(instruction:operandsCount()):value(), ReferenceType.Jump)
   end
-    
-  listing:push(instruction:address() + DataType.sizeOf(DataType.UInt32), ReferenceType.Flow)
+  
+  if self.muststop == false then
+    listing:push(instruction:address() + DataType.sizeOf(DataType.UInt32), ReferenceType.Flow)
+  end
+  
+  self.muststop = false
 end
 
-function MIPS32Processor:analyzeInstructions(listing, func)
-  local i = 1
+function MIPS32Processor:compileFunction(listing, func)
+  local checklast = false
+  local address = func:startAddress()
+  local instruction = listing:instructionFromAddress(address)
   
-  while i <= func:instructionsCount() do
-    local instruction = func:instructionAt(i)
-    
+  while instruction do
     if instruction:opCode() == self.opcodes.Mem_LUI then
-      self:simplifyLui(listing, func, instruction, i)
+      instruction = self:simplifyLui(listing, instruction)
     elseif instruction:opCode() == self.opcodes.Log_SLL then
       self:checkNop(instruction)
     elseif instruction:opCode() == self.opcodes.Branch_JR then
@@ -307,27 +322,39 @@ function MIPS32Processor:analyzeInstructions(listing, func)
     elseif instruction:opCode() == self.opcodes.Trap_BREAK then
       instruction:clearOperands()
     end
+  
+    func:addInstruction(instruction)
     
-    i = i + 1
+    if checklast == true then
+      return
+    end
+    
+    checklast = (instruction:type() == InstructionType.Stop)
+    
+    if not listing:hasNextInstruction(instruction) then
+      break
+    end
+    
+    instruction = listing:nextInstruction(instruction)
   end
 end
 
-function MIPS32Processor:simplifyLui(listing, func, instruction, i)
-  if (i + 1) > func:instructionsCount() then
-    return
+function MIPS32Processor:simplifyLui(listing, instruction)
+  if not listing:hasNextInstruction(instruction) then
+    return instruction
   end
   
-  local nextinstruction = func:instructionAt(i + 1)
+  local nextinstruction = listing:nextInstruction(instruction)
   
   if nextinstruction:opCode() ~= self.opcodes.Math_ADDIU then
-    return
+    return instruction
   end
   
   local luiimmediate = bit.lshift(instruction:operandAt(3):value(), 16)
   local macroinstruction = listing:mergeInstructions(instruction, nextinstruction, "LI", InstructionCategory.LoadStore)
-  
   macroinstruction:cloneOperand(nextinstruction:operandAt(1))
   macroinstruction:addOperand(OperandType.Address, DataType.UInt32):setValue(luiimmediate + nextinstruction:operandAt(3):value())
+  return macroinstruction
 end
 
 function MIPS32Processor:checkNop(instruction)

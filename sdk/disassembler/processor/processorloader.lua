@@ -64,7 +64,7 @@ function ProcessorLoader:disassembleInstruction(listing)
   local processor = self.processor
   local address = listing:pop()
   
-  local instruction = listing:addInstruction(address, self.databuffer, self.endian)
+  local instruction = listing:createInstruction(address, self.databuffer, self.endian)
   local size = processor:analyze(instruction, self:baseAddress())
   
   if size <= 0 then
@@ -92,7 +92,7 @@ function ProcessorLoader:disassemble()
     local func = listing:functionAt(i)
     
     if func then
-      processor:analyzeInstructions(listing, func)
+      processor:compileFunction(listing, func)
       self:elaborateFunction(func)
     end
   end

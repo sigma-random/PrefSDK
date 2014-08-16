@@ -10,7 +10,10 @@ ffi.cdef
   void DisassemblerListing_addSegment(void* __this, const char *name, int segmenttype, uint64_t startaddress, uint64_t size, uint64_t baseoffset);
   void DisassemblerListing_addEntryPoint(void* __this, const char* name, uint64_t address);
   void *DisassemblerListing_getFunction(void* __this, int idx);
-  void* DisassemblerListing_addInstruction(void* __this, uint64_t address);
+  void* DisassemblerListing_createInstruction(void* __this, uint64_t address);
+  void* DisassemblerListing_getInstructionFromAddress(void* __this, uint64_t address);
+  void* DisassemblerListing_getNextInstruction(void* __this, void* instruction);
+  bool DisassemblerListing_hasNextInstruction(void* __this, void* instruction);
   void DisassemblerListing_addReference(void* __this, uint64_t srcaddress, uint64_t destaddress, int referencetype);
   void DisassemblerListing_setSymbol(void* __this, uint64_t address, int datatype, const char* name);
   bool DisassemblerListing_hasSymbol(void* __this, uint64_t address);
@@ -38,8 +41,8 @@ function DisassemblerListing:addEntryPoint(name, address)
   C.DisassemblerListing_addEntryPoint(self.cthis, name, address)
 end
 
-function DisassemblerListing:addInstruction(address, databuffer, endian)
-  return Instruction(C.DisassemblerListing_addInstruction(self.cthis, address), databuffer, endian)
+function DisassemblerListing:createInstruction(address, databuffer, endian)
+  return Instruction(C.DisassemblerListing_createInstruction(self.cthis, address), databuffer, endian)
 end
 
 function DisassemblerListing:setSymbol(address, datatype, name)
@@ -68,6 +71,18 @@ end
 
 function DisassemblerListing:functionAt(idx)
   return Function(C.DisassemblerListing_getFunction(self.cthis, idx))
+end
+
+function DisassemblerListing:instructionFromAddress(address)
+  return Instruction(C.DisassemblerListing_getInstructionFromAddress(self.cthis, address))
+end
+
+function DisassemblerListing:nextInstruction(instruction)
+  return Instruction(C.DisassemblerListing_getNextInstruction(self.cthis, instruction.cthis))
+end
+
+function DisassemblerListing:hasNextInstruction(instruction)
+  return C.DisassemblerListing_hasNextInstruction(self.cthis, instruction.cthis)
 end
 
 function DisassemblerListing:mergeInstructions(instruction1, instruction2, mnemonic, instrcategory, instrtype)
