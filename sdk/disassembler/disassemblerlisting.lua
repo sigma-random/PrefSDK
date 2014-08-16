@@ -12,7 +12,9 @@ ffi.cdef
   void *DisassemblerListing_getFunction(void* __this, int idx);
   void* DisassemblerListing_createInstruction(void* __this, uint64_t address);
   void* DisassemblerListing_getInstructionFromAddress(void* __this, uint64_t address);
+  void* DisassemblerListing_getPreviousInstruction(void* __this, void* instruction);
   void* DisassemblerListing_getNextInstruction(void* __this, void* instruction);
+  bool DisassemblerListing_hasPreviousInstruction(void* __this, void* instruction);
   bool DisassemblerListing_hasNextInstruction(void* __this, void* instruction);
   void DisassemblerListing_addReference(void* __this, uint64_t srcaddress, uint64_t destaddress, int referencetype);
   void DisassemblerListing_setSymbol(void* __this, uint64_t address, int datatype, const char* name);
@@ -77,8 +79,16 @@ function DisassemblerListing:instructionFromAddress(address)
   return Instruction(C.DisassemblerListing_getInstructionFromAddress(self.cthis, address))
 end
 
+function DisassemblerListing:previousInstruction(instruction)
+  return Instruction(C.DisassemblerListing_getPreviousInstruction(self.cthis, instruction.cthis))
+end
+
 function DisassemblerListing:nextInstruction(instruction)
   return Instruction(C.DisassemblerListing_getNextInstruction(self.cthis, instruction.cthis))
+end
+
+function DisassemblerListing:hasPreviousInstruction(instruction)
+  return C.DisassemblerListing_hasPreviousInstruction(instruction)
 end
 
 function DisassemblerListing:hasNextInstruction(instruction)
