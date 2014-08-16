@@ -351,6 +351,8 @@ function MIPS32Processor:simplifyInstruction(listing, instruction)
     return self:simplifyLui(listing, instruction)
   elseif instruction:opCode() == self.opcodes.Log_SLL then
     self:checkNop(instruction)
+  elseif (instruction:opCode() == self.opcodes.Math_ADD) or (instruction:opCode() == self.opcodes.Math_ADDU) then
+    self:simplifyToMove(instruction)
   elseif instruction:opCode() == self.opcodes.Branch_JR then
     instruction:removeOperand(3)
     instruction:removeOperand(2)
@@ -368,17 +370,13 @@ function MIPS32Processor:simplifyLui(listing, instruction)
     return instruction
   end
   
+  local pseudoinstruction = nil
+  local luiresult = instruction:operandAt(2):value()
   local nextinstruction = listing:nextInstruction(instruction)
   
-  if (self.mathimminstructions[nextinstruction:opCode()] == nil) or (instruction:operandAt(1):value() ~= nextinstruction:operandAt(1):value()) or (instruction:operandAt(1):value() ~= nextinstruction:operandAt(2):value()) then
-    return instruction
-  end
-  
-  local luiresult = instruction:operandAt(2):value()
-  
-  while (nextinstruction:category() == InstructionCategory.Arithmetic) or (nextinstruction:category() == InstructionCategory.Logical) do
+  if (self.mathimminstructions[nextinstruction:opCode()] ~= nil) and (instruction:operandAt(1):value() == nextinstruction:operandAt(1):value()) and (instruction:operandAt(1):value() == nextinstruction:operandAt(2):value()) then
     local opvalue = nextinstruction:operandAt(3):value()
-    
+      
     if nextinstruction:type() == InstructionType.Add then
       luiresult = luiresult + opvalue
     elseif nextinstruction:type() == InstructionType.And then
@@ -389,19 +387,22 @@ function MIPS32Processor:simplifyLui(listing, instruction)
       luiresult = bit.bxor(luiresult, opvalue)
     end
     
-    local newinstruction = listing:nextInstruction(nextinstruction)
-    
-    if (self.mathimminstructions[newinstruction:opCode()] == nil) or (instruction:operandAt(1):value() ~= newinstruction:operandAt(1):value()) or (instruction:operandAt(1):value() ~= newinstruction:operandAt(2):value()) then
-      break
-    end
-    
-    nextinstruction = newinstruction
+    pseudoinstruction = listing:mergeInstructions(instruction, nextinstruction, "LI", InstructionCategory.LoadStore)
+    pseudoinstruction:cloneOperand(instruction:operandAt(1))
+    pseudoinstruction:addOperand(OperandType.Address, DataType.UInt32):setValue(luiresult)
+  elseif (nextinstruction:opCode() == self.opcodes.Mem_LW) or (nextinstruction:opCode() == self.opcodes.Mem_LH) then
+    pseudoinstruction = listing:mergeInstructions(instruction, nextinstruction, nextinstruction:mnemonic(), InstructionCategory.LoadStore)
+    pseudoinstruction:cloneOperand(nextinstruction:operandAt(1))
+    pseudoinstruction:addOperand(OperandType.Address, DataType.UInt32):setValue(luiresult + nextinstruction:operandAt(3):value())    
+  elseif (nextinstruction:opCode() == self.opcodes.Mem_SW) or (nextinstruction:opCode() == self.opcodes.Mem_SH) then
+    pseudoinstruction = listing:mergeInstructions(instruction, nextinstruction, nextinstruction:mnemonic(), InstructionCategory.LoadStore)
+    pseudoinstruction:addOperand(OperandType.Address, DataType.UInt32):setValue(luiresult + nextinstruction:operandAt(3):value())    
+    pseudoinstruction:cloneOperand(nextinstruction:operandAt(2))
+  else
+    return instruction
   end
   
-  local macroinstruction = listing:mergeInstructions(instruction, nextinstruction, "LI", InstructionCategory.LoadStore)
-  macroinstruction:cloneOperand(instruction:operandAt(1))
-  macroinstruction:addOperand(OperandType.Address, DataType.UInt32):setValue(luiresult)
-  return macroinstruction
+  return pseudoinstruction
 end
 
 function MIPS32Processor:checkNop(instruction)
@@ -417,6 +418,22 @@ function MIPS32Processor:checkNop(instruction)
   instruction:setCategory(InstructionCategory.NoOperation)
   instruction:setType(InstructionType.Nop)
   instruction:clearOperands()
+end
+
+function MIPS32Processor:simplifyToMove(instruction)
+  if (instruction:operandAt(2):value() ~= self.registers.Reg_ZERO) and (instruction:operandAt(3):value() ~= self.registers.Reg_ZERO) then
+    return
+  end
+  
+  if instruction:operandAt(2):value() == self.registers.Reg_ZERO then
+    instruction:removeOperand(2)
+  elseif instruction:operandAt(3):value() == self.registers.Reg_ZERO then
+    instruction:removeOperand(3)
+  end
+  
+  instruction:setMnemonic("MOVE")
+  instruction:setCategory(InstructionCategory.LoadStore)
+  instruction:setType(InstructionType.Undefined)
 end
 
 return MIPS32Processor
