@@ -166,6 +166,12 @@ function MIPS32Processor:__ctor()
                          [self.opcodes.Branch_BLEZ]  = true,
                          [self.opcodes.Branch_BNE]   = true,
                          [self.opcodes.Branch_BNEL]  = true }
+                         
+  self.mathimminstructions = { [self.opcodes.Math_ADDI]  = true,
+                               [self.opcodes.Math_ADDIU] = true,
+                               [self.opcodes.Log_ANDI]   = true,
+                               [self.opcodes.Log_ORI]    = true,
+                               [self.opcodes.Log_XORI]   = true }
   
   self.constantdispatcher = { [0x00000000] = MIPS32Processor.parseSpecial,
                               [0x04000000] = MIPS32Processor.parseRegimm,
@@ -187,15 +193,17 @@ end
 
 function MIPS32Processor:parseSpecial(instruction, data)
   instruction:setOpCode(bit.bor(0x00000000, bit.band(data, 0x3F))) -- SPECIAL | ... | OPCODE
+    
+  if (instruction:opCode() == self.opcodes.Log_SLL) or (instruction:opCode() == self.opcodes.Log_SRL) then
+    instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x0000F800), 0x0B), self.registernames) -- rd
+    instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x001F0000), 0x10), self.registernames) -- rt
+    instruction:addOperand(OperandType.Immediate, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x000007C0), 0x06))                    -- sa
+    return
+  end
   
+  instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x0000F800), 0x0B), self.registernames) -- rd
   instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x03E00000), 0x15), self.registernames) -- rs
   instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x001F0000), 0x10), self.registernames) -- rt
-  
-  if (instruction:opCode() == self.opcodes.Log_SLL) or (instruction:opCode() == self.opcodes.Log_SRL) then
-    instruction:addOperand(OperandType.Immediate, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x000007C0), 0x06))
-  else
-    instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x0000F800), 0x0B), self.registernames) -- rd
-  end
 end
 
 function MIPS32Processor:parseRegimm(instruction, data)
@@ -265,7 +273,11 @@ function MIPS32Processor:analyze(instruction, baseaddress)
         local offset = bit.lshift(self:signExtend(bit.band(data, 0x0000FFFF)), 2)      
         instruction:addOperand(OperandType.Address, DataType.UInt32):setValue(instruction:address() + DataType.sizeOf(DataType.UInt32) + offset) -- address
       else
-        instruction:addOperand(OperandType.Immediate, DataType.UInt32):setValue(bit.band(data, 0x0000FFFF))                                      -- immediate
+        if instruction:opCode() == self.opcodes.Mem_LUI then
+          instruction:addOperand(OperandType.Immediate, DataType.UInt32):setValue(bit.lshift(bit.band(data, 0x0000FFFF), 16))                    -- immediate
+        else
+          instruction:addOperand(OperandType.Immediate, DataType.UInt32):setValue(bit.band(data, 0x0000FFFF))                                    -- immediate
+        end
       end
     end
   end
@@ -307,53 +319,83 @@ function MIPS32Processor:emulate(listing, instruction)
 end
 
 function MIPS32Processor:compileFunction(listing, func)
-  local checklast = false
+  local checkdelayslot = false
   local address = func:startAddress()
   local instruction = listing:instructionFromAddress(address)
   
-  while instruction do
-    if instruction:opCode() == self.opcodes.Mem_LUI then
-      instruction = self:simplifyLui(listing, instruction)
-    elseif instruction:opCode() == self.opcodes.Log_SLL then
-      self:checkNop(instruction)
-    elseif instruction:opCode() == self.opcodes.Branch_JR then
-      instruction:removeOperand(3)
-      instruction:removeOperand(2)
-    elseif instruction:opCode() == self.opcodes.Trap_BREAK then
-      instruction:clearOperands()
-    end
-  
+  while instruction do    
+    instruction = self:simplifyInstruction(listing, instruction)
     func:addInstruction(instruction)
+    checkdelayslot = (instruction:opCode() == self.opcodes.Branch_JR)
     
-    if checklast == true then
-      return
-    end
-    
-    checklast = (instruction:type() == InstructionType.Stop)
-    
-    if not listing:hasNextInstruction(instruction) then
+    if (instruction:type() == InstructionType.Stop) or (not listing:hasNextInstruction(instruction)) then
       break
     end
     
     instruction = listing:nextInstruction(instruction)
   end
+  
+  if instruction and listing:hasNextInstruction(instruction) and (checkdelayslot == true) then
+    instruction = self:simplifyInstruction(listing, listing:nextInstruction(instruction))
+    func:addInstruction(instruction)
+  end
 end
 
-function MIPS32Processor:simplifyLui(listing, instruction)
+function MIPS32Processor:simplifyInstruction(listing, instruction)
+  if instruction:opCode() == self.opcodes.Mem_LUI then
+    return self:simplifyLui(listing, instruction)
+  elseif instruction:opCode() == self.opcodes.Log_SLL then
+    self:checkNop(instruction)
+  elseif instruction:opCode() == self.opcodes.Branch_JR then
+    instruction:removeOperand(3)
+    instruction:removeOperand(2)
+  elseif instruction:opCode() == self.opcodes.Trap_BREAK then
+    instruction:clearOperands()
+  end
+  
+  return instruction
+end
+
+function MIPS32Processor:simplifyLui(listing, instruction)  
+  instruction:removeOperand(1)
+  
   if not listing:hasNextInstruction(instruction) then
     return instruction
   end
   
   local nextinstruction = listing:nextInstruction(instruction)
   
-  if nextinstruction:opCode() ~= self.opcodes.Math_ADDIU then
+  if (self.mathimminstructions[nextinstruction:opCode()] == nil) or (instruction:operandAt(1):value() ~= nextinstruction:operandAt(1):value()) or (instruction:operandAt(1):value() ~= nextinstruction:operandAt(2):value()) then
     return instruction
   end
   
-  local luiimmediate = bit.lshift(instruction:operandAt(3):value(), 16)
+  local luiresult = instruction:operandAt(2):value()
+  
+  while (nextinstruction:category() == InstructionCategory.Arithmetic) or (nextinstruction:category() == InstructionCategory.Logical) do
+    local opvalue = nextinstruction:operandAt(3):value()
+    
+    if nextinstruction:type() == InstructionType.Add then
+      luiresult = luiresult + opvalue
+    elseif nextinstruction:type() == InstructionType.And then
+      luiresult = bit.band(luiresult, opvalue)
+    elseif nextinstruction:type() == InstructionType.Or then
+      luiresult = bit.bor(luiresult, opvalue)
+    elseif nextinstruction:type() == InstructionType.Xor then
+      luiresult = bit.bxor(luiresult, opvalue)
+    end
+    
+    local newinstruction = listing:nextInstruction(nextinstruction)
+    
+    if (self.mathimminstructions[newinstruction:opCode()] == nil) or (instruction:operandAt(1):value() ~= newinstruction:operandAt(1):value()) or (instruction:operandAt(1):value() ~= newinstruction:operandAt(2):value()) then
+      break
+    end
+    
+    nextinstruction = newinstruction
+  end
+  
   local macroinstruction = listing:mergeInstructions(instruction, nextinstruction, "LI", InstructionCategory.LoadStore)
-  macroinstruction:cloneOperand(nextinstruction:operandAt(1))
-  macroinstruction:addOperand(OperandType.Address, DataType.UInt32):setValue(luiimmediate + nextinstruction:operandAt(3):value())
+  macroinstruction:cloneOperand(instruction:operandAt(1))
+  macroinstruction:addOperand(OperandType.Address, DataType.UInt32):setValue(luiresult)
   return macroinstruction
 end
 
