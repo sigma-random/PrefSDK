@@ -201,6 +201,11 @@ function MIPS32Processor:parseSpecial(instruction, data)
     return
   end
   
+  if instruction:opCode() == self.opcodes.Branch_JR then
+    instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x03E00000), 0x15), self.registernames) -- rs
+    return 
+  end
+  
   instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x0000F800), 0x0B), self.registernames) -- rd
   instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x03E00000), 0x15), self.registernames) -- rs
   instruction:addOperand(OperandType.Register, DataType.UInt8):setValue(bit.rshift(bit.band(data, 0x001F0000), 0x10), self.registernames) -- rt
