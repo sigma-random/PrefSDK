@@ -1,23 +1,40 @@
 local oop = require("sdk.lua.oop")
+local Address = require("sdk.math.address")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
+local MessageBox = require("sdk.ui.messagebox")
 local DosHeader = require("formats.portableexecutable.dosheader")
 local NtHeaders = require("formats.portableexecutable.ntheaders")
 local SectionTable = require("formats.portableexecutable.sectiontable")
 local DataDirectory = require("formats.portableexecutable.datadirectory")
 local SectionTableDialog = require("formats.portableexecutable.ui.sectiontabledialog")
+local SignatureDB = require("formats.portableexecutable.signaturedb")
 
 local PeFormat = oop.class(FormatDefinition)
 
 function PeFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
   self:registerOption("Section Table", PeFormat.showSectionTable)
+  self:registerOption("Analyze Signature", PeFormat.analyzeSignature)
   self.peheaders = { } -- Store Headers' definition
 end
 
 function PeFormat:showSectionTable(startoffset, endoffset)
   local sectiontabledialog = SectionTableDialog(self.tree)
   sectiontabledialog:show()
+end
+
+function PeFormat:analyzeSignature(startoffset, endoffset)
+  local eprva = self.tree.NtHeaders.OptionalHeader.AddressOfEntryPoint:value()
+  local section = self.peheaders.SectionTable:sectionFromRva(eprva)
+   
+  if section == nil then
+    MessageBox("Error", "Cannot find a valid section"):show()
+    return
+  end
+   
+  local epoffset = Address.rebase(eprva, section.VirtualAddress:value(), section.PointerToRawData:value())
+  MessageBox("Signature Analysis", "Matched Signature: '" .. SignatureDB():match(self.databuffer, epoffset) .. "'"):show()
 end
 
 function PeFormat:validate()
