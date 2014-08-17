@@ -18,7 +18,7 @@ function SectionTable:rvaInSection(rva, section)
   local sectrva = section.VirtualAddress:value()
   local sectsize = section.VirtualSize:value()
   
-  if (rva >= sectrva) and (rva <= (sectrva + sectsize)) then
+  if (rva >= sectrva) and (rva < (sectrva + sectsize)) then
     return true
   end
   
