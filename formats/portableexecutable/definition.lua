@@ -15,7 +15,6 @@ local PeFormat = oop.class(FormatDefinition)
 function PeFormat:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
   self:registerOption("Section Table", PeFormat.showSectionTable)
-  self:registerOption("Analyze Signature", PeFormat.analyzeSignature)
   self.peheaders = { } -- Store Headers' definition
 end
 
@@ -24,17 +23,16 @@ function PeFormat:showSectionTable(startoffset, endoffset)
   sectiontabledialog:show()
 end
 
-function PeFormat:analyzeSignature(startoffset, endoffset)
-  local eprva = self.tree.NtHeaders.OptionalHeader.AddressOfEntryPoint:value()
+function PeFormat:analyzeSignature(eprva)
   local section = self.peheaders.SectionTable:sectionFromRva(eprva)
    
   if section == nil then
-    MessageBox("Error", "Cannot find a valid section"):show()
+    self:error("Cannot find a valid section")
     return
   end
    
   local epoffset = Address.rebase(eprva, section.VirtualAddress:value(), section.PointerToRawData:value())
-  MessageBox("Signature Analysis", "Matched Signature: '" .. SignatureDB():match(self.databuffer, epoffset) .. "'"):show()
+  self:logLine("Matched Signature: '" .. SignatureDB():match(self.databuffer, epoffset) .. "'")
 end
 
 function PeFormat:validate()
@@ -61,6 +59,8 @@ function PeFormat:parse(formattree)
   self.peheaders["NtHeaders"] = ntheaders
   self.peheaders["SectionTable"] = sectiontable
   self.peheaders["DataDirectory"] = datadirectory
+  
+  self:analyzeSignature(self.tree.NtHeaders.OptionalHeader.AddressOfEntryPoint:value())
 end
 
 return PeFormat

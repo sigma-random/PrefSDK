@@ -1,6 +1,7 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
 local uuid = require("sdk.math.uuid")
+local DebugObject = require("sdk.debug.debugobject")
 local DataBuffer = require("sdk.io.databuffer")
 local DataType = require("sdk.types.datatype")
 local FormatTree = require("sdk.format.formattree")
@@ -25,7 +26,7 @@ ffi.cdef
 ]]
 
 local C = ffi.C
-local FormatDefinition = oop.class()
+local FormatDefinition = oop.class(DebugObject)
 
 function FormatDefinition.register(formattype, name, category, author, version)
   local formatid = uuid()
@@ -34,8 +35,9 @@ function FormatDefinition.register(formattype, name, category, author, version)
 end
 
 function FormatDefinition:__ctor(databuffer)
+  DebugObject.__ctor(self, databuffer)
+  
   self.validated = false
-  self.databuffer = databuffer
   self.elementsinfo = { }
   self.dynamicelements = { }
   self.options = { }

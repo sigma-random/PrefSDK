@@ -135,9 +135,10 @@ local MIPS32Registers = { Reg_ZERO = 0,  Reg_AT   = 1,  Reg_V0   = 2,  Reg_V1   
 
 local MIPS32Processor = oop.class(ProcessorDefinition)
 
-function MIPS32Processor:__ctor()
+function MIPS32Processor:__ctor(databuffer)
+  ProcessorDefinition.__ctor(self, "MIPS32", MIPS32InstructionSet, MIPS32OpCodes, MIPS32Registers, MIPS32RegisterNames, databuffer)
+  
   self.muststop = false
-  ProcessorDefinition.__ctor(self, "MIPS32", MIPS32InstructionSet, MIPS32OpCodes, MIPS32Registers, MIPS32RegisterNames)
   
   self.instructionformats = { [self.opcodes.Priv_CACHE] = "%2, %3(%1)",
                               [self.opcodes.Mem_LB]     = "%2, %3(%1)",

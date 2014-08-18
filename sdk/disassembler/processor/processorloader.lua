@@ -1,6 +1,7 @@
 local ffi = require("ffi")
 local oop = require("sdk.lua.oop")
 local uuid = require("sdk.math.uuid")
+local DebugObject = require("sdk.debug.debugobject")
 local FormatTree = require("sdk.format.formattree")
 local Instruction = require("sdk.disassembler.instructions.instruction")
 local ReferenceType = require("sdk.disassembler.blocks.referencetype")
@@ -13,7 +14,7 @@ ffi.cdef
 ]]
 
 local C = ffi.C
-local ProcessorLoader = oop.class()
+local ProcessorLoader = oop.class(DebugObject)
 
 function ProcessorLoader.register(loadertype, name, author, version)
   local loaderid = uuid()
@@ -22,10 +23,11 @@ function ProcessorLoader.register(loadertype, name, author, version)
 end
 
 function ProcessorLoader:__ctor(listing, databuffer, formattype, processortype, endian)
+  DebugObject.__ctor(self, databuffer)
+  
   self.listing = listing
-  self.databuffer = databuffer
   self.format = formattype(databuffer)
-  self.processor = processortype()
+  self.processor = processortype(databuffer)
   self.endian = endian
   self.validated = self:validate()
   
@@ -41,7 +43,13 @@ function ProcessorLoader:__ctor(listing, databuffer, formattype, processortype, 
 end
 
 function ProcessorLoader:validate()
-  return pcall(self.format.validate, self.format)
+  local res, msg = pcall(self.format.validate, self.format)
+  
+  if res == false then
+    Sdk.errorDialog(msg)
+  end
+  
+  return res
 end
 
 function ProcessorLoader:createSegments(listing, formattree)

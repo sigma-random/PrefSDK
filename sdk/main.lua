@@ -10,9 +10,7 @@ ffi.cdef
   
   void Pref_setSdkVersion(int8_t major, int8_t minor, int8_t revision, const char* custom);
   
-  void Debug_print(const char* s);
-  void Debug_println(const char* s);
-  void Debug_showDialog();
+  void Debug_showDialog(const char* s);
   
   void* QHexEditData_createReader(void* __this);
   void* QHexEditData_createWriter(void* __this);
@@ -82,10 +80,10 @@ function Sdk.disassembleData(clisting, databuffer, loaderid)
     local currentinstr = loader.listing.currentinstruction
 
     if currentinstr then
-      Sdk.dbgprint(string.format("Disassembler in panic state: %s\n  Current Address: %X\n  Last Instruction: '%s' (Address %X, %d Operands)\n", 
-                                  msg, loader.listing.currentaddress, currentinstr.mnemonic, currentinstr.address, #currentinstr.operands)) 
+      Sdk.errorDialog(string.format("Disassembler in panic state: %s\n  Current Address: %X\n  Last Instruction: '%s' (Address %X, %d Operands)\n", 
+                      msg, loader.listing.currentaddress, currentinstr.mnemonic, currentinstr.address, #currentinstr.operands)) 
     else
-      Sdk.dbgprint("Disassembler in panic state: " .. msg .. "\n")
+      Sdk.errorDialog("Disassembler in panic state: " .. msg .. "\n")
     end
   end
   
@@ -134,20 +132,20 @@ function Sdk.exportData(exporterid, databufferin, databufferout, startoffset, en
   exporter:exportData(DataBuffer(databufferin), DataBuffer(databufferout), startoffset, endoffset)
 end
 
-function Sdk.dbgprint(obj, showdialog)
+function Sdk.errorDialog(obj)
   if type(obj) == "string" then
-    C.Debug_print(obj)
+    C.Debug_showDialog(obj)
   elseif type(obj) == "number" then
-    C.Debug_print(tostring(obj))
+    C.Debug_showDialog(tostring(obj))
   elseif type(obj) == "table" then
-    C.Debug_println("Table:")
+    local tableoutput = "Table:\n"
     
     for k,v in pairs(obj) do
-      C.Debug_println(string.format("%s = %s", k, v))
+      tableoutput = tableoutput .. string.format("%s = %s", k, v)
     end
-  end
-  
-  if showdialog == nil or showdialog == true then
-    C.Debug_showDialog()
+    
+    C.Debug_showDialog(tableoutput)
+  else
+    C.Debug_showDialog("Unupported Type: '" .. type(obj) .. "'")
   end
 end
