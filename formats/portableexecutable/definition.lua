@@ -32,7 +32,14 @@ function PeFormat:analyzeSignature(eprva)
   end
    
   local epoffset = Address.rebase(eprva, section.VirtualAddress:value(), section.PointerToRawData:value())
-  self:logLine("Matched Signature: '" .. SignatureDB():match(self.databuffer, epoffset) .. "'")
+  local found, signature = SignatureDB():match(self.databuffer, epoffset)
+  
+  if found then
+    self:logLine("Matched Signature: '" .. signature .. "'")
+    return
+  end
+  
+  self:warning("Unknown Signature detected")
 end
 
 function PeFormat:validate()

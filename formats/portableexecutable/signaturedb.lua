@@ -85,7 +85,7 @@ function SignatureDB:loadDB(dbfile)
 end
 
 function SignatureDB:match(databuffer, offset)
-  local bestmatch = "Nothing Found"
+  local bestmatch, found = "Nothing Found", false
   local currentpath = SignatureDB.db
   local currentoffset = offset
   
@@ -102,12 +102,13 @@ function SignatureDB:match(databuffer, offset)
     
     if currentpath.name then
       bestmatch = currentpath.name
+      found = true
     end
     
     currentoffset = currentoffset + DataType.sizeOf(DataType.UInt8)
   end
   
-  return bestmatch
+  return found, bestmatch
 end
 
 return SignatureDB
