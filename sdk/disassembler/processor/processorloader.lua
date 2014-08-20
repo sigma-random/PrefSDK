@@ -76,6 +76,7 @@ function ProcessorLoader:disassembleInstruction(listing)
   local size = processor:analyze(instruction, self:baseAddress())
   
   if size <= 0 then
+    self:warning(string.format("Unknown Instruction at: %Xh", address))
     listing:push(address + instruction:size(), ReferenceType.Flow) -- Got an Invalid Instruction: Try To Continue analysis
   else
     local instructiondef = processor.instructionset[instruction:opCode()]
