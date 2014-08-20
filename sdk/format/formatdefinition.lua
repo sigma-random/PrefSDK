@@ -37,7 +37,6 @@ end
 function FormatDefinition:__ctor(databuffer)
   DebugObject.__ctor(self, databuffer)
   
-  self.validated = false
   self.elementsinfo = { }
   self.dynamicelements = { }
   self.options = { }
@@ -86,10 +85,6 @@ function FormatDefinition:checkData(offset, datatype, value)
       else
         error("FormatDefinition:checkData(): Unsupported DataType")
       end
-    end
-    
-    if self.validated == true then
-      break
     end
   end
   

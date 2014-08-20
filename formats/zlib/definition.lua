@@ -74,8 +74,6 @@ function ZLibFormat:validate()
   if ((dict ~= 0) and (dict ~= 1)) or ((level < 0) or (level > 3)) then
     error("Invalid Flags")
   end
-  
-  self.validated = true
 end
 
 function ZLibFormat:parse(formattree)

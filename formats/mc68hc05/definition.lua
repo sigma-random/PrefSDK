@@ -11,10 +11,6 @@ function MC68HC05Rom:__ctor(databuffer)
   FormatDefinition.__ctor(self, databuffer)
 end
 
-function MC68HC05Rom:validate()
-  self.validated = true
-end
-
 function MC68HC05Rom:parse(formattree)
   local mc68hc05 = formattree:addStructure("MC68HC05")
   mc68hc05:addField(DataType.Blob, "DualMapIORegs", 0x10)

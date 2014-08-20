@@ -55,12 +55,9 @@ function Sdk.parseFormat(formatid, baseoffset, databuffer, cformattree)
   end
   
   f:validate()
-  
-  if f.validated then
-    f.tree = FormatTree(cformattree, buffer)
-    Sdk.loadedformats[databuffer] = f
-    f:parse(f.tree)
-  end
+  f.tree = FormatTree(cformattree, buffer)
+  Sdk.loadedformats[databuffer] = f
+  f:parse(f.tree)
 end
 
 function Sdk.validateLoaders(loadermodel, databuffer)

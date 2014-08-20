@@ -101,8 +101,6 @@ function TimFormat:validate()
   if ((pxfbx < 0) or (pxw < 0) or (pxfby < 0) or (pxh < 0)) or (pxfbx > pxw) or (pxfby > pxh) then
     error("Invalid Pixel Block Metrics")
   end
-  
-  self.validated = true
 end
     
 function TimFormat:parse(formattree)

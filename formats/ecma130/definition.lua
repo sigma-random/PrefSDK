@@ -53,10 +53,6 @@ function Ecma130Format:createSectorMode01(sector)
   sector:addField(DataType.UInt8, "P-Parity", 104)
 end
 
-function Ecma130Format:validate()
-  self.validated = true
-end
-
 function Ecma130Format:parse(formattree)
   local offset = 0
   local sectoridx = 0
