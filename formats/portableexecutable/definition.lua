@@ -1,5 +1,6 @@
 local oop = require("sdk.lua.oop")
 local Address = require("sdk.math.address")
+local MathFunctions = require("sdk.math.functions")
 local FormatDefinition = require("sdk.format.formatdefinition")
 local DataType = require("sdk.types.datatype")
 local MessageBox = require("sdk.ui.messagebox")
@@ -42,6 +43,19 @@ function PeFormat:analyzeSignature(eprva)
   self:warning("Unknown Signature detected")
 end
 
+function PeFormat:displaySectionsEntropy()
+  local numberofsections = self.tree.NtHeaders.FileHeader.NumberOfSections:value()
+  
+  for i = 1, numberofsections do
+    local section = self.tree.SectionTable["Section" .. i]
+    
+    if (section.SizeOfRawData:value() > 0) and (bit.band(section.Characteristics:value(), 0x20000000) ~= 0) then
+      local e = MathFunctions.entropy(self.databuffer, section.PointerToRawData:value(), section.VirtualSize:value())
+      self:logLine(string.format("Section %q Entropy: %f", section.Name:value(), e))
+    end
+  end
+end
+
 function PeFormat:validate()
   self:checkData(0, DataType.UInt16_LE, 0x5A4D)
   
@@ -68,6 +82,7 @@ function PeFormat:parse(formattree)
   self.peheaders["DataDirectory"] = datadirectory
   
   self:analyzeSignature(self.tree.NtHeaders.OptionalHeader.AddressOfEntryPoint:value())
+  self:displaySectionsEntropy()
 end
 
 return PeFormat
