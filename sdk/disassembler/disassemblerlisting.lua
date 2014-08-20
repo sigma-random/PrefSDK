@@ -100,7 +100,7 @@ function DisassemblerListing:mergeInstructions(instruction1, instruction2, mnemo
 end
 
 function DisassemblerListing:pop()
-  return C.DisassemblerListing_pop(self.cthis)
+  return tonumber(C.DisassemblerListing_pop(self.cthis))
 end
 
 function DisassemblerListing:push(address, referencetype)
