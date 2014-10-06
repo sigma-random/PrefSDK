@@ -2,13 +2,13 @@ PrefSDK
 ====
 
 This repository contains the SDK for Portable Reverse Engineering Framework (PREF).
-The SDK is composted by Lua scripts that will be loaded and executed by PREF.
+The SDK is composted by Lua scripts and QML files that will be loaded and executed by PREF.
 
-SDK's Structure
+SDK Features
 -----
-- Format Parser.
-- Disassembler Engine.
-- Custom Exporter Support.
+- Format Parser with custom User Interface support (if needed)
+- Disassembler Engine with Processor Definition and Custom Loader support
+- Custom Exporters.
 - Basic Math Functions.
 - Basic String Functions.
 - Basic Container Classes.
