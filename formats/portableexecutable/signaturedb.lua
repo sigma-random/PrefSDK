@@ -1,5 +1,4 @@
-local oop = require("sdk.lua.oop")
-local DataType = require("sdk.types.datatype")
+local oop = require("oop")
 
 local SignatureDB = oop.class()
 
@@ -90,7 +89,7 @@ function SignatureDB:match(databuffer, offset)
   local currentoffset = offset
   
   for i = 1, SignatureDB.db.maxdepth do
-    local b = databuffer:readType(currentoffset, DataType.UInt8)
+    local b = databuffer:readType(currentoffset, pref.datatype.UInt8)
     
     if currentpath[b] then
       currentpath = currentpath[b]
@@ -105,7 +104,7 @@ function SignatureDB:match(databuffer, offset)
       found = true
     end
     
-    currentoffset = currentoffset + DataType.sizeOf(DataType.UInt8)
+    currentoffset = currentoffset + pref.datatype.sizeof(pref.datatype.UInt8)
   end
   
   return found, bestmatch

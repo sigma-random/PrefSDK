@@ -1,59 +1,35 @@
-local oop = require("sdk.lua.oop")
+local pref = require("pref")
 local MathFunctions = require("sdk.math.functions")
-local FormatDefinition = require("sdk.format.formatdefinition")
-local ByteOrder = require("sdk.types.byteorder")
-local DataType = require("sdk.types.datatype")
 local LZma = require("sdk.compression.lzma")
+local LZmaFunctions = require("formats.lzma.functions")
 
-local LZmaFormat = oop.class(FormatDefinition)
+local LZmaFormat = pref.format.create("LZMA Format", "Compression", "Dax", "1.0")
 
-function LZmaFormat:__ctor(databuffer)
-  FormatDefinition.__ctor(self, databuffer)
-end
-
-function LZmaFormat:analyzeProperties(propfield)
-  local lc, lp, pb = LZma.getProperties(propfield:value())
-  return string.format("lc: %d, lp %d, pb: %d", lc, lp, pb)
-end
-
-function LZmaFormat:getDictionarySize(dictsizefield)
-  local val = MathFunctions.logb(dictsizefield:value(), 2)
-  return string.format("2^%d bytes", val)
-end
-
-function LZmaFormat:checkUncompressedSize(uncomprsizefield)  
-  if uncomprsizefield:value() == -1 then
-    return "Unknown Size"
-  end
+function LZmaFormat:validate(validator)  
+  validator:checkType(0, 0x5D, pref.datatype.UInt8)
   
-  return ""
-end
-
-function LZmaFormat:validate()  
-  self:checkData(0, DataType.UInt8, 0x5D)
-  
-  local databuffer = self.databuffer
-  local props = databuffer:readUInt8(0)
-  local dictsize = databuffer:readUInt32(1, ByteOrder.LittleEndian)
+  local buffer = validator.buffer
+  local props = buffer:readType(0, pref.datatype.UInt8)
+  local dictsize = buffer:readType(1, pref.datatype.UInt32_LE)
+  local uncompressedsize = buffer:readType(5,pref.datatype.Int64_LE)
   local dictcount = MathFunctions.logb(dictsize, 2)
-  local uncompressedsize = self.databuffer:readInt64(5, ByteOrder.LittleEndian)
   local lc, lp, pb = LZma.getProperties(props)
   
   -- LZma format Extended Checks
   if (props >= (9 * 5 * 5)) or ((lc + lp) > 4) then 
-    error("Invalid ZLMA Properties")
+    validator:error("Invalid ZLMA Properties")
   elseif (dictcount < 16) or (dictcount > 25) then
-    error("Invalid Dictonary Size")
+    validator:error("Invalid Dictonary Size")
   elseif (uncompressedsize == 0) or (uncompressedsize >= 0x100000000) or (uncompressedsize < -1) then  -- Skip more than 4GB files 
-    error("Compressed file's size cannot be greater than 4GB")
+    validator:error("Compressed file's size cannot be greater than 4GB")
   end
 end
     
 function LZmaFormat:parse(formattree)
   local lzmaheader = formattree:addStructure("LZmaHeader")
-  lzmaheader:addField(DataType.UInt8, "Properties"):dynamicInfo(LZmaFormat.analyzeProperties)
-  lzmaheader:addField(DataType.UInt32_LE, "DictionarySize"):dynamicInfo(LZmaFormat.getDictionarySize)
-  lzmaheader:addField(DataType.Int64_LE, "UncompressedSize"):dynamicInfo(LZmaFormat.checkUncompressedSize)
+  lzmaheader:addField(pref.datatype.UInt8, "Properties"):dynamicInfo(LZmaFunctions.analyzeProperties)
+  lzmaheader:addField(pref.datatype.UInt32_LE, "DictionarySize"):dynamicInfo(LZmaFunctions.getDictionarySize)
+  lzmaheader:addField(pref.datatype.Int64_LE, "UncompressedSize"):dynamicInfo(LZmaFunctions.checkUncompressedSize)
 end 
 
 return LZmaFormat

@@ -1,34 +1,20 @@
-local oop = require("sdk.lua.oop")
-local ByteOrder = require("sdk.types.byteorder")
-local SegmentType = require("sdk.disassembler.blocks.segmenttype")
-local ProcessorLoader = require("sdk.disassembler.processor.processorloader")
+local pref = require("pref")
 local PsxExeFormat = require("formats.psxexe.definition")
-local MIPS32Processor = require("processors.mips32")
+local MIPS32Processor = require("processors.mips32.definition")
 
-local PsxExeLoader = oop.class(ProcessorLoader)
+local PsxExeLoader = pref.disassembler.createloader("Sony Playstation 1 PS-EXE", "Dax", "1.0", PsxExeFormat, MIPS32Processor)
 
-function PsxExeLoader:__ctor(listing, databuffer)
-  ProcessorLoader.__ctor(self, listing, databuffer, PsxExeFormat, MIPS32Processor, ByteOrder.LittleEndian)
-end
-
-function PsxExeLoader:createSegments(listing, formattree)
-  local taddrfield = formattree.ExeHeader.t_addr
-  local tsizefield = formattree.ExeHeader.t_size
-  
-  listing:addSegment("TEXT", SegmentType.Code, taddrfield:value(), tsizefield:value(), 0x800)
-end
-
-function PsxExeLoader:createEntryPoints(listing, formattree)
-  local pc0field = formattree.ExeHeader.pc0
-  listing:addEntryPoint("main", pc0field:value())
-end
-
-function PsxExeLoader:baseAddress()
+function PsxExeLoader:baseAddress(formattree)
   return 0x80000000
 end
 
-function PsxExeLoader:elaborateFunction(func)
+function PsxExeLoader:map(formattree)  
+  local taddrfield = formattree.ExeHeader.t_addr
+  local tsizefield = formattree.ExeHeader.t_size
+  local pc0field = formattree.ExeHeader.pc0
   
+  self:createSegment("TEXT", pref.disassembler.segment.Code, taddrfield.value, tsizefield.value, 0x800)
+  self:createEntryPoint("main", pc0field.value)
 end
 
 return PsxExeLoader

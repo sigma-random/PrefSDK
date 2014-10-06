@@ -1,4 +1,4 @@
-local oop = require("sdk.lua.oop")
+local oop = require("oop")
 
 local Stack = oop.class()
 

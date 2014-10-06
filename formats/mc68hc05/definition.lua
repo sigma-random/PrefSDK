@@ -1,32 +1,23 @@
-local oop = require("sdk.lua.oop")
-local DataType = require("sdk.types.datatype")
-local FormatDefinition = require("sdk.format.formatdefinition")
--- local SegmentType = require("sdk.disassembler.segmenttype")
-local ProcessorLoader = require("sdk.disassembler.processor.processorloader")
--- local MC68HC05Processor = require("processors.mc68hc05")
+local pref = require("pref")
 
-local MC68HC05Rom = oop.class(FormatDefinition)
-
-function MC68HC05Rom:__ctor(databuffer)
-  FormatDefinition.__ctor(self, databuffer)
-end
+local MC68HC05Rom = pref.format.create("MC68HC05 Microcontroller ROM", "ICs (Freescale)", "Dax", "1.0")
 
 function MC68HC05Rom:parse(formattree)
   local mc68hc05 = formattree:addStructure("MC68HC05")
-  mc68hc05:addField(DataType.Blob, "DualMapIORegs", 0x10)
-  mc68hc05:addField(DataType.Blob, "GenericIORegs", 0x30)
+  mc68hc05:addField(pref.datatype.Blob, "DualMapIORegs", 0x10)
+  mc68hc05:addField(pref.datatype.Blob, "GenericIORegs", 0x30)
   
   local ram = mc68hc05:addStructure("InternalRAM")
-  ram:addField(DataType.Blob, "LowRam", 0x80)
-  ram:addField(DataType.Blob, "Stack", 0x40)
-  ram:addField(DataType.Blob, "HighRam", 0x140)
+  ram:addField(pref.datatype.Blob, "LowRam", 0x80)
+  ram:addField(pref.datatype.Blob, "Stack", 0x40)
+  ram:addField(pref.datatype.Blob, "HighRam", 0x140)
   
-  mc68hc05:addField(DataType.Blob, "Unused1", 0xDC0)
-  mc68hc05:addField(DataType.Blob, "MaskROM", 0x4000)
-  mc68hc05:addField(DataType.Blob, "Unused2", 0xAE00)
-  mc68hc05:addField(DataType.Blob, "SelfTestROM", 0x1E0)
-  mc68hc05:addField(DataType.Blob, "TestVectors", 0x10)
-  mc68hc05:addField(DataType.Blob, "UserVectors", 0x10)
+  mc68hc05:addField(pref.datatype.Blob, "Unused1", 0xDC0)
+  mc68hc05:addField(pref.datatype.Blob, "MaskROM", 0x4000)
+  mc68hc05:addField(pref.datatype.Blob, "Unused2", 0xAE00)
+  mc68hc05:addField(pref.datatype.Blob, "SelfTestROM", 0x1E0)
+  mc68hc05:addField(pref.datatype.Blob, "TestVectors", 0x10)
+  mc68hc05:addField(pref.datatype.Blob, "UserVectors", 0x10)
 end
 
 -- function MC68HC05Rom:generateLoader()

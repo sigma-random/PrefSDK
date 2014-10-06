@@ -1,5 +1,3 @@
-local ffi = require("ffi")
-
 local floor, insert = math.floor, table.insert
 local Numerics = { }
 

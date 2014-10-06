@@ -82,7 +82,7 @@ function MapItemParser:parseAnnotationDirectory()
 end
 
 function MapItemParser:parseItem()
-  local itemtype = tonumber(self.mapitem.Type:value())
+  local itemtype = self.mapitem.Type.value
   local parseproc = self.parseitemtable[itemtype]
   
   if parseproc then
