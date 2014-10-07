@@ -63,18 +63,15 @@ function PdfFunctions.isWhitespace(ch)
 end
 
 function PdfFunctions.eatWhitespaces(buffer)
-  while PdfFunctions.isWhitespace(buffer[PdfFunctions.filepos]) do
+  while (PdfFunctions.filepos < buffer.length) and PdfFunctions.isWhitespace(buffer[PdfFunctions.filepos]) do
     PdfFunctions.filepos = PdfFunctions.filepos + 1
   end
 end
 
 function PdfFunctions.createWhitespaceObj(buffer)
   local obj = PdfFunctions.createPdfObject(PdfTypes.PdfWhitespace, PdfFunctions.filepos)
-    
-  while PdfFunctions.isWhitespace(buffer[PdfFunctions.filepos]) do
-    PdfFunctions.filepos = PdfFunctions.filepos + 1
-  end
-   
+  
+  PdfFunctions.eatWhitespaces(buffer)
   obj.endpos = PdfFunctions.filepos
   return obj
 end
