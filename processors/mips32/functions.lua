@@ -152,7 +152,6 @@ function Mips32.simplifyLui(instruction, listing)
       luivalue = bit.bor(luivalue, opvalue)
     elseif nextblock.type == pref.disassembler.instructiontype.Xor then
       luivalue = bit.bxor(luivalue, opvalue)
-    else
     end
     
     pseudoinstruction = listing:replaceInstructions(instruction, nextblock, "LI", pref.disassembler.instructioncategory.LoadStore)
