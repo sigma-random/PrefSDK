@@ -10,16 +10,18 @@ function Mips32Processor:analyze(instruction, baseaddress)
   local constant = bit.band(data, 0xFC000000)
   
   if Mips32.constantdispatcher[constant] ~= nil then
-    Mips32.constantdispatcher[constant](instruction, data)
+    local res = Mips32.constantdispatcher[constant](instruction, data)
     
-    if Mips32InstructionSet[instruction.opcode] == nil then
-      return 0 -- Invalid Instruction
+    if (res > 0) and Mips32.customformats[instruction.opcode] then
+      instruction.format = Mips32.customformats[instruction.opcode] -- Set Custom Format
     end
+    
+    return res    
   else
     instruction.opcode = constant
     
     if Mips32InstructionSet[instruction.opcode] == nil then
-      return 0 -- Invalid Instruction
+      return -4 -- Invalid Instruction
     end
     
     if (instruction.opcode == Mips32InstructionSet["J"].opcode) or (instruction.opcode == Mips32InstructionSet["JAL"].opcode) then

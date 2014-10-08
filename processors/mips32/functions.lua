@@ -19,17 +19,19 @@ function Mips32.parseSpecial(instruction, data)
     instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)   -- rd
     instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)   -- rt
     instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x000007C0), 0x06)  -- sa
-    return
+    return pref.datatype.sizeof(pref.datatype.UInt32)
   end
   
   if instruction.opcode == Mips32InstructionSet["JR"].opcode then
     instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15)   -- rs
-    return 
+    return pref.datatype.sizeof(pref.datatype.UInt32)
   end
   
   instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)     -- rd
   instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15)     -- rs
   instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)     -- rt
+  
+  return pref.datatype.sizeof(pref.datatype.UInt32)
 end
 
 function Mips32.parseRegimm(instruction, data)
@@ -38,22 +40,32 @@ function Mips32.parseRegimm(instruction, data)
   
   instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15)     -- rs
   instruction:addOperand(pref.disassembler.operandtype.Address, pref.datatype.UInt32).value = instruction.address + pref.datatype.sizeof(pref.datatype.UInt32) + offset
+  
+  return pref.datatype.sizeof(pref.datatype.UInt32)
 end
 
 function Mips32.parseCop0(instruction, data)
   -- NOTE: COP0 Implemented yet
+  
+  return -4
 end
 
 function Mips32.parseCop1(instruction, data)
   -- NOTE: COP1 (FPU) Not Implemented yet
+  
+  return -4
 end
 
 function Mips32.parseCop2(instruction, data)
   -- NOTE: COP2 Not Implemented yet
+  
+  return -4
 end
 
 function Mips32.parseCop1X(instruction, data)
   -- NOTE: COP1X Not Implemented yet
+  
+  return -4
 end
 
 function Mips32.parseSpecial2(instruction, data)
@@ -62,14 +74,22 @@ function Mips32.parseSpecial2(instruction, data)
   instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15) -- rs
   instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10) -- rt
   instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x0000F800), 0x0B) -- rd
+  
+  return pref.datatype.sizeof(pref.datatype.UInt32)
 end
 
 function Mips32.parseSpecial3(instruction, data)
   -- NOTE: Not Implemented yet
+  
+  return -4
 end
 
 function Mips32.simplifyInstruction(instruction, listing)
   local blocktype = pref.disassembler.blocktype
+  
+  if not instruction.valid then
+    return
+  end
   
   if instruction.opcode == Mips32InstructionSet["LUI"].opcode then
     Mips32.simplifyLui(instruction, listing)
@@ -115,6 +135,10 @@ function Mips32.simplifyLui(instruction, listing)
     return
   end
   
+  if not nextblock.valid then
+    return
+  end
+  
   local pseudoinstruction, luireg, luivalue = nil, instruction:operand(0).value, instruction:operand(1).value
   
   if (Mips32.mathimminstructions[nextblock.opcode] ~= nil) and (luireg == nextblock:operand(0).value) and (luireg == nextblock:operand(1).value) then
@@ -128,6 +152,7 @@ function Mips32.simplifyLui(instruction, listing)
       luivalue = bit.bor(luivalue, opvalue)
     elseif nextblock.type == pref.disassembler.instructiontype.Xor then
       luivalue = bit.bxor(luivalue, opvalue)
+    else
     end
     
     pseudoinstruction = listing:replaceInstructions(instruction, nextblock, "LI", pref.disassembler.instructioncategory.LoadStore)
