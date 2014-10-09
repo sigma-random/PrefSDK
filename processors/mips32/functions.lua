@@ -90,11 +90,13 @@ function Mips32.simplifyInstruction(instruction, listing)
   if not instruction.valid then
     return
   end
-  
+    
   if instruction.opcode == Mips32InstructionSet["LUI"].opcode then
     Mips32.simplifyLui(instruction, listing)
   elseif (instruction.opcode == Mips32InstructionSet["ADD"].opcode) or (instruction.opcode == Mips32InstructionSet["ADDU"].opcode) then
     Mips32.simplifyToMove(instruction)
+  elseif (instruction.opcode == Mips32InstructionSet["ADDIU"].opcode) and (instruction:operand(0).value == Mips32Registers["zero"]) then
+    Mips32.simplifyAddiu(instruction)
   elseif instruction.opcode == Mips32InstructionSet["SLL"].opcode then
     Mips32.checkNop(instruction)
   elseif instruction.opcode == Mips32InstructionSet["BREAK"].opcode then
@@ -182,6 +184,14 @@ function Mips32.simplifyToMove(instruction)
   end
   
   instruction.mnemonic = "MOVE"
+  instruction.category = pref.disassembler.instructioncategory.LoadStore
+  instruction.type = pref.disassembler.instructiontype.Undefined
+end
+
+function Mips32.simplifyAddiu(instruction)
+  instruction:removeOperand(0)
+  
+  instruction.mnemonic = "LI"
   instruction.category = pref.disassembler.instructioncategory.LoadStore
   instruction.type = pref.disassembler.instructiontype.Undefined
 end
