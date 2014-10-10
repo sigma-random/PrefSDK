@@ -1,4 +1,3 @@
-local qt = require("qt")
 local pref = require("pref")
 local BitmapFunctions = require("formats.bitmap.functions")
 
@@ -55,8 +54,7 @@ function BitmapFormat:view(formattree)
     return nil
   end
   
-  return qt.qml.load("formats/bitmap/ui/ColorTable.qml", { name = "formattree", 
-                                                           object = formattree })
+  return pref.format.loadview("formats/bitmap/ui/ColorTable.qml", formattree)
 end
 
 return BitmapFormat

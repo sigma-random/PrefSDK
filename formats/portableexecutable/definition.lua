@@ -1,4 +1,3 @@
-local qt = require("qt")
 local pref = require("pref")
 local PeFunctions = require("formats.portableexecutable.functions")
 local DosHeader = require("formats.portableexecutable.dosheader")
@@ -34,8 +33,7 @@ function PeFormat:parse(formattree)
 end
 
 function PeFormat:view(formattree)
-  return qt.qml.load("formats/portableexecutable/ui/PeEditor.qml", { name = "formattree", 
-                                                                     object = formattree })
+  return pref.format.loadview("formats/portableexecutable/ui/PeEditor.qml", formattree)
 end
 
 return PeFormat
