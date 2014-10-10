@@ -35,7 +35,7 @@ function Mips32Processor:analyze(instruction, baseaddress)
         instruction:addOperand(pref.disassembler.operandtype.Address, pref.datatype.UInt32).value = instruction.address + pref.datatype.sizeof(pref.datatype.UInt32) + offset  -- address
       else
         if instruction.opcode == Mips32InstructionSet["LUI"].opcode then
-          instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt32).value = bit.lshift(bit.band(data, 0x0000FFFF), 16)                             -- immediate
+          instruction:addOperand(pref.disassembler.operandtype.Address, pref.datatype.UInt32).value = bit.lshift(bit.band(data, 0x0000FFFF), 16)                               -- address
         else
           instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt32).value = bit.band(data, 0x0000FFFF)                                             -- immediate
         end
