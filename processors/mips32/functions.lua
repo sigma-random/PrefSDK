@@ -1,6 +1,6 @@
 local pref = require("pref")
 local Mips32InstructionSet = require("processors.mips32.instructionset")
-local Mips32Registers = require("processors.mips32.registers")
+local Mips32RegisterSet = require("processors.mips32.registerset")
 
 local Mips32 = { muststop = false }
 
@@ -95,7 +95,7 @@ function Mips32.simplifyInstruction(instruction, listing)
     Mips32.simplifyLui(instruction, listing)
   elseif (instruction.opcode == Mips32InstructionSet["ADD"].opcode) or (instruction.opcode == Mips32InstructionSet["ADDU"].opcode) then
     Mips32.simplifyToMove(instruction)
-  elseif (instruction.opcode == Mips32InstructionSet["ADDIU"].opcode) and (instruction:operand(0).value == Mips32Registers["zero"]) then
+  elseif (instruction.opcode == Mips32InstructionSet["ADDIU"].opcode) and (instruction:operand(0).value == Mips32RegisterSet["zero"]) then
     Mips32.simplifyAddiu(instruction)
   elseif instruction.opcode == Mips32InstructionSet["SLL"].opcode then
     Mips32.checkNop(instruction)
@@ -108,7 +108,7 @@ function Mips32.simplifyInstruction(instruction, listing)
 end
 
 function Mips32.checkNop(instruction)
-  local zeroregister = Mips32Registers["zero"]
+  local zeroregister = Mips32RegisterSet["zero"]
   
   for i = 0, instruction.operandscount - 1 do
     local operand = instruction:operand(i)
@@ -173,13 +173,13 @@ end
 function Mips32.simplifyToMove(instruction)
   local op1value, op2value = instruction:operand(1).value, instruction:operand(2).value
   
-  if (op1value ~= Mips32Registers["zero"]) and (op2value ~= Mips32Registers["zero"]) then
+  if (op1value ~= Mips32RegisterSet["zero"]) and (op2value ~= Mips32RegisterSet["zero"]) then
     return
   end
   
-  if op1value == Mips32Registers["zero"] then
+  if op1value == Mips32RegisterSet["zero"] then
     instruction:removeOperand(1)
-  elseif op2value == Mips32Registers["zero"] then
+  elseif op2value == Mips32RegisterSet["zero"] then
     instruction:removeOperand(2)
   end
   

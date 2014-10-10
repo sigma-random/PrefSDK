@@ -1,9 +1,9 @@
 local pref = require("pref")
 local Mips32InstructionSet = require("processors.mips32.instructionset")
-local Mips32Registers = require("processors.mips32.registers")
+local Mips32RegisterSet = require("processors.mips32.registerset")
 local Mips32 = require("processors.mips32.functions")
 
-local Mips32Processor = pref.disassembler.createprocessor(Mips32InstructionSet, Mips32Registers, pref.datatype.UInt32)
+local Mips32Processor = pref.disassembler.createprocessor(Mips32InstructionSet, Mips32RegisterSet, pref.datatype.UInt32)
 
 function Mips32Processor:analyze(instruction, baseaddress)  
   local data = instruction:next(pref.datatype.UInt32_LE)

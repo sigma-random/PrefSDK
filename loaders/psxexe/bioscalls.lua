@@ -1,6 +1,6 @@
 local oop = require("oop")
 local pref = require("pref")
-local Mips32Registers = require("processors.mips32.registers")
+local Mips32RegisterSet = require("processors.mips32.registerset")
 local SysCallsA0 = require("loaders.psxexe.syscalls.syscalls00A0")
 local SysCallsB0 = require("loaders.psxexe.syscalls.syscalls00B0")
 local SysCallsC0 = require("loaders.psxexe.syscalls.syscalls00C0")
@@ -14,8 +14,8 @@ local BiosCalls = oop.class()
 function BiosCalls:__ctor(loader, listing)
   self._loader = loader
   self._listing = listing
-  self._t1reg = Mips32Registers["t1"]
-  self._t2reg = Mips32Registers["t2"]
+  self._t1reg = Mips32RegisterSet["t1"]
+  self._t2reg = Mips32RegisterSet["t2"]
 end
 
 function BiosCalls:analyze(f)
