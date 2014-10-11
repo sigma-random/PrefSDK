@@ -56,10 +56,26 @@ function Mips32.parseCop1(instruction, data)
   return -4
 end
 
-function Mips32.parseCop2(instruction, data)
-  -- NOTE: COP2 Not Implemented yet
+function Mips32.parseCop2(instruction, data)  
+  if bit.band(data, 0x02000000) ~= 0 then -- Check for 'COP2' Instruction
+    instruction.opcode = bit.bor(0x48000000, bit.band(data, 0x02000000)) -- COP2 | CO | ...
+    instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt32).value = bit.band(data, 0x00FFFFFF)
+    return pref.datatype.sizeof(pref.datatype.UInt32)
+  end
   
-  return -4
+  local cop2op = bit.band(data, 0x03E00000) 
+  
+  if cop2op == 0x01000000 then -- Branch Operation
+    instruction.opcode = bit.bor(0x48000000, bit.band(data, 0x3E30000)) -- COP2 | COP2OP | ... | ND | TF | ...
+    instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001C0000), 0x12)
+    instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt32).value = bit.lshift(bit.band(data, 0x0000FFFF), 2)
+  else
+    instruction.opcode = bit.bor(0x48000000, cop2op) -- COP2 | COP2OP | ...
+    instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)
+    instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt32).value = bit.band(data, 0x0000FFFF)
+  end
+  
+  return pref.datatype.sizeof(pref.datatype.UInt32)
 end
 
 function Mips32.parseCop1X(instruction, data)
@@ -222,16 +238,18 @@ Mips32.customformats = { [Mips32InstructionSet["CACHE"].opcode]  = "%2, %3(%1)",
                          [Mips32InstructionSet["LHU"].opcode]    = "%2, %3(%1)",
                          [Mips32InstructionSet["LL"].opcode]     = "%2, %3(%1)",
                          [Mips32InstructionSet["LW"].opcode]     = "%2, %3(%1)",
-                         [Mips32InstructionSet["LWC2"].opcode]   = "%2, %3(%1)",
                          [Mips32InstructionSet["LWL"].opcode]    = "%2, %3(%1)",
                          [Mips32InstructionSet["LWR"].opcode]    = "%2, %3(%1)",
                          [Mips32InstructionSet["SB"].opcode]     = "%2, %3(%1)",
                          [Mips32InstructionSet["SC"].opcode]     = "%2, %3(%1)",
                          [Mips32InstructionSet["SH"].opcode]     = "%2, %3(%1)",
                          [Mips32InstructionSet["SW"].opcode]     = "%2, %3(%1)",
-                         [Mips32InstructionSet["SWC2"].opcode]   = "%2, %3(%1)",
                          [Mips32InstructionSet["SWL"].opcode]    = "%2, %3(%1)",
-                         [Mips32InstructionSet["SWR"].opcode]    = "%2, %3(%1)" }
+                         [Mips32InstructionSet["SWR"].opcode]    = "%2, %3(%1)",
+                         [Mips32InstructionSet["LDC2"].opcode]   = "%2, %3(%1)",
+                         [Mips32InstructionSet["LWC2"].opcode]   = "%2, %3(%1)",
+                         [Mips32InstructionSet["SDC2"].opcode]   = "%2, %3(%1)",
+                         [Mips32InstructionSet["SWC2"].opcode]   = "%2, %3(%1)" }
 
 Mips32.mathimminstructions = { [Mips32InstructionSet["ADDI"].opcode]   = true,
                                [Mips32InstructionSet["ADDIU"].opcode]  = true,

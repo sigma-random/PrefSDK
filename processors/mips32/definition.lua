@@ -28,7 +28,12 @@ function Mips32Processor:analyze(instruction, baseaddress)
       instruction:addOperand(pref.disassembler.operandtype.Address, pref.datatype.UInt32).value = baseaddress + bit.lshift(bit.band(data, 0x3FFFFFF), 2)                       -- instr_index
     else
       instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15)                                 -- rs
-      instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)                                 -- rt
+      
+      if (instruction.opcode == Mips32InstructionSet["LWC2"].opcode) or (instruction.opcode == Mips32InstructionSet["SWC2"].opcode) then
+        instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)                              -- COP2 Data Register
+      else
+        instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)                               -- rt
+      end
       
       if Mips32.noregimmccall[instruction.opcode] then
         local offset = bit.lshift(Mips32.signExtend(bit.band(data, 0x0000FFFF)), 2)      

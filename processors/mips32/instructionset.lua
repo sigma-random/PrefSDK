@@ -82,19 +82,19 @@ Mips32InstructionSet[0x00000023] = { mnemonic = "SUBU", category = pref.disassem
 Mips32InstructionSet[0xAC000000] = { mnemonic = "SW", category = pref.disassembler.instructioncategory.LoadStore, type = pref.disassembler.instructiontype.Undefined }
 Mips32InstructionSet[0xA8000000] = { mnemonic = "SWL", category = pref.disassembler.instructioncategory.LoadStore, type = pref.disassembler.instructiontype.Undefined }
 Mips32InstructionSet[0xB8000000] = { mnemonic = "SWR", category = pref.disassembler.instructioncategory.LoadStore, type = pref.disassembler.instructiontype.Undefined }
-Mips32InstructionSet[0x0000000C] = { mnemonic = "SYSCALL", category = pref.disassembler.instructioncategory.InterruptTrap, type = pref.disassembler.instructiontype.Undefined }
-Mips32InstructionSet[0x00000030] = { mnemonic = "TGE", category = pref.disassembler.instructioncategory.InterruptTrap, type = pref.disassembler.instructiontype.Undefined }
+Mips32InstructionSet[0x0000000C] = { mnemonic = "SYSCALL", category = pref.disassembler.instructioncategory.InterruptTrap, type = pref.disassembler.instructiontype.InterruptTrap }
+Mips32InstructionSet[0x00000030] = { mnemonic = "TGE", category = pref.disassembler.instructioncategory.InterruptTrap, type = pref.disassembler.instructiontype.InterruptTrap }
 Mips32InstructionSet[0x00000026] = { mnemonic = "XOR", category = pref.disassembler.instructioncategory.Logical, type = pref.disassembler.instructiontype.Xor }
 Mips32InstructionSet[0x38000000] = { mnemonic = "XORI", category = pref.disassembler.instructioncategory.Logical, type = pref.disassembler.instructiontype.Xor }
 
--- COP2 Instructions
+-- COP2 Related Instructions
 Mips32InstructionSet[0x49000000] = { mnemonic = "BC2F", category = pref.disassembler.instructioncategory.ControlFlow, type = pref.disassembler.instructiontype.ConditionalJump }
 Mips32InstructionSet[0x49020000] = { mnemonic = "BC2FL", category = pref.disassembler.instructioncategory.ControlFlow, type = pref.disassembler.instructiontype.ConditionalJump }
 Mips32InstructionSet[0x49010000] = { mnemonic = "BC2T", category = pref.disassembler.instructioncategory.ControlFlow, type = pref.disassembler.instructiontype.ConditionalJump }
 Mips32InstructionSet[0x49010000] = { mnemonic = "BC2TL", category = pref.disassembler.instructioncategory.ControlFlow, type = pref.disassembler.instructiontype.ConditionalJump }
 Mips32InstructionSet[0x48400000] = { mnemonic = "CFC2", category = pref.disassembler.instructioncategory.LoadStore, type = pref.disassembler.instructiontype.Undefined }
-Mips32InstructionSet[0x4A000000] = { mnemonic = "COP2", category = pref.disassembler.instructioncategory.Undefined, type = pref.disassembler.instructiontype.Undefined }
-Mips32InstructionSet[0x48C00000] = { mnemonic = "CTC2", category = pref.disassembler.instructioncategory.Undefined, type = pref.disassembler.instructiontype.Undefined }
+Mips32InstructionSet[0x4A000000] = { mnemonic = "COP2", category = pref.disassembler.instructioncategory.InterruptTrap, type = pref.disassembler.instructiontype.InterruptTrap }
+Mips32InstructionSet[0x48C00000] = { mnemonic = "CTC2", category = pref.disassembler.instructioncategory.LoadStore, type = pref.disassembler.instructiontype.Undefined }
 Mips32InstructionSet[0xD8000000] = { mnemonic = "LDC2", category = pref.disassembler.instructioncategory.LoadStore, type = pref.disassembler.instructiontype.Undefined }
 Mips32InstructionSet[0xC8000000] = { mnemonic = "LWC2", category = pref.disassembler.instructioncategory.LoadStore, type = pref.disassembler.instructiontype.Undefined }
 Mips32InstructionSet[0x48000000] = { mnemonic = "MFC2", category = pref.disassembler.instructioncategory.LoadStore, type = pref.disassembler.instructiontype.Undefined }

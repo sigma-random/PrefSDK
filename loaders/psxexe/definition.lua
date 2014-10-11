@@ -1,7 +1,7 @@
 local pref = require("pref")
 local PsxExeFormat = require("formats.psxexe.definition")
 local MIPS32Processor = require("processors.mips32.definition")
-local BiosCalls = require("loaders.psxexe.bioscalls")
+local PsyQ = require("loaders.psxexe.psyq")
 
 local PsxExeLoader = pref.disassembler.createloader("Sony Playstation 1 PS-EXE", "Dax", "1.0", PsxExeFormat, MIPS32Processor)
 
@@ -20,7 +20,7 @@ end
 
 function PsxExeLoader:elaborate(listing, formattree)
   local f = listing.firstfunction
-  local psyq = BiosCalls(self, listing)
+  local psyq = PsyQ(self, listing)
   
   while f do
     psyq:analyze(f)
