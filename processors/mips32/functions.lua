@@ -66,7 +66,7 @@ end
 function Mips32.parseCop2(instruction, data)  
   if bit.band(data, 0x02000000) ~= 0 then -- Check for 'COP2' Instruction
     instruction.opcode = bit.bor(0x48000000, bit.band(data, 0x02000000)) -- COP2 | CO | ...
-    instruction:addOperand(OperandType.Immediate, OperandDescriptor.Destination, DataType.UInt32).value = bit.band(data, 0x00FFFFFF)
+    instruction:addOperand(OperandType.Immediate, OperandDescriptor.Destination, DataType.UInt32).value = bit.band(data, 0x01FFFFFF) 
     return DataType.sizeof(DataType.UInt32)
   end
   
