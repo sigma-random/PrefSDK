@@ -127,9 +127,9 @@ function Mips32.simplifyInstruction(instruction, listing)
   elseif instruction.opcode == Mips32InstructionSet["JR"].opcode then
     instruction:removeOperand(1)
     instruction:removeOperand(2)
-  elseif Mips32.customformats[instruction.opcode] and ((instruction:operand(2).value == 0) or (instruction:operand(0).value == Mips32RegisterSet["zero"])) then
+  elseif Mips32.baseoffsetinstruction[instruction.opcode] and ((instruction:operand(2).value == 0) or (instruction:operand(0).value == Mips32RegisterSet["zero"])) then
     Mips32.simplifyToMove(instruction)
-  elseif (instruction.operandscount == 3) and (instruction:operand(0).type == OperandType.Register) and (instruction:operand(1).type == OperandType.Register) and (instruction:operand(0).value == instruction:operand(1).value) then
+  elseif (Mips32.baseoffsetinstruction[instruction.opcode] == nil) and (instruction.operandscount == 3) and (instruction:operand(0).type == OperandType.Register) and (instruction:operand(1).type == OperandType.Register) and (instruction:operand(0).value == instruction:operand(1).value) then
     instruction:removeOperand(1)
   end
 end
@@ -188,7 +188,7 @@ function Mips32.simplifyLui(instruction, listing)
 end
 
 function Mips32.simplifyToMove(instruction)
-  if Mips32.customformats[instruction.opcode] then
+  if Mips32.baseoffsetinstruction[instruction.opcode] then
     if instruction:operand(2).value == 0 then
       instruction:removeOperand(2)
     elseif instruction:operand(0).value == Mips32RegisterSet["zero"] then
@@ -241,7 +241,7 @@ Mips32.noregimmccall = { [Mips32InstructionSet["BEQ"].opcode]    = true,
                          [Mips32InstructionSet["BNE"].opcode]    = true,
                          [Mips32InstructionSet["BNEL"].opcode]   = true }
 
-Mips32.customformats = { [Mips32InstructionSet["CACHE"].opcode]  = "%2, [%1 + %3]",
+Mips32.baseoffsetinstruction = { [Mips32InstructionSet["CACHE"].opcode]  = "%2, [%1 + %3]",
                          [Mips32InstructionSet["LB"].opcode]     = "%2, [%1 + %3]",
                          [Mips32InstructionSet["LBU"].opcode]    = "%2, [%1 + %3]",
                          [Mips32InstructionSet["LH"].opcode]     = "%2, [%1 + %3]",

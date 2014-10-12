@@ -17,8 +17,8 @@ function Mips32Processor:analyze(instruction, baseaddress)
   if Mips32.constantdispatcher[constant] ~= nil then
     local res = Mips32.constantdispatcher[constant](instruction, data)
     
-    if (res > 0) and Mips32.customformats[instruction.opcode] then
-      instruction.format = Mips32.customformats[instruction.opcode] -- Set Custom Format
+    if (res > 0) and Mips32.baseoffsetinstruction[instruction.opcode] then
+      instruction.format = Mips32.baseoffsetinstruction[instruction.opcode] -- Set Custom Format
     end
     
     return res    
@@ -53,8 +53,8 @@ function Mips32Processor:analyze(instruction, baseaddress)
     end
   end
   
-  if Mips32.customformats[instruction.opcode] then
-    instruction.format = Mips32.customformats[instruction.opcode] -- Set Custom Format
+  if Mips32.baseoffsetinstruction[instruction.opcode] then
+    instruction.format = Mips32.baseoffsetinstruction[instruction.opcode] -- Set Custom Format
   end
   
   return DataType.sizeof(DataType.UInt32) -- Fixed instruction size
