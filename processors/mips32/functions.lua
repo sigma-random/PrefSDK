@@ -113,34 +113,28 @@ function Mips32.simplifyInstruction(instruction, listing)
   if not instruction.valid then
     return
   end
-    
-  if instruction.opcode == Mips32InstructionSet["LUI"].opcode then
-    Mips32.simplifyLui(instruction, listing)
+  
+  if (instruction.opcode == Mips32InstructionSet["SLL"].opcode) and (instruction:operand(0).value == Mips32RegisterSet["zero"]) and (instruction:operand(1).value == Mips32RegisterSet["zero"]) and (instruction:operand(2).value == Mips32RegisterSet["zero"]) then
+    Mips32.simplifyToNop(instruction)
   elseif (instruction.opcode == Mips32InstructionSet["ADD"].opcode) or (instruction.opcode == Mips32InstructionSet["ADDU"].opcode) then
     Mips32.simplifyToMove(instruction)
   elseif (instruction.opcode == Mips32InstructionSet["ADDIU"].opcode) and (instruction:operand(0).value == Mips32RegisterSet["zero"]) then
     Mips32.simplifyAddiu(instruction)
-  elseif instruction.opcode == Mips32InstructionSet["SLL"].opcode then
-    Mips32.checkNop(instruction)
+  elseif instruction.opcode == Mips32InstructionSet["LUI"].opcode then
+    Mips32.simplifyLui(instruction, listing)
   elseif instruction.opcode == Mips32InstructionSet["BREAK"].opcode then
     instruction:clearOperands()
   elseif instruction.opcode == Mips32InstructionSet["JR"].opcode then
     instruction:removeOperand(1)
     instruction:removeOperand(2)
+  elseif Mips32.customformats[instruction.opcode] and ((instruction:operand(2).value == 0) or (instruction:operand(0).value == Mips32RegisterSet["zero"])) then
+    Mips32.simplifyToMove(instruction)
+  elseif (instruction.operandscount == 3) and (instruction:operand(0).type == OperandType.Register) and (instruction:operand(1).type == OperandType.Register) and (instruction:operand(0).value == instruction:operand(1).value) then
+    instruction:removeOperand(1)
   end
 end
 
-function Mips32.checkNop(instruction)
-  local zeroregister = Mips32RegisterSet["zero"]
-  
-  for i = 0, instruction.operandscount - 1 do
-    local operand = instruction:operand(i)
-    
-    if operand.value ~= zeroregister then
-      return
-    end
-  end
-  
+function Mips32.simplifyToNop(instruction)  
   instruction.mnemonic = "NOP"
   instruction.category = pref.disassembler.instructioncategory.NoOperation
   instruction.type = pref.disassembler.instructiontype.Nop
@@ -194,19 +188,28 @@ function Mips32.simplifyLui(instruction, listing)
 end
 
 function Mips32.simplifyToMove(instruction)
-  local op1value, op2value = instruction:operand(1).value, instruction:operand(2).value
-  
-  if (op1value ~= Mips32RegisterSet["zero"]) and (op2value ~= Mips32RegisterSet["zero"]) then
-    return
-  end
-  
-  if op1value == Mips32RegisterSet["zero"] then
-    instruction:removeOperand(1)
-  elseif op2value == Mips32RegisterSet["zero"] then
-    instruction:removeOperand(2)
+  if Mips32.customformats[instruction.opcode] then
+    if instruction:operand(2).value == 0 then
+      instruction:removeOperand(2)
+    elseif instruction:operand(0).value == Mips32RegisterSet["zero"] then
+      instruction:removeOperand(0)
+    end
+  else
+    local op1value, op2value = instruction:operand(1).value, instruction:operand(2).value
+    
+    if (op1value ~= Mips32RegisterSet["zero"]) and (op2value ~= Mips32RegisterSet["zero"]) then
+      return
+    end
+    
+    if op1value == Mips32RegisterSet["zero"] then
+      instruction:removeOperand(1)
+    elseif op2value == Mips32RegisterSet["zero"] then
+      instruction:removeOperand(2)
+    end
   end
   
   instruction.mnemonic = "MOVE"
+  instruction.format = ""
   instruction.category = pref.disassembler.instructioncategory.LoadStore
   instruction.type = pref.disassembler.instructiontype.Undefined
 end
@@ -238,25 +241,25 @@ Mips32.noregimmccall = { [Mips32InstructionSet["BEQ"].opcode]    = true,
                          [Mips32InstructionSet["BNE"].opcode]    = true,
                          [Mips32InstructionSet["BNEL"].opcode]   = true }
 
-Mips32.customformats = { [Mips32InstructionSet["CACHE"].opcode]  = "%2, %3(%1)",
-                         [Mips32InstructionSet["LB"].opcode]     = "%2, %3(%1)",
-                         [Mips32InstructionSet["LBU"].opcode]    = "%2, %3(%1)",
-                         [Mips32InstructionSet["LH"].opcode]     = "%2, %3(%1)",
-                         [Mips32InstructionSet["LHU"].opcode]    = "%2, %3(%1)",
-                         [Mips32InstructionSet["LL"].opcode]     = "%2, %3(%1)",
-                         [Mips32InstructionSet["LW"].opcode]     = "%2, %3(%1)",
-                         [Mips32InstructionSet["LWL"].opcode]    = "%2, %3(%1)",
-                         [Mips32InstructionSet["LWR"].opcode]    = "%2, %3(%1)",
-                         [Mips32InstructionSet["SB"].opcode]     = "%2, %3(%1)",
-                         [Mips32InstructionSet["SC"].opcode]     = "%2, %3(%1)",
-                         [Mips32InstructionSet["SH"].opcode]     = "%2, %3(%1)",
-                         [Mips32InstructionSet["SW"].opcode]     = "%2, %3(%1)",
-                         [Mips32InstructionSet["SWL"].opcode]    = "%2, %3(%1)",
-                         [Mips32InstructionSet["SWR"].opcode]    = "%2, %3(%1)",
-                         [Mips32InstructionSet["LDC2"].opcode]   = "%2, %3(%1)",
-                         [Mips32InstructionSet["LWC2"].opcode]   = "%2, %3(%1)",
-                         [Mips32InstructionSet["SDC2"].opcode]   = "%2, %3(%1)",
-                         [Mips32InstructionSet["SWC2"].opcode]   = "%2, %3(%1)" }
+Mips32.customformats = { [Mips32InstructionSet["CACHE"].opcode]  = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["LB"].opcode]     = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["LBU"].opcode]    = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["LH"].opcode]     = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["LHU"].opcode]    = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["LL"].opcode]     = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["LW"].opcode]     = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["LWL"].opcode]    = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["LWR"].opcode]    = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["SB"].opcode]     = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["SC"].opcode]     = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["SH"].opcode]     = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["SW"].opcode]     = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["SWL"].opcode]    = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["SWR"].opcode]    = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["LDC2"].opcode]   = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["LWC2"].opcode]   = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["SDC2"].opcode]   = "%2, [%1 + %3]",
+                         [Mips32InstructionSet["SWC2"].opcode]   = "%2, [%1 + %3]" }
 
 Mips32.mathimminstructions = { [Mips32InstructionSet["ADDI"].opcode]   = true,
                                [Mips32InstructionSet["ADDIU"].opcode]  = true,
