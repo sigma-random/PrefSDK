@@ -2,6 +2,10 @@ local pref = require("pref")
 local Mips32InstructionSet = require("processors.mips32.instructionset")
 local Mips32RegisterSet = require("processors.mips32.registerset")
 
+local OperandDescriptor = pref.disassembler.operanddescriptor
+local OperandType = pref.disassembler.operandtype
+local DataType = pref.datatype
+
 local Mips32 = { muststop = false }
 
 function Mips32.signExtend(address)
@@ -16,32 +20,35 @@ function Mips32.parseSpecial(instruction, data)
   instruction.opcode = bit.bor(0x00000000, bit.band(data, 0x3F)) -- SPECIAL | ... | OPCODE
     
   if (instruction.opcode == Mips32InstructionSet["SLL"].opcode) or (instruction.opcode == Mips32InstructionSet["SRL"].opcode) then
-    instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)   -- rd
-    instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)   -- rt
-    instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x000007C0), 0x06)  -- sa
-    return pref.datatype.sizeof(pref.datatype.UInt32)
+    instruction:addOperand(OperandType.Register, OperandDescriptor.Destination, DataType.UInt8).value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)   -- rd
+    instruction:addOperand(OperandType.Register, OperandDescriptor.Source, DataType.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)        -- rt
+    instruction:addOperand(OperandType.Immediate, OperandDescriptor.Scale, DataType.UInt8).value = bit.rshift(bit.band(data, 0x000007C0), 0x06)        -- sa
+    return DataType.sizeof(DataType.UInt32)
   end
   
   if instruction.opcode == Mips32InstructionSet["JR"].opcode then
-    instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15)   -- rs
-    return pref.datatype.sizeof(pref.datatype.UInt32)
+    instruction:addOperand(OperandType.Register, OperandDescriptor.Destination, DataType.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15)   -- rs
+    return DataType.sizeof(DataType.UInt32)
   end
   
-  instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)     -- rd
-  instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15)     -- rs
-  instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)     -- rt
+  instruction:addOperand(OperandType.Register, OperandDescriptor.Destination, DataType.UInt8).value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)     -- rd
+  instruction:addOperand(OperandType.Register, OperandDescriptor.Source, DataType.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15)     -- rs
+  instruction:addOperand(OperandType.Register, DataType.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)     -- rt
   
-  return pref.datatype.sizeof(pref.datatype.UInt32)
+  return DataType.sizeof(DataType.UInt32)
 end
 
 function Mips32.parseRegimm(instruction, data)
   local offset = bit.lshift(Mips32.signExtend(bit.band(data, 0x0000FFFF)), 2)  
   instruction.opcode = bit.bor(0x04000000, bit.band(data, 0x001F0000)) -- REGIMM | ... | OPCODE
   
-  instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15)     -- rs
-  instruction:addOperand(pref.disassembler.operandtype.Address, pref.datatype.UInt32).value = instruction.address + pref.datatype.sizeof(pref.datatype.UInt32) + offset
+  local sourceop = instruction:addOperand(OperandType.Register, DataType.UInt8)
+  local destop = instruction:addOperand(OperandType.Address, OperandDescriptor.Destination, DataType.UInt32)
   
-  return pref.datatype.sizeof(pref.datatype.UInt32)
+  sourceop.value = bit.rshift(bit.band(data, 0x03E00000), 0x15)     -- rs
+  destop.value = instruction.address + DataType.sizeof(DataType.UInt32) + offset
+  
+  return DataType.sizeof(DataType.UInt32)
 end
 
 function Mips32.parseCop0(instruction, data)
@@ -59,23 +66,23 @@ end
 function Mips32.parseCop2(instruction, data)  
   if bit.band(data, 0x02000000) ~= 0 then -- Check for 'COP2' Instruction
     instruction.opcode = bit.bor(0x48000000, bit.band(data, 0x02000000)) -- COP2 | CO | ...
-    instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt32).value = bit.band(data, 0x00FFFFFF)
-    return pref.datatype.sizeof(pref.datatype.UInt32)
+    instruction:addOperand(OperandType.Immediate, OperandDescriptor.Destination, DataType.UInt32).value = bit.band(data, 0x00FFFFFF)
+    return DataType.sizeof(DataType.UInt32)
   end
   
   local cop2op = bit.band(data, 0x03E00000) 
   
   if cop2op == 0x01000000 then -- Branch Operation
     instruction.opcode = bit.bor(0x48000000, bit.band(data, 0x3E30000)) -- COP2 | COP2OP | ... | ND | TF | ...
-    instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001C0000), 0x12)
-    instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt32).value = bit.lshift(bit.band(data, 0x0000FFFF), 2)
+    instruction:addOperand(OperandType.Immediate, DataType.UInt8).value = bit.rshift(bit.band(data, 0x001C0000), 0x12)
+    instruction:addOperand(OperandType.Immediate, OperandDescriptor.Destination, DataType.UInt32).value = bit.lshift(bit.band(data, 0x0000FFFF), 2)
   else
     instruction.opcode = bit.bor(0x48000000, cop2op) -- COP2 | COP2OP | ...
-    instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)
-    instruction:addOperand(pref.disassembler.operandtype.Immediate, pref.datatype.UInt32).value = bit.band(data, 0x0000FFFF)
+    instruction:addOperand(OperandType.Register, OperandDescriptor.Source, DataType.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)
+    instruction:addOperand(OperandType.Immediate, OperandDescriptor.Destination, DataType.UInt32).value = bit.band(data, 0x0000FFFF)
   end
   
-  return pref.datatype.sizeof(pref.datatype.UInt32)
+  return DataType.sizeof(DataType.UInt32)
 end
 
 function Mips32.parseCop1X(instruction, data)
@@ -87,11 +94,11 @@ end
 function Mips32.parseSpecial2(instruction, data)
   instruction.opcode = bit.bor(0x70000000, bit.band(data, 0x21))  -- SPECIAL2 | ... | OPCODE
   
-  instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15) -- rs
-  instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10) -- rt
-  instruction:addOperand(pref.disassembler.operandtype.Register, pref.datatype.UInt8).value = bit.rshift(bit.band(data, 0x0000F800), 0x0B) -- rd
+  instruction:addOperand(OperandType.Register, OperandDescriptor.Source, DataType.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15) -- rs
+  instruction:addOperand(OperandType.Register, DataType.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10) -- rt
+  instruction:addOperand(OperandType.Register, OperandDescriptor.Destination, DataType.UInt8).value = bit.rshift(bit.band(data, 0x0000F800), 0x0B) -- rd
   
-  return pref.datatype.sizeof(pref.datatype.UInt32)
+  return DataType.sizeof(DataType.UInt32)
 end
 
 function Mips32.parseSpecial3(instruction, data)
@@ -174,14 +181,14 @@ function Mips32.simplifyLui(instruction, listing)
     
     pseudoinstruction = listing:replaceInstructions(instruction, nextblock, "LI", pref.disassembler.instructioncategory.LoadStore)
     pseudoinstruction:cloneOperand(instruction:operand(0))
-    pseudoinstruction:addOperand(pref.disassembler.operandtype.Address, pref.datatype.UInt32).value = luivalue
+    pseudoinstruction:addOperand(OperandType.Address, DataType.UInt32).value = luivalue
   elseif (nextblock.opcode == Mips32InstructionSet["LW"].opcode) or (nextblock.opcode == Mips32InstructionSet["LH"].opcode) then
     pseudoinstruction = listing:replaceInstructions(instruction, nextblock, nextblock.mnemonic, pref.disassembler.instructioncategory.LoadStore)
     pseudoinstruction:cloneOperand(nextblock:operand(0))
-    pseudoinstruction:addOperand(pref.disassembler.operandtype.Address, pref.datatype.UInt32).value = luivalue + nextblock:operand(2).value
+    pseudoinstruction:addOperand(OperandType.Address, DataType.UInt32).value = luivalue + nextblock:operand(2).value
   elseif (nextblock.opcode == Mips32InstructionSet["SW"].opcode) or (nextblock.opcode == Mips32InstructionSet["SH"].opcode) then
     pseudoinstruction = listing:replaceInstructions(instruction, nextblock, nextblock.mnemonic, pref.disassembler.instructioncategory.LoadStore)
-    pseudoinstruction:addOperand(pref.disassembler.operandtype.Address, pref.datatype.UInt32).value = luivalue + nextblock:operand(2).value
+    pseudoinstruction:addOperand(OperandType.Address, DataType.UInt32).value = luivalue + nextblock:operand(2).value
     pseudoinstruction:cloneOperand(nextblock:operand(1))
   end
 end
