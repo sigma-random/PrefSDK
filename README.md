@@ -17,3 +17,7 @@ SDK Features
 License
 -----
 PrefSDK is release under GNU GPL3 License
+
+Documentation
+-----
+I have started to write the documentation, you can see the completed chapters here: https://github.com/Dax89/PrefSDK/wiki
