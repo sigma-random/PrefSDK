@@ -1,6 +1,4 @@
 local pref = require("pref")
-local Mips32InstructionSet = require("processors.mips32.instructionset")
-local Mips32RegisterSet = require("processors.mips32.registerset")
 local Mips32 = require("processors.mips32.functions")
 
 local OperandType = pref.disassembler.operandtype
@@ -8,7 +6,7 @@ local OperandDescriptor = pref.disassembler.operanddescriptor
 local DataType = pref.datatype
 local ReferenceType = pref.disassembler.referencetype
 
-local Mips32Processor = pref.disassembler.createprocessor(Mips32InstructionSet, Mips32RegisterSet, DataType.UInt32)
+local Mips32Processor = pref.disassembler.createprocessor(Mips32.instructionset, Mips32.registerset, DataType.UInt32)
 
 function Mips32Processor:analyze(instruction, baseaddress)  
   local data = instruction:next(DataType.UInt32_LE)
@@ -25,16 +23,16 @@ function Mips32Processor:analyze(instruction, baseaddress)
   else
     instruction.opcode = constant
     
-    if Mips32InstructionSet[instruction.opcode] == nil then
+    if Mips32.instructionset[instruction.opcode] == nil then
       return -4 -- Invalid Instruction
     end
     
-    if (instruction.opcode == Mips32InstructionSet["J"].opcode) or (instruction.opcode == Mips32InstructionSet["JAL"].opcode) then
+    if (instruction.opcode == Mips32.instructionset["J"].opcode) or (instruction.opcode == Mips32.instructionset["JAL"].opcode) then
       instruction:addOperand(OperandType.Address, OperandDescriptor.Destination, DataType.UInt32).value = baseaddress + bit.lshift(bit.band(data, 0x3FFFFFF), 2)  -- instr_index
     else
       instruction:addOperand(OperandType.Register, DataType.UInt8).value = bit.rshift(bit.band(data, 0x03E00000), 0x15)                                           -- rs
       
-      if (instruction.opcode == Mips32InstructionSet["LWC2"].opcode) or (instruction.opcode == Mips32InstructionSet["SWC2"].opcode) then
+      if (instruction.opcode == Mips32.instructionset["LWC2"].opcode) or (instruction.opcode == Mips32.instructionset["SWC2"].opcode) then
         instruction:addOperand(OperandType.Immediate, OperandDescriptor.Destination, DataType.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)         -- COP2 Data Register
       else
         instruction:addOperand(OperandType.Register, DataType.UInt8).value = bit.rshift(bit.band(data, 0x001F0000), 0x10)                                         -- rt
@@ -44,7 +42,7 @@ function Mips32Processor:analyze(instruction, baseaddress)
         local offset = bit.lshift(Mips32.signExtend(bit.band(data, 0x0000FFFF)), 2)      
         instruction:addOperand(OperandType.Address, OperandDescriptor.Destination, DataType.UInt32).value = instruction.address + DataType.sizeof(DataType.UInt32) + offset            -- address
       else
-        if instruction.opcode == Mips32InstructionSet["LUI"].opcode then
+        if instruction.opcode == Mips32.instructionset["LUI"].opcode then
           instruction:addOperand(OperandType.Address, OperandDescriptor.Source, DataType.UInt32).value = bit.lshift(bit.band(data, 0x0000FFFF), 16)                                    -- address
         else
           instruction:addOperand(OperandType.Immediate, DataType.UInt32).value = bit.band(data, 0x0000FFFF)                                                                            -- immediate
@@ -61,8 +59,8 @@ function Mips32Processor:analyze(instruction, baseaddress)
 end
 
 function Mips32Processor:emulate(emulator, instruction)  
-  if bit.band(Mips32InstructionSet[instruction.opcode].type, pref.disassembler.instructiontype.Stop) ~= 0 then
-    if instruction.opcode == Mips32InstructionSet["JR"].opcode then
+  if bit.band(Mips32.instructionset[instruction.opcode].type, pref.disassembler.instructiontype.Stop) ~= 0 then
+    if instruction.opcode == Mips32.instructionset["JR"].opcode then
       emulator:push(instruction.address + DataType.sizeof(DataType.UInt32), ReferenceType.Flow)
       Mips32.muststop = true
     end
@@ -70,11 +68,11 @@ function Mips32Processor:emulate(emulator, instruction)
     return
   end
   
-  if instruction.opcode == Mips32InstructionSet["JAL"].opcode then
+  if instruction.opcode == Mips32.instructionset["JAL"].opcode then
     emulator:push(instruction.firstoperand.value, ReferenceType.Call)
-  elseif instruction.opcode == Mips32InstructionSet["J"].opcode then
+  elseif instruction.opcode == Mips32.instructionset["J"].opcode then
     emulator:push(instruction.firstoperand.value, ReferenceType.Jump)
-  elseif (Mips32InstructionSet[instruction.opcode].type == pref.disassembler.instructiontype.Jump) then
+  elseif (Mips32.instructionset[instruction.opcode].type == pref.disassembler.instructiontype.Jump) then
     emulator:push(instruction.lastoperand.value, ReferenceType.Jump)
   end
   

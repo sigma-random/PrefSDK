@@ -1,7 +1,6 @@
 local oop = require("oop")
 local pref = require("pref")
-local Mips32RegisterSet = require("processors.mips32.registerset")
-local Mips32InstructionSet = require("processors.mips32.instructionset")
+local Mips32 = require("processors.mips32.functions")
 local SysCallsA0 = require("loaders.psxexe.syscalls.syscalls00A0")
 local SysCallsB0 = require("loaders.psxexe.syscalls.syscalls00B0")
 local SysCallsC0 = require("loaders.psxexe.syscalls.syscalls00C0")
@@ -16,8 +15,8 @@ local PsyQ = oop.class()
 function PsyQ:__ctor(loader, listing)
   self._loader = loader
   self._listing = listing
-  self._t1reg = Mips32RegisterSet["t1"]
-  self._t2reg = Mips32RegisterSet["t2"]
+  self._t1reg = Mips32.registerset["t1"].value
+  self._t2reg = Mips32.registerset["t2"].value
 end
 
 function PsyQ:analyze(f)
@@ -36,9 +35,9 @@ function PsyQ:analyze(f)
   instruction = self._listing:firstInstruction(f)
   
   while instruction and (instruction.address < f.endaddress) do
-    if (instruction.opcode == Mips32InstructionSet["COP2"].opcode) and PsxGTE.functions[instruction:operand(0).value] then
+    if (instruction.opcode == Mips32.instructionset["COP2"].opcode) and PsxGTE.functions[instruction:operand(0).value] then
       self._loader:setConstant(instruction, instruction:operand(0).datatype, instruction:operand(0).value, PsxGTE.functions[instruction:operand(0).value])
-    elseif (instruction.opcode == Mips32InstructionSet["LWC2"].opcode) or (instruction.opcode == Mips32InstructionSet["SWC2"].opcode) then  -- Check another COP2 Instructions
+    elseif (instruction.opcode == Mips32.instructionset["LWC2"].opcode) or (instruction.opcode == Mips32.instructionset["SWC2"].opcode) then  -- Check another COP2 Instructions
       local op = instruction:operand(1)
       op.type = pref.disassembler.operandtype.Register
       op.registername = PsxGTE.dataregisters[op.value]
@@ -60,9 +59,9 @@ function PsyQ:elaborateCop2(instruction)
   op2.value = bit.rshift(bit.band(op2.value, 0x0000F800), 0x0B) -- This is a COP2 Register
   op2.type = pref.disassembler.operandtype.Register
   
-  if (instruction.opcode == Mips32InstructionSet["MTC2"].opcode) or (instruction.opcode == Mips32InstructionSet["MFC2"].opcode) then
+  if (instruction.opcode == Mips32.instructionset["MTC2"].opcode) or (instruction.opcode == Mips32.instructionset["MFC2"].opcode) then
     op2.registername = PsxGTE.dataregisters[op2.value]
-  elseif (instruction.opcode == Mips32InstructionSet["CTC2"].opcode) or (instruction.opcode == Mips32InstructionSet["CFC2"].opcode) then
+  elseif (instruction.opcode == Mips32.instructionset["CTC2"].opcode) or (instruction.opcode == Mips32.instructionset["CFC2"].opcode) then
     op2.registername = PsxGTE.controlregisters[op2.value]
   end
 end
