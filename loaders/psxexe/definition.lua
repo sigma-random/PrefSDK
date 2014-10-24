@@ -15,7 +15,7 @@ function PsxExeLoader:map(formattree)
   local pc0field = formattree.ExeHeader.pc0
   
   self:createSegment("TEXT", pref.disassembler.segment.Code, taddrfield.value, tsizefield.value, 0x800)
-  self:createEntryPoint("main", pc0field.value)
+  self:createEntryPoint("start", pc0field.value)
 end
 
 function PsxExeLoader:elaborate(listing, formattree)

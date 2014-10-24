@@ -1,6 +1,5 @@
 local oop = require("oop")
 local pref = require("pref")
-local Mips32 = require("processors.mips32.functions")
 local SysCallsA0 = require("loaders.psxexe.syscalls.syscalls00A0")
 local SysCallsB0 = require("loaders.psxexe.syscalls.syscalls00B0")
 local SysCallsC0 = require("loaders.psxexe.syscalls.syscalls00C0")
@@ -15,8 +14,10 @@ local PsyQ = oop.class()
 function PsyQ:__ctor(loader, listing)
   self._loader = loader
   self._listing = listing
-  self._t1reg = Mips32.registerset["t1"].value
-  self._t2reg = Mips32.registerset["t2"].value
+  self._instructionset = loader.processor.instructionset
+  self._registerset = loader.processor.registerset
+  self._t1reg = loader.processor.registerset["t1"].id
+  self._t2reg = loader.processor.registerset["t2"].id
 end
 
 function PsyQ:analyze(f)
@@ -35,10 +36,10 @@ function PsyQ:analyze(f)
   instruction = self._listing:firstInstruction(f)
   
   while instruction and (instruction.address < f.endaddress) do
-    if (instruction.opcode == Mips32.instructionset["COP2"].opcode) and PsxGTE.functions[instruction:operand(0).value] then
+    if (instruction.opcode == self._instructionset["COP2"].opcode) and PsxGTE.functions[instruction:operand(0).value] then
       self._loader:setConstant(instruction, instruction:operand(0).datatype, instruction:operand(0).value, PsxGTE.functions[instruction:operand(0).value])
-    elseif (instruction.opcode == Mips32.instructionset["LWC2"].opcode) or (instruction.opcode == Mips32.instructionset["SWC2"].opcode) then  -- Check another COP2 Instructions
-      local op = instruction:operand(1)
+    elseif (instruction.opcode == self._instructionset["LWC2"].opcode) or (instruction.opcode == self._instructionset["SWC2"].opcode) then  -- Check another COP2 Instructions
+      local op = instruction:operand(0)
       op.type = pref.disassembler.operandtype.Register
       op.registername = PsxGTE.dataregisters[op.value]
     elseif bit.band(instruction.opcode, 0xFC000000) == 0x48000000 then  -- Check for COP2 Instructions
@@ -59,9 +60,9 @@ function PsyQ:elaborateCop2(instruction)
   op2.value = bit.rshift(bit.band(op2.value, 0x0000F800), 0x0B) -- This is a COP2 Register
   op2.type = pref.disassembler.operandtype.Register
   
-  if (instruction.opcode == Mips32.instructionset["MTC2"].opcode) or (instruction.opcode == Mips32.instructionset["MFC2"].opcode) then
+  if (instruction.opcode == self._instructionset["MTC2"].opcode) or (instruction.opcode == self._instructionset["MFC2"].opcode) then
     op2.registername = PsxGTE.dataregisters[op2.value]
-  elseif (instruction.opcode == Mips32.instructionset["CTC2"].opcode) or (instruction.opcode == Mips32.instructionset["CFC2"].opcode) then
+  elseif (instruction.opcode == self._instructionset["CTC2"].opcode) or (instruction.opcode == self._instructionset["CFC2"].opcode) then
     op2.registername = PsxGTE.controlregisters[op2.value]
   end
 end
