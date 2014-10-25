@@ -49,10 +49,8 @@ function Mips32Processor:emulate(emulator, instruction)
     return
   end
   
-  if instruction.opcode == self.instructionset["JAL"].opcode then
+  if (instruction.opcode == self.instructionset["J"].opcode) or (instruction.opcode == self.instructionset["JAL"].opcode) then
     emulator:push(instruction.firstoperand.value, ReferenceType.Call)
-  elseif instruction.opcode == self.instructionset["J"].opcode then
-    emulator:push(instruction.firstoperand.value, ReferenceType.Jump)
   elseif (self.instructionset[instruction.opcode].type == pref.disassembler.instructiontype.Jump) then
     emulator:push(instruction.lastoperand.value, ReferenceType.Jump)
   end
