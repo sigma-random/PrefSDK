@@ -24,7 +24,7 @@ function MipsProcessor:__ctor()
                [24] = 0, [25] = 0, [26] = 0, [27] = 0, [28] = 0, [29] = 0, [30] = 0, [31] = 0 }
 end
 
-function MipsProcessor:decode(address, memorybuffer)
+function MipsProcessor:decode(address, memorybuffer, skipemulation)
   local data = memorybuffer:read(address, DataType.UInt32)
   local instructiondef = InstructionSet.decode(data)
   
@@ -54,7 +54,11 @@ function MipsProcessor:decode(address, memorybuffer)
   end
   
   local instruction = self.macroanalyzer:analyze(instruction, memorybuffer)
-  self.emulator:execute(instruction, memorybuffer)
+  
+  if not skipemulation then
+    self.emulator:execute(instruction, memorybuffer)
+  end
+  
   return instruction
 end
 

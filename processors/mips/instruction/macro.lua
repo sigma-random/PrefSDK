@@ -26,10 +26,10 @@ function MacroAnalyzer:__ctor(processor)
 end
 
 function MacroAnalyzer:nextInstruction(instruction, memorybuffer, decodedelayslot)
-  local instruction = self.processor:decode(instruction.address + instruction.size, memorybuffer)
+  local instruction = self.processor:decode(instruction.address + instruction.size, memorybuffer, true)
   
   if decodedelayslot and (instruction.isjump or instruction.iscall) then -- Check Delay Slot
-    instruction = self.processor:decode(instruction.address + instruction.size, memorybuffer)
+    instruction = self.processor:decode(instruction.address + instruction.size, memorybuffer, true)
   end
   
   return instruction
