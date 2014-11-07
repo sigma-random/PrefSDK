@@ -51,7 +51,7 @@ function PsxExeDisassembler:disassemble(address)
       self:enqueue(destination)  -- Try to follow jump destination
     end
   elseif instruction.ismacro and (instruction.operands[2].type == OperandType.Immediate) and self:isAddress(instruction.operands[2].value) then
-    self:setSymbol(instruction.operands[2].value, SymbolType.Address)
+    self:setSymbol(instruction.operands[2].value, instruction.address, SymbolType.Address)
   end
   
   if delayslot then
