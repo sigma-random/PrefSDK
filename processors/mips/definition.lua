@@ -59,7 +59,7 @@ function MipsProcessor:decode(address, memorybuffer)
 end
 
 function MipsProcessor:setCallDestination(instruction)
-  if (instruction.mnemonic == "J") or (instruction.mnemonic == "JAL") then
+  if instruction.mnemonic == "JAL" then
     instruction.isdestinationvalid = true
     instruction.destination = instruction.operands[1].value
   end
@@ -86,12 +86,10 @@ function MipsProcessor:analyzeJump(instruction)
       instruction.type = InstructionType.Jump
     end
   elseif instruction.mnemonic == "JR" then
-    if (instruction.operands[1].value == 31) then -- JR $ra
-      instruction.type = InstructionType.Stop
-      instruction.isdestinationvalid = false
-    else
-      instruction.isdestinationvalid = true
-    end
+    instruction.isdestinationvalid = (instruction.operands[1].value ~= 31)
+  elseif instruction.mnemonic == "J" then
+    instruction.isdestinationvalid = true
+    instruction.destination = instruction.operands[1].value
   end
 end
 

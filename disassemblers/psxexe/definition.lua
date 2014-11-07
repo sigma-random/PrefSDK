@@ -87,7 +87,7 @@ function PsxExeDisassembler:output(printer, instruction)
       printer:outregister(GTERegisters.control[op.value])
     elseif op.type == OperandType.Memory then
       printer:out("["):outregister(MipsRegisters.gpr[op.base]):out(" + "):outvalue(op.disp, op.datatype):out("]")
-    elseif (op.type == OperandType.Immediate) and (instruction.mnemonic == "COP2") and GTEFunctions[op.value] then
+    elseif (op.type == OperandType.Immediate) and (instruction.mnemonic == "COP2") and GTEFunctions[op.value] then      
       printer:out(GTEFunctions[op.value], 0x0000FF)
     elseif ((op.type == OperandType.Immediate) and self:isSymbol(op.value)) then
       printer:out(self:symbolName(op.value), 0x0000FF)
