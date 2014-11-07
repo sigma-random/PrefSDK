@@ -40,13 +40,13 @@ function PsxExeDisassembler:disassemble(address)
   elseif instruction.type == InstructionType.Stop then    
     return 0
   elseif instruction.iscall and instruction.isdestinationvalid then
-    self:createFunction(instruction.destination)
+    self:createFunction(instruction.destination, instruction.address)
     self:enqueue(instruction.destination)
   elseif instruction.isjump and instruction.isdestinationvalid then
     local destination = ((instruction.mnemonic == "JR") and processor.gpr[instruction.operands[1].value] or instruction.destination)
     
     if self:isAddress(destination) then
-      self:createLabel(destination, instruction, string.format("j_%08X", destination))
+      self:createLabel(destination, instruction.address, string.format("j_%08X", destination))
       self:enqueue(destination)  -- Try to follow jump destination
     end
   elseif instruction.ismacro and (instruction.operands[2].type == OperandType.Immediate) and self:isAddress(instruction.operands[2].value) then
