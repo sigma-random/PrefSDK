@@ -21,6 +21,7 @@ function MacroAnalyzer:__ctor(processor)
                       ADDU  = MacroAnalyzer.analyzeAddu,
                       ADDIU = MacroAnalyzer.analyzeAddu,
                       NOR   = MacroAnalyzer.analyzeNor,
+                      -- ORI   = MacroAnalyzer.analyzeOri,
                       SUB   = MacroAnalyzer.analyzeSub }
 end
 
@@ -86,7 +87,16 @@ function MacroAnalyzer:analyzeSlt(instruction, memorybuffer)
   return instruction
 end
 
-function MacroAnalyzer:analyzeAddu(instruction)
+function MacroAnalyzer:analyzeAddu(instruction, memorybuffer)
+  local nextinstruction = self:nextInstruction(instruction, memorybuffer, true)
+  
+  if (nextinstruction.mnemonic == "LUI") and (instruction.operands[2].value == nextinstruction.operands[1].value) then
+    local macroinstruction = MacroInstruction(instruction.address, "LI", InstructionType.Load)
+    macroinstruction.size = 8
+    macroinstruction.operands = { instruction.operands[1], Operand(DataType.UInt32, OperandType.Immediate, bit.lshift(nextinstruction.operands[2].value, 16) + instruction.operands[3].value) }
+    return macroinstruction
+  end
+  
   if instruction.operands[2].value == 0 then
     instruction.mnemonic = "MOVE"
     instruction.ismacro = true

@@ -16,6 +16,7 @@ local SymbolType = pref.disassembler.symboltype
 local processor = MipsProcessor()
 local psyq = PsyQ()
 local PsxExeDisassembler = pref.disassembler.create("Sony Playstation 1 PS-EXE", "Dax", "1.0", DataType.UInt32_LE, PsxExeFormat)
+local delayslot = false
 
 function PsxExeDisassembler:baseAddress()
   return 0x80000000
@@ -34,7 +35,7 @@ function PsxExeDisassembler:disassemble(address)
   local instruction = processor:decode(address, self.memorybuffer)
   self:addInstruction(instruction)
   psyq:analyze(self, instruction)
-    
+  
   if instruction.type == InstructionType.Invalid then
     self:warning(string.format("Got an Invalid Instruction at %08Xh", address))
   elseif instruction.type == InstructionType.Stop then    
@@ -53,16 +54,20 @@ function PsxExeDisassembler:disassemble(address)
     self:setSymbol(instruction.operands[2].value, SymbolType.Address)
   end
   
+  if delayslot then
+    return self:next(instruction)
+  end
+  
   if instruction.isjump or instruction.iscall then
-    local delayslot = processor:decode(address + instruction.size, self.memorybuffer) -- Decode Delay Slot      
-    self:addInstruction(delayslot) -- Add Delay Slot
-    psyq:analyze(self, delayslot)
+    delayslot = true
+    local result = self:disassemble(address + instruction.size) -- Decode Delay Slot
+    delayslot = false
     
-    if instruction.type == InstructionType.Jump then
+    if (instruction.type == InstructionType.Jump) then
       return 0
     end
     
-    return self:next(delayslot)
+    return result
   end
     
   return self:next(instruction)
