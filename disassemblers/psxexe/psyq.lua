@@ -22,7 +22,7 @@ function PsyQ:__ctor()
   self.jrt2 = false
 end
 
-function PsyQ:analyze(disassembler, instruction)
+function PsyQ:analyze(listing, instruction)
   if instruction.mnemonic == "MOVE" then 
     if MipsRegisters.gpr[instruction.operands[1].value] == "t2" then
       self.funcaddress = instruction.address
@@ -32,7 +32,7 @@ function PsyQ:analyze(disassembler, instruction)
       self.t1 = instruction.operands[2].value
       
       if self.jrt2 and self.funcaddress then
-        self:analyzeBiosCall(disassembler)
+        self:analyzeBiosCall(listing)
         return
       end
     elseif MipsRegisters.gpr[instruction.operands[1].value] == "a0" then
@@ -49,7 +49,7 @@ function PsyQ:analyze(disassembler, instruction)
     self.jrt2 = true
     return
   elseif (self.a0 > -1) and (instruction.mnemonic == "SYSCALL") then
-    self:analyzeServiceCall(disassembler)
+    self:analyzeServiceCall(listing)
     return
   end
   
@@ -60,23 +60,23 @@ function PsyQ:analyze(disassembler, instruction)
   self.jrt2 = false
 end
 
-function PsyQ:analyzeBiosCall(disassembler)
+function PsyQ:analyzeBiosCall(listing)
   local syscalls = BiosSysCalls[self.t2]
   
   if syscalls then
     local callname = syscalls[self.t1]
     
     if callname then
-      disassembler:setFunction(self.funcaddress, callname, FunctionType.ImportFunction)
+      listing:setFunction(self.funcaddress, FunctionType.ImportFunction, callname)
     end
   end
 end
 
-function PsyQ:analyzeServiceCall(disassembler)
+function PsyQ:analyzeServiceCall(listing)
   local callname = ServiceCalls[self.a0]
   
   if callname then
-    disassembler:setFunction(self.funcaddress, callname, FunctionType.ImportFunction)
+    listing:setFunction(self.funcaddress, FunctionType.ImportFunction, callname)
   end
 end
 

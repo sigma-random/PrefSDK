@@ -10,7 +10,7 @@ local PsyQ = require("disassemblers.psxexe.psyq")
 
 local ByteOrder = pref.byteorder
 local DataType = pref.datatype
-local Segment = pref.disassembler.segment
+local SegmentType = pref.disassembler.segmenttype
 local SymbolType = pref.disassembler.symboltype
 
 local processor = MipsProcessor()
@@ -22,36 +22,43 @@ function PsxExeDisassembler:baseAddress()
   return 0x80000000
 end
 
-function PsxExeDisassembler:map()  
+function PsxExeDisassembler:map()
   local taddrfield = self.formattree.ExeHeader.t_addr
   local tsizefield = self.formattree.ExeHeader.t_size
   local pc0field = self.formattree.ExeHeader.pc0
   
-  self:createSegment("TEXT", Segment.Code, taddrfield.value, tsizefield.value, 0x800)
-  self:createEntryPoint(pc0field.value, "start")
+  self.listing:createSegment("TEXT", SegmentType.Code, taddrfield.value, tsizefield.value, 0x800)
+  self.listing:createEntryPoint(pc0field.value, "start")
 end
 
 function PsxExeDisassembler:disassemble(address)
+  local symboltable = self.listing.symboltable
   local instruction = processor:decode(address, self.memorybuffer)
-  self:addInstruction(instruction)
-  psyq:analyze(self, instruction)
+  self.listing:addInstruction(instruction)
+  psyq:analyze(self.listing, instruction)
   
   if instruction.type == InstructionType.Invalid then
     self:warning(string.format("Got an Invalid Instruction at %08Xh", address))
   elseif instruction.type == InstructionType.Stop then    
     return 0
   elseif instruction.iscall and instruction.isdestinationvalid then
-    self:createFunction(instruction.destination, instruction.address)
+    self.listing:createFunction(instruction.destination, instruction.address)
     self:enqueue(instruction.destination)
   elseif instruction.isjump and instruction.isdestinationvalid then
     local destination = ((instruction.mnemonic == "JR") and processor.gpr[instruction.operands[1].value] or instruction.destination)
     
-    if self:isAddress(destination) then
-      self:createLabel(destination, instruction.address, string.format("j_%08X", destination))
+    if self.listing:isAddress(destination) then
+      self.listing:createLabel(destination, instruction.address, string.format("j_%08X", destination))
       self:enqueue(destination)  -- Try to follow jump destination
     end
-  elseif instruction.ismacro and (instruction.operands[2].type == OperandType.Immediate) and self:isAddress(instruction.operands[2].value) then
-    self:setSymbol(instruction.operands[2].value, instruction.address, SymbolType.Address)
+  elseif instruction.ismacro and (instruction.operands[2].type == OperandType.Immediate) and self.listing:isAddress(instruction.operands[2].value) then
+    local len = self.memorybuffer:pointsToString(instruction.operands[2].value)
+    
+    if len > 3 then
+      symboltable:set(instruction.operands[2].value, len, instruction.address, SymbolType.String)
+    else
+      symboltable:set(instruction.operands[2].value, instruction.address, SymbolType.Address)
+    end
   end
   
   if delayslot then
@@ -74,6 +81,8 @@ function PsxExeDisassembler:disassemble(address)
 end
 
 function PsxExeDisassembler:output(printer, instruction)
+  local symboltable = self.listing.symboltable
+  
   if instruction.type == InstructionType.Invalid then
     printer:out(string.format("db %s", self:hexdump(instruction)))
     return
@@ -94,12 +103,12 @@ function PsxExeDisassembler:output(printer, instruction)
       printer:out("["):outregister(MipsRegisters.gpr[op.base]):out(" + "):outvalue(op.disp, op.datatype):out("]")
     elseif (op.type == OperandType.Immediate) and (instruction.mnemonic == "COP2") and GTEFunctions[op.value] then      
       printer:out(GTEFunctions[op.value], 0x0000FF)
-    elseif ((op.type == OperandType.Immediate) and self:isSymbol(op.value)) then
-      printer:out(self:symbolName(op.value), 0x0000FF)
-    elseif (op.type == OperandType.Address) and self:isSymbol(op.value) then
-      printer:out(self:symbolName(op.value), 0x800080)
-    elseif (op.type == OperandType.Offset) and self:isSymbol(op.value) then
-      printer:out(self:symbolName(op.value), 0x4B0082)
+    elseif (op.type == OperandType.Immediate) and symboltable:contains(op.value) then
+      printer:out(symboltable:name(op.value), 0x0000FF)
+    elseif (op.type == OperandType.Address) and symboltable:contains(op.value) then
+      printer:out(symboltable:name(op.value), 0x800080)
+    elseif (op.type == OperandType.Offset) and symboltable:contains(op.value) then
+      printer:out(symboltable:name(op.value), 0x4B0082)
     else
       printer:outvalue(op.value, op.datatype)
     end
@@ -109,7 +118,7 @@ function PsxExeDisassembler:output(printer, instruction)
     end
   end
   
-  if instruction.ismacro and (instruction.type == InstructionType.Load) and self:isStringSymbol(instruction.operands[2].value) then
+  if instruction.ismacro and (instruction.type == InstructionType.Load) and (symboltable:type(instruction.operands[2].value) == SymbolType.String) then
     printer:outcomment("'" .. self.memorybuffer:readDisplayString(instruction.operands[2].value) .. "'")
   end
 end
