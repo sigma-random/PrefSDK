@@ -11,9 +11,10 @@ local DataType = pref.datatype
 
 local MacroAnalyzer = oop.class()
 
-function MacroAnalyzer:__ctor(processor)
+function MacroAnalyzer:__ctor(processor)  
   self.processor = processor
-  
+  self.branchskipped = false
+  self.branchaddress = 0
   self.dispatcher = { LUI   = MacroAnalyzer.analyzeLui,
                       SLT   = MacroAnalyzer.analyzeSlt,
                       SLTU  = MacroAnalyzer.analyzeSlt,
@@ -22,20 +23,24 @@ function MacroAnalyzer:__ctor(processor)
                       ADDIU = MacroAnalyzer.analyzeAddu,
                       NOR   = MacroAnalyzer.analyzeNor,
                       -- ORI   = MacroAnalyzer.analyzeOri,
+                      SLL   = MacroAnalyzer.analyzeSll,
                       SUB   = MacroAnalyzer.analyzeSub }
 end
 
-function MacroAnalyzer:nextInstruction(instruction, memorybuffer, decodedelayslot)
-  local instruction = self.processor:decode(instruction.address + instruction.size, memorybuffer, true)
+function MacroAnalyzer:nextInstruction(instruction, memorybuffer)
+  local instruction = self.processor:decode(instruction.address + instruction.size, memorybuffer)
   
-  if decodedelayslot and (instruction.isjump or instruction.iscall) then -- Check Delay Slot
-    instruction = self.processor:decode(instruction.address + instruction.size, memorybuffer, true)
+  if instruction.isjump or instruction.iscall then -- Check Delay Slot
+    self.branchskipped = true
+    self.branchaddress = instruction.address
+    instruction = self.processor:decode(instruction.address + instruction.size, memorybuffer)
   end
   
   return instruction
 end
 
-function MacroAnalyzer:analyze(instruction, memorybuffer)
+function MacroAnalyzer:checkMacro(instruction, memorybuffer)
+  self.branchskipped = false
   local d = self.dispatcher[instruction.mnemonic]
   
   if d then
@@ -46,7 +51,7 @@ function MacroAnalyzer:analyze(instruction, memorybuffer)
 end
 
 function MacroAnalyzer:analyzeLui(instruction, memorybuffer)
-  local nextinstruction = self:nextInstruction(instruction, memorybuffer, true)
+  local nextinstruction = self:nextInstruction(instruction, memorybuffer)
   
   if ((nextinstruction.mnemonic == "ADDIU") or (nextinstruction.mnemonic == "ORI")) and (instruction.operands[1].value == nextinstruction.operands[2].value) then    
     local macroinstruction = MacroInstruction(instruction.address, "LI", InstructionType.Load)
@@ -60,11 +65,12 @@ function MacroAnalyzer:analyzeLui(instruction, memorybuffer)
     return macroinstruction
   end
   
+  self.branchskipped = false -- It's a standalone SLT/SLTIU, disassemble it normally
   return instruction
 end
 
 function MacroAnalyzer:analyzeSlt(instruction, memorybuffer)
-  local nextinstruction = self:nextInstruction(instruction, memorybuffer, false)
+  local nextinstruction = self:nextInstruction(instruction, memorybuffer)
   
   if (nextinstruction.mnemonic == "BNE") and (instruction.operands[1].value == nextinstruction.operands[1].value) and (nextinstruction.operands[2].value == 0) then
     local macroinstruction = MacroInstruction(instruction.address, "BGT", InstructionType.ConditionalJump, true)
@@ -84,11 +90,12 @@ function MacroAnalyzer:analyzeSlt(instruction, memorybuffer)
     return macroinstruction
   end
   
+  self.branchskipped = false -- It's a standalone SLT/SLTIU, disassemble it normally
   return instruction
 end
 
 function MacroAnalyzer:analyzeAddu(instruction, memorybuffer)
-  local nextinstruction = self:nextInstruction(instruction, memorybuffer, true)
+  local nextinstruction = self:nextInstruction(instruction, memorybuffer)
   
   if (nextinstruction.mnemonic == "LUI") and (instruction.operands[2].value == nextinstruction.operands[1].value) then
     local macroinstruction = MacroInstruction(instruction.address, "LI", InstructionType.Load)
@@ -96,6 +103,8 @@ function MacroAnalyzer:analyzeAddu(instruction, memorybuffer)
     macroinstruction.operands = { instruction.operands[1], Operand(DataType.UInt32, OperandType.Immediate, bit.lshift(nextinstruction.operands[2].value, 16) + instruction.operands[3].value) }
     return macroinstruction
   end
+  
+  self.branchskipped = false -- It's a standalone ADDU/ADDIU, disassemble it normally
   
   if instruction.operands[2].value == 0 then
     instruction.mnemonic = "MOVE"
@@ -126,6 +135,19 @@ function MacroAnalyzer:analyzeSub(instruction)
     table.remove(instruction.operands, 2)
   end
   
+  return instruction
+end
+
+function MacroAnalyzer:analyzeSll(instruction)
+  for _, op in pairs(instruction.operands) do
+    if op.value ~= 0 then
+      return instruction
+    end
+  end
+  
+  instruction.mnemonic = "NOP"
+  instruction.operands = { }
+  instruction.type = InstructionType.Nop
   return instruction
 end
 

@@ -2,6 +2,8 @@ local pref = require("pref")
 local PsxExeFormat = require("formats.psxexe.definition")
 local MipsProcessor = require("processors.mips.definition")
 local MipsRegisters = require("processors.mips.registers")
+local MacroAnalyzer = require("processors.mips.instruction.macro")
+local InstructionEmulator = require("processors.mips.instruction.emulator")
 local OperandType = require("processors.mips.operand.type")
 local InstructionType = require("processors.mips.instruction.type")
 local GTERegisters = require("disassemblers.psxexe.gte.registers")
@@ -13,10 +15,11 @@ local DataType = pref.datatype
 local SegmentType = pref.disassembler.segmenttype
 local SymbolType = pref.disassembler.symboltype
 
-local processor = MipsProcessor()
-local psyq = PsyQ()
 local PsxExeDisassembler = pref.disassembler.create("Sony Playstation 1 PS-EXE", "Dax", "1.0", DataType.UInt32_LE, PsxExeFormat)
-local delayslot = false
+local processor = MipsProcessor()
+local macroanalyzer = MacroAnalyzer(processor)
+local emulator = InstructionEmulator()
+local psyq = PsyQ()
 
 function PsxExeDisassembler:baseAddress()
   return 0x80000000
@@ -31,52 +34,62 @@ function PsxExeDisassembler:map()
   self.listing:createEntryPoint(pc0field.value, "start")
 end
 
-function PsxExeDisassembler:disassemble(address)
+function PsxExeDisassembler:analyzeInstruction(instruction)
   local symboltable = self.listing.symboltable
-  local instruction = processor:decode(address, self.memorybuffer)
-  self.listing:addInstruction(instruction)
-  psyq:analyze(self.listing, instruction)
   
   if instruction.type == InstructionType.Invalid then
-    self:warning(string.format("Got an Invalid Instruction at %08Xh", address))
-  elseif instruction.type == InstructionType.Stop then    
-    return 0
+      self:warning(string.format("Got an Invalid Instruction at %08Xh", address))
   elseif instruction.iscall and instruction.isdestinationvalid then
     self.listing:createFunction(instruction.destination, instruction.address)
     self:enqueue(instruction.destination)
   elseif instruction.isjump and instruction.isdestinationvalid then
-    local destination = ((instruction.mnemonic == "JR") and processor.gpr[instruction.operands[1].value] or instruction.destination)
-    
+    local destination = ((instruction.mnemonic == "JR") and emulator.gpr[instruction.operands[1].value] or instruction.destination)
+  
     if self.listing:isAddress(destination) then
       self.listing:createLabel(destination, instruction.address, string.format("j_%08X", destination))
       self:enqueue(destination)  -- Try to follow jump destination
     end
   elseif instruction.ismacro and (instruction.operands[2].type == OperandType.Immediate) and self.listing:isAddress(instruction.operands[2].value) then
     local len = self.memorybuffer:pointsToString(instruction.operands[2].value)
-    
+  
     if len > 3 then
       symboltable:set(instruction.operands[2].value, len, instruction.address, SymbolType.String)
     else
       symboltable:set(instruction.operands[2].value, instruction.address, SymbolType.Address)
     end
   end
+end
+
+function PsxExeDisassembler:disassemble(address)
+  local instruction = macroanalyzer:checkMacro(processor:decode(address, self.memorybuffer), self.memorybuffer)
+  emulator:execute(instruction, self.memorybuffer)
   
-  if delayslot then
-    return self:next(instruction)
-  end
+  self:analyzeInstruction(instruction)
+  self.listing:addInstruction(instruction)
+  psyq:analyze(self.listing, instruction)
   
-  if instruction.isjump or instruction.iscall then
-    delayslot = true
-    local result = self:disassemble(address + instruction.size) -- Decode Delay Slot
-    delayslot = false
+  if macroanalyzer.branchskipped then
+    local branchinstruction = macroanalyzer:checkMacro(processor:decode(macroanalyzer.branchaddress, self.memorybuffer), self.memorybuffer)
+    emulator:execute(branchinstruction, self.memorybuffer)
+    self:analyzeInstruction(branchinstruction)
+    self.listing:addInstruction(branchinstruction)
+    psyq:analyze(self.listing, branchinstruction)
+       
+    if (branchinstruction.type == InstructionType.Stop) or (branchinstruction.type == InstructionType.Jump) then
+      return 0
+    end
+
+    return instruction.address + 8 -- Skip delay slot
+  elseif instruction.isjump or instruction.iscall then
+    local nextaddress = self:disassemble(self:next(instruction)) -- Decode Delay Slot
     
-    if (instruction.type == InstructionType.Jump) then
+    if (instruction.type == InstructionType.Stop) or (instruction.type == InstructionType.Jump) then
       return 0
     end
     
-    return result
+    return nextaddress
   end
-    
+  
   return self:next(instruction)
 end
 

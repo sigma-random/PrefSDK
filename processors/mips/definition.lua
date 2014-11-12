@@ -8,23 +8,13 @@ local OperandType = require("processors.mips.operand.type")
 local InstructionSet = require("processors.mips.instruction.set")
 local InstructionType = require("processors.mips.instruction.type")
 local InvalidInstruction = require("processors.mips.instruction.invalid")
-local MacroAnalyzer = require("processors.mips.instruction.macro")
 local InstructionEmulator = require("processors.mips.instruction.emulator")
 
 local DataType = pref.datatype
 
 local MipsProcessor = oop.class()
 
-function MipsProcessor:__ctor()
-  self.macroanalyzer = MacroAnalyzer(self)
-  self.emulator = InstructionEmulator(self)
-  self.gpr = { [0]  = 0, [1]  = 0, [2]  = 0, [3]  = 0, [4]  = 0, [5]  = 0, [6]  = 0, [7]  = 0, 
-               [8]  = 0, [9]  = 0, [10] = 0, [11] = 0, [12] = 0, [13] = 0, [14] = 0, [15] = 0, 
-               [16] = 0, [17] = 0, [18] = 0, [19] = 0, [20] = 0, [21] = 0, [22] = 0, [23] = 0, 
-               [24] = 0, [25] = 0, [26] = 0, [27] = 0, [28] = 0, [29] = 0, [30] = 0, [31] = 0 }
-end
-
-function MipsProcessor:decode(address, memorybuffer, skipemulation)
+function MipsProcessor:decode(address, memorybuffer)
   local data = memorybuffer:read(address, DataType.UInt32)
   local instructiondef = InstructionSet.decode(data)
   
@@ -45,18 +35,10 @@ function MipsProcessor:decode(address, memorybuffer, skipemulation)
     end
   end
   
-  if instruction.mnemonic == "SLL" then
-    self:checkNop(instruction)
-  elseif instruction.iscall then
+  if instruction.iscall then
     self:setCallDestination(instruction)
   elseif instruction.isjump then
     self:analyzeJump(instruction)
-  end
-  
-  local instruction = self.macroanalyzer:analyze(instruction, memorybuffer)
-  
-  if not skipemulation then
-    self.emulator:execute(instruction, memorybuffer)
   end
   
   return instruction
@@ -95,18 +77,6 @@ function MipsProcessor:analyzeJump(instruction)
     instruction.isdestinationvalid = true
     instruction.destination = instruction.operands[1].value
   end
-end
-
-function MipsProcessor:checkNop(instruction)
-  for _, op in pairs(instruction.operands) do
-    if op.value ~= 0 then
-      return
-    end
-  end
-  
-  instruction.mnemonic = "NOP"
-  instruction.operands = { }
-  instruction.type = InstructionType.Nop
 end
 
 return MipsProcessor
