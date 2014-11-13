@@ -17,7 +17,6 @@ function InstructionEmulator:__ctor()
                       ADDIU = InstructionEmulator.emulateAddi,
                       AND   = InstructionEmulator.emulateAnd,
                       ANDI  = InstructionEmulator.emulateAndi,
-                      LUI   = InstructionEmulator.emulateLui,
                       LW    = InstructionEmulator.emulateLw,
                       ORI   = InstructionEmulator.emulateOri,
                       SLL   = InstructionEmulator.emulateSll,
@@ -46,10 +45,6 @@ end
 
 function InstructionEmulator:emulateLi(instruction)
   self.gpr[instruction.operands[1].value] = instruction.operands[2].value
-end
-
-function InstructionEmulator:emulateLui(instruction)
-  self.gpr[instruction.operands[1].value] = bit.lshift(instruction.operands[2].value, 16)
 end
 
 function InstructionEmulator:emulateLw(instruction, memorybuffer)

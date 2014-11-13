@@ -27,10 +27,10 @@ function MacroAnalyzer:__ctor(processor)
                       SUB   = MacroAnalyzer.analyzeSub }
 end
 
-function MacroAnalyzer:nextInstruction(instruction, memorybuffer)
+function MacroAnalyzer:nextInstruction(instruction, memorybuffer, skipcontrolflow)
   local instruction = self.processor:decode(instruction.address + instruction.size, memorybuffer)
   
-  if instruction.isjump or instruction.iscall then -- Check Delay Slot
+  if skipcontrolflow and (instruction.isjump or instruction.iscall) then -- Check Delay Slot
     self.branchskipped = true
     self.branchaddress = instruction.address
     instruction = self.processor:decode(instruction.address + instruction.size, memorybuffer)
@@ -51,7 +51,7 @@ function MacroAnalyzer:checkMacro(instruction, memorybuffer)
 end
 
 function MacroAnalyzer:analyzeLui(instruction, memorybuffer)
-  local nextinstruction = self:nextInstruction(instruction, memorybuffer)
+  local nextinstruction = self:nextInstruction(instruction, memorybuffer, true)
   
   if ((nextinstruction.mnemonic == "ADDIU") or (nextinstruction.mnemonic == "ORI")) and (instruction.operands[1].value == nextinstruction.operands[2].value) then    
     local macroinstruction = MacroInstruction(instruction.address, "LI", InstructionType.Load)
@@ -63,9 +63,14 @@ function MacroAnalyzer:analyzeLui(instruction, memorybuffer)
     macroinstruction.size = 8
     macroinstruction.operands = { nextinstruction.operands[1], Operand(DataType.UInt32, OperandType.Immediate, bit.lshift(instruction.operands[2].value, 16) + nextinstruction.operands[2].disp) }
     return macroinstruction
+  else
+    instruction.ismacro = true
+    instruction.mnemonic = "LI"
+    instruction.operands[2].datatype = DataType.UInt32
+    instruction.operands[2].value = bit.lshift(instruction.operands[2].value, 16)
   end
   
-  self.branchskipped = false -- It's a standalone SLT/SLTIU, disassemble it normally
+  self.branchskipped = false -- It's a standalone LUI, disassemble it normally
   return instruction
 end
 
@@ -95,7 +100,7 @@ function MacroAnalyzer:analyzeSlt(instruction, memorybuffer)
 end
 
 function MacroAnalyzer:analyzeAddu(instruction, memorybuffer)
-  local nextinstruction = self:nextInstruction(instruction, memorybuffer)
+  local nextinstruction = self:nextInstruction(instruction, memorybuffer, true)
   
   if (instruction.mnemonic == "ADDIU") and (nextinstruction.mnemonic == "LUI") and (instruction.operands[2].value == nextinstruction.operands[1].value) then
     local macroinstruction = MacroInstruction(instruction.address, "LI", InstructionType.Load)
