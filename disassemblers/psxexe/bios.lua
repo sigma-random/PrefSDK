@@ -2,19 +2,19 @@ local oop = require("oop")
 local pref = require("pref")
 local MipsRegisters = require("processors.mips.registers")
 local ServiceCalls = require("disassemblers.psxexe.syscalls.servicecalls")
-local SysCallsA0 = require("disassemblers.psxexe.syscalls.syscalls00A0")
-local SysCallsB0 = require("disassemblers.psxexe.syscalls.syscalls00B0")
-local SysCallsC0 = require("disassemblers.psxexe.syscalls.syscalls00C0")
+local SysCalls00A0 = require("disassemblers.psxexe.syscalls.syscalls00A0")
+local SysCalls00B0 = require("disassemblers.psxexe.syscalls.syscalls00B0")
+local SysCalls00C0 = require("disassemblers.psxexe.syscalls.syscalls00C0")
 
 local FunctionType = pref.disassembler.functiontype
 local SymbolType = pref.disassembler.symboltype
-local BiosSysCalls = { [0x000000A0] = SysCallsA0,
-                       [0x000000B0] = SysCallsB0,
-                       [0x000000C0] = SysCallsC0 }
+local BiosSysCalls = { [0xA0] = SysCalls00A0,
+                       [0xB0] = SysCalls00B0,
+                       [0xC0] = SysCalls00C0 }
 
-local PsyQ = oop.class()
+local PsxBios = oop.class()
 
-function PsyQ:__ctor()
+function PsxBios:__ctor()
   self.t2 = 0
   self.t1 = 0
   self.a0 = -1
@@ -22,7 +22,7 @@ function PsyQ:__ctor()
   self.jrt2 = false
 end
 
-function PsyQ:analyze(listing, instruction)
+function PsxBios:analyze(listing, instruction)
   if instruction.mnemonic == "MOVE" then 
     if MipsRegisters.gpr[instruction.operands[1].value] == "t2" then
       self.funcaddress = instruction.address
@@ -60,7 +60,7 @@ function PsyQ:analyze(listing, instruction)
   self.jrt2 = false
 end
 
-function PsyQ:analyzeBiosCall(listing)
+function PsxBios:analyzeBiosCall(listing)
   local syscalls = BiosSysCalls[self.t2]
   
   if syscalls then
@@ -72,7 +72,7 @@ function PsyQ:analyzeBiosCall(listing)
   end
 end
 
-function PsyQ:analyzeServiceCall(listing)
+function PsxBios:analyzeServiceCall(listing)
   local callname = ServiceCalls[self.a0]
   
   if callname then
@@ -80,4 +80,4 @@ function PsyQ:analyzeServiceCall(listing)
   end
 end
 
-return PsyQ
+return PsxBios

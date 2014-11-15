@@ -8,7 +8,7 @@ local OperandType = require("processors.mips.operand.type")
 local InstructionType = require("processors.mips.instruction.type")
 local GTERegisters = require("disassemblers.psxexe.gte.registers")
 local GTEFunctions = require("disassemblers.psxexe.gte.functions")
-local PsyQ = require("disassemblers.psxexe.psyq")
+local PsxBios = require("disassemblers.psxexe.bios")
 
 local ByteOrder = pref.byteorder
 local DataType = pref.datatype
@@ -19,7 +19,7 @@ local PsxExeDisassembler = pref.disassembler.create("Sony Playstation 1 PS-EXE",
 local processor = MipsProcessor()
 local macroanalyzer = MacroAnalyzer(processor)
 local emulator = InstructionEmulator()
-local psyq = PsyQ()
+local psxbios = PsxBios()
 
 function PsxExeDisassembler:baseAddress()
   return 0x80000000
@@ -66,14 +66,14 @@ function PsxExeDisassembler:disassemble(address)
   
   self:analyzeInstruction(instruction)
   self.listing:addInstruction(instruction)
-  psyq:analyze(self.listing, instruction)
+  psxbios:analyze(self.listing, instruction)
   
   if macroanalyzer.branchskipped then
     local branchinstruction = macroanalyzer:checkMacro(processor:decode(macroanalyzer.branchaddress, self.memorybuffer), self.memorybuffer)
     emulator:execute(branchinstruction, self.memorybuffer)
     self:analyzeInstruction(branchinstruction)
     self.listing:addInstruction(branchinstruction)
-    psyq:analyze(self.listing, branchinstruction)
+    psxbios:analyze(self.listing, branchinstruction)
        
     if (branchinstruction.type == InstructionType.Stop) or (branchinstruction.type == InstructionType.Jump) then
       return 0
@@ -114,8 +114,9 @@ function PsxExeDisassembler:output(printer, instruction)
       printer:outregister(GTERegisters.control[op.value])
     elseif op.type == OperandType.Memory then
       printer:out("["):outregister(MipsRegisters.gpr[op.base]):out(" + "):outvalue(op.disp, op.datatype):out("]")
-    elseif (op.type == OperandType.Immediate) and (instruction.mnemonic == "COP2") and GTEFunctions[op.value] then      
-      printer:out(GTEFunctions[op.value], 0x0000FF)
+    elseif (op.type == OperandType.Immediate) and (instruction.mnemonic == "COP2") and GTEFunctions.exists(op.value) then      
+      printer:out(GTEFunctions.name(op.value), 0x0000FF)
+      printer:outcomment(GTEFunctions.comment(op.value))
     elseif (op.type == OperandType.Immediate) and symboltable:contains(op.value) then
       printer:out(symboltable:name(op.value), 0x0000FF)
     elseif (op.type == OperandType.Address) and symboltable:contains(op.value) then

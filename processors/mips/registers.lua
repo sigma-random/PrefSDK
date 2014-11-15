@@ -5,7 +5,13 @@ local MipsGPR = { [0]  = "zero", [1]  = "at", [2]  = "v0", [3]  = "v1", [4]  = "
                   [24] = "t8",   [25] = "t9", [26] = "k0", [27] = "k1", [28] = "gp", [29] = "sp",
                   [30] = "fp",   [31] = "ra" }
 
-local Cop0Registers = { [0]  = "INDEX",   [1]  = "RANDOM",  [2] = "ENTRYLO", [4] = "CONTEXT", [8] = "VADDR",
-                        [10] = "ENTRYHI", [12] = "STATUS", [13] = "CAUSE",  [14] = "EPC" }
+local Cop0Registers = { [0]  = "Index",    [1]  = "Random",   [2]  = "EntryLo0", [3]  = "EntryLo1",
+                        [4]  = "Context",  [5]  = "PageMask", [6]  = "Wired",    [7]  = "DcIc", 
+                        [8]  = "BadVaddr", [9]  = "Count",    [10] = "EntryHi",  [11] = "Compare",
+                        [12] = "Status",   [13] = "Cause",    [14] = "ExceptPC", [15] = "PrevID",
+                        [16] = "Config",   [17] = "LLAddr",   [18] = "WatchLo",  [19] = "WatchHi",
+                        [20] = "XContext", [21] = "Res1",     [22] = "Res2",     [23] = "Res3",
+                        [24] = "Res4",     [25] = "Res5",     [26] = "PErr",     [27] = "CacheErr",
+                        [28] = "TagLo",    [29] = "TagHi",    [30] = "ErrorEPC", [31] = "Res6" }
                   
 return { gpr = MipsGPR, cop0 = Cop0Registers }
