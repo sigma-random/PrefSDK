@@ -179,57 +179,26 @@ end
 ------------------------
 -- MIPS COP2 Operands --
 ------------------------
--- FIXME: Stack Overflow when inheriting RxOperand
 
 -- Data Registers --
-local Cop2DataRsOperand = oop.class(Operand)
+local Cop2DataRsOperand = oop.class(RsOperand)
 Cop2DataRsOperand.type = OperandType.COP2DataRegister
 
-function Cop2DataRsOperand:__ctor(data)
-  self:__super(DataType.UInt8)
-  self.value = bit.rshift(bit.band(data, 0x03E00000), 0x15)
-end
-
-local Cop2DataRtOperand = oop.class(Operand)
+local Cop2DataRtOperand = oop.class(RtOperand)
 Cop2DataRtOperand.type = OperandType.COP2DataRegister
 
-function Cop2DataRtOperand:__ctor(data)
-  self:__super(DataType.UInt8)
-  self.value = bit.rshift(bit.band(data, 0x001F0000), 0x10)
-end
-
-local Cop2DataRdOperand = oop.class(Operand)
+local Cop2DataRdOperand = oop.class(RdOperand)
 Cop2DataRdOperand.type = OperandType.COP2DataRegister
 
-function Cop2DataRdOperand:__ctor(data)
-  self:__super(DataType.UInt8)
-  self.value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)
-end
-
 -- Control Registers --
-local Cop2ControlRsOperand = oop.class(Operand)
+local Cop2ControlRsOperand = oop.class(RsOperand)
 Cop2ControlRsOperand.type = OperandType.COP2ControlRegister
 
-function Cop2ControlRsOperand:__ctor(data)
-  self:__super(DataType.UInt8)
-  self.value = bit.rshift(bit.band(data, 0x03E00000), 0x15)
-end
-
-local Cop2ControlRtOperand = oop.class(Operand)
+local Cop2ControlRtOperand = oop.class(RtOperand)
 Cop2ControlRtOperand.type = OperandType.COP2ControlRegister
 
-function Cop2ControlRtOperand:__ctor(data)
-  self:__super(DataType.UInt8)
-  self.value = bit.rshift(bit.band(data, 0x001F0000), 0x10)
-end
-
-local Cop2ControlRdOperand = oop.class(Operand)
+local Cop2ControlRdOperand = oop.class(RdOperand)
 Cop2ControlRdOperand.type = OperandType.COP2ControlRegister
-
-function Cop2ControlRdOperand:__ctor(data)
-  self:__super(DataType.UInt8)
-  self.value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)
-end
 
 return { rs = RsOperand, rt = RtOperand, rd = RdOperand,
          shamt = ShamtOperand, imm16 = Imm16Operand, target = TargetOperand, offset = OffsetOperand, memory = MemoryOperand,
