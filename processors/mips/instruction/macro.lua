@@ -56,12 +56,12 @@ function MacroAnalyzer:analyzeLui(instruction, memorybuffer)
   if ((nextinstruction.mnemonic == "ADDIU") or (nextinstruction.mnemonic == "ORI")) and (instruction.operands[1].value == nextinstruction.operands[2].value) then    
     local macroinstruction = MacroInstruction(instruction.address, "LI", InstructionType.Load)
     macroinstruction.size = 8
-    macroinstruction.operands = { nextinstruction.operands[1], Operand(DataType.UInt32, OperandType.Immediate, bit.lshift(instruction.operands[2].value, 16) + nextinstruction.operands[3].value) }
+    macroinstruction.operands = { nextinstruction.operands[1], Operand:create(DataType.UInt32, OperandType.Immediate, bit.lshift(instruction.operands[2].value, 16) + nextinstruction.operands[3].value) }
     return macroinstruction
   elseif ((nextinstruction.mnemonic == "LW") or (nextinstruction.mnemonic == "SW")) and (instruction.operands[1].value == nextinstruction.operands[2].base) then    
     local macroinstruction = MacroInstruction(instruction.address, nextinstruction.mnemonic, nextinstruction.type)
     macroinstruction.size = 8
-    macroinstruction.operands = { nextinstruction.operands[1], Operand(DataType.UInt32, OperandType.Immediate, bit.lshift(instruction.operands[2].value, 16) + nextinstruction.operands[2].disp) }
+    macroinstruction.operands = { nextinstruction.operands[1], Operand:create(DataType.UInt32, OperandType.Immediate, bit.lshift(instruction.operands[2].value, 16) + nextinstruction.operands[2].disp) }
     return macroinstruction
   else
     instruction.ismacro = true
@@ -105,7 +105,7 @@ function MacroAnalyzer:analyzeAddu(instruction, memorybuffer)
   if (instruction.mnemonic == "ADDIU") and (nextinstruction.mnemonic == "LUI") and (instruction.operands[2].value == nextinstruction.operands[1].value) then
     local macroinstruction = MacroInstruction(instruction.address, "LI", InstructionType.Load)
     macroinstruction.size = 8
-    macroinstruction.operands = { instruction.operands[1], Operand(DataType.UInt32, OperandType.Immediate, bit.lshift(nextinstruction.operands[2].value, 16) + instruction.operands[3].value) }
+    macroinstruction.operands = { instruction.operands[1], Operand:create(DataType.UInt32, OperandType.Immediate, bit.lshift(nextinstruction.operands[2].value, 16) + instruction.operands[3].value) }
     return macroinstruction
   end
   
