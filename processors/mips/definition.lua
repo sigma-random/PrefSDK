@@ -4,6 +4,7 @@
 local oop = require("oop")
 local pref = require("pref")
 local Instruction = require("sdk.disassembler.instruction")
+local Processor = require("sdk.disassembler.processor")
 local OperandType = require("processors.mips.operand.type")
 local InstructionSet = require("processors.mips.instruction.set")
 local InstructionType = require("processors.mips.instruction.type")
@@ -12,7 +13,7 @@ local InstructionEmulator = require("processors.mips.instruction.emulator")
 
 local DataType = pref.datatype
 
-local MipsProcessor = oop.class()
+local MipsProcessor = oop.class(Processor)
 
 function MipsProcessor:decode(address, memorybuffer)
   local data = memorybuffer:read(address, DataType.UInt32)
