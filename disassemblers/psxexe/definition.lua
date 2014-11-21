@@ -22,6 +22,10 @@ local emulator = InstructionEmulator()
 local psxbios = PsxBios()
 
 function PsxExeDisassembler:baseAddress()
+  if self.formattree.ExeHeader.t_addr.value < 0x80000000 then -- Hackish way to find a valid base address
+    return 0
+  end
+  
   return 0x80000000
 end
 
