@@ -20,84 +20,64 @@ local function signExtend(value)
   return value
 end
 
-local RsOperand = oop.class(Operand)
-RsOperand.type = OperandType.Register
+local RsOperand = Operand:define(OperandType.Register, DataType.UInt8)
 
 function RsOperand:__ctor(data)
-  self:__super(DataType.UInt8)
   self.value = bit.rshift(bit.band(data, 0x03E00000), 0x15)
 end
 
-local RtOperand = oop.class(Operand)
-RtOperand.type = OperandType.Register
+local RtOperand = Operand:define(OperandType.Register, DataType.UInt8)
 
 function RtOperand:__ctor(data)
-  self:__super(DataType.UInt8)
   self.value = bit.rshift(bit.band(data, 0x001F0000), 0x10)
 end
 
-local RdOperand = oop.class(Operand)
-RdOperand.type = OperandType.Register
+local RdOperand = Operand:define(OperandType.Register, DataType.UInt8)
 
 function RdOperand:__ctor(data)
-  self:__super(DataType.UInt8)
   self.value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)
 end
 
-local ShamtOperand = oop.class(Operand)
-ShamtOperand.type = OperandType.Immediate
+local ShamtOperand = Operand:define(OperandType.Immediate, DataType.UInt8)
 
 function ShamtOperand:__ctor(data)
-  self:__super(DataType.UInt8)
   self.value = bit.rshift(bit.band(data, 0x000007C0), 0x06)
 end
 
-local Imm16Operand = oop.class(Operand)
-Imm16Operand.type = OperandType.Immediate
+local Imm16Operand = Operand:define(OperandType.Immediate, DataType.UInt16)
 
 function Imm16Operand:__ctor(data)
-  self:__super(DataType.Int16)
   self.value = signExtend(bit.band(data, 0x0000FFFF))
 end
 
-local TargetOperand = oop.class(Operand)
-TargetOperand.type = OperandType.Address
+local TargetOperand = Operand:define(OperandType.Address, DataType.UInt32)
 
 function TargetOperand:__ctor(data, baseaddress)
-  self:__super(DataType.UInt32)
   self.value = baseaddress + bit.lshift(bit.band(data, 0x03FFFFFF), 2)
 end
 
-local OffsetOperand = oop.class(Operand)
-OffsetOperand.type = OperandType.Offset
+local OffsetOperand = Operand:define(OperandType.Offset, DataType.UInt32)
 
 function OffsetOperand:__ctor(data, address)
-  self:__super(DataType.UInt32)
   self.value = address + 4 + bit.lshift(signExtend(bit.band(data, 0x0000FFFF)), 2)
 end
 
-local MemoryOperand = oop.class(Operand)
-MemoryOperand.type = OperandType.Memory
+local MemoryOperand = Operand:define(OperandType.Memory, DataType.UInt32)
 
 function MemoryOperand:__ctor(data)
-  self:__super(DataType.UInt32)
   self.base = bit.rshift(bit.band(data, 0x03E00000), 0x15)
   self.disp = signExtend(bit.band(data, 0x0000FFFF))
 end
 
-local CacheOpOperand = oop.class(Operand)
-CacheOpOperand.type = OperandType.Immediate
+local CacheOpOperand = Operand:define(OperandType.Immediate, DataType.UInt16)
 
 function CacheOpOperand:__ctor(data)
-  self:__super(DataType.UInt16)
   self.value = bit.rshift(bit.band(data, 0x001F0000), 0x10)
 end
 
-local CodeOperand = oop.class(Operand)
-CodeOperand.type = OperandType.Code
+local CodeOperand = Operand:define(OperandType.Code, DataType.UInt32)
 
 function CodeOperand:__ctor(data)
-  self:__super(DataType.UInt32)
   self.value = bit.rshift(bit.band(data, 0x03FFFFC0), 0x06)
 end
 
@@ -105,74 +85,58 @@ end
 -- COPX Performance Op --
 -------------------------
 
-local CoFunOperand = oop.class(Operand)
-CoFunOperand.type = OperandType.Immediate
+local CoFunOperand = Operand:define(OperandType.Immediate, DataType.UInt32)
 
 function CoFunOperand:__ctor(data)
-  self:__super(DataType.UInt32)
   self.value = bit.band(data, 0x01FFFFFF)
 end
 
 -----------------------
 -- MIPS FPU Operands --
 -----------------------
-local BaseIndexOperand = oop.class()
-BaseIndexOperand.type = OperandType.BaseIndex
+local BaseIndexOperand = Operand:define(OperandType.BaseIndex, DataType.UInt32)
 
 function BaseIndexOperand:__ctor(data)
-  self:_super(DataType.UInt32)
   self.base = bit.rshift(bit.band(data, 0x03E00000), 0x15)
   self.index = bit.rshift(bit.band(data, 0x001F0000), 0x10)
 end
 
-local FtOperand = oop.class(Operand)
-FtOperand.type = OperandType.FPURegister
+local FtOperand = Operand:define(OperandType.FPURegister, DataType.UInt8)
 
 function FtOperand:__ctor(data)
-  self:__super(DataType.UInt8)
   self.value = bit.rshift(bit.band(data, 0x001F0000), 0x10)
 end
 
-local FsOperand = oop.class(Operand)
-FsOperand.type = OperandType.FPURegister
+local FsOperand = Operand:define(OperandType.FPURegister, DataType.UInt8)
 
 function FsOperand:__ctor(data)
-  self:__super(DataType.UInt8)
   self.value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)
 end
 
-local FdOperand = oop.class(Operand)
-FdOperand.type = OperandType.FPURegister
+local FdOperand = Operand:define(OperandType.FPURegister, DataType.UInt8)
 
 function FdOperand:__ctor(data)
-  self:__super(DataType.UInt8)
   self.value = bit.rshift(bit.band(data, 0x000007C0), 0x06)
 end
 
 ------------------------
 -- MIPS COP0 Operands --
 ------------------------
-local Cop0RsOperand = oop.class(Operand)
-Cop0RsOperand.type = OperandType.COP0Register
+local Cop0RsOperand = Operand:define(OperandType.COP0Register, DataType.UInt8)
 
 function Cop0RsOperand:__ctor(data)
-  self:__super(DataType.UInt8)
   self.value = bit.rshift(bit.band(data, 0x03E00000), 0x15)
 end
 
-local Cop0RtOperand = oop.class(Operand)
-Cop0RtOperand.type = OperandType.COP0Register
+local Cop0RtOperand = Operand:define(OperandType.COP0Register, DataType.UInt8)
 
 function Cop0RtOperand:__ctor(data)
-  self:__super(DataType.UInt8)
   self.value = bit.rshift(bit.band(data, 0x001F0000), 0x10)
 end
 
-local Cop0RdOperand = oop.class(Operand)
-Cop0RdOperand.type = OperandType.COP0Register
+local Cop0RdOperand = Operand:define(OperandType.COP0Register, DataType.UInt8)
 
 function Cop0RdOperand:__ctor(data)
-  self:__super(DataType.UInt8)
   self.value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)
 end
 
@@ -181,24 +145,43 @@ end
 ------------------------
 
 -- Data Registers --
-local Cop2DataRsOperand = oop.class(RsOperand)
-Cop2DataRsOperand.type = OperandType.COP2DataRegister
+local Cop2DataRsOperand = Operand:define(OperandType.COP2DataRegister, DataType.UInt8)
 
-local Cop2DataRtOperand = oop.class(RtOperand)
-Cop2DataRtOperand.type = OperandType.COP2DataRegister
+function Cop2DataRsOperand:__ctor(data)
+  self.value = bit.rshift(bit.band(data, 0x03E00000), 0x15)
+end
 
-local Cop2DataRdOperand = oop.class(RdOperand)
-Cop2DataRdOperand.type = OperandType.COP2DataRegister
+local Cop2DataRtOperand = Operand:define(OperandType.COP2DataRegister, DataType.UInt8)
+
+function Cop2DataRtOperand:__ctor(data)
+  self.value = bit.rshift(bit.band(data, 0x001F0000), 0x10)
+end
+
+local Cop2DataRdOperand = Operand:define(OperandType.COP2DataRegister, DataType.UInt8)
+
+function Cop2DataRdOperand:__ctor(data)
+  self.value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)
+end
 
 -- Control Registers --
-local Cop2ControlRsOperand = oop.class(RsOperand)
-Cop2ControlRsOperand.type = OperandType.COP2ControlRegister
 
-local Cop2ControlRtOperand = oop.class(RtOperand)
-Cop2ControlRtOperand.type = OperandType.COP2ControlRegister
+local Cop2ControlRsOperand = Operand:define(OperandType.COP2ControlRegister, DataType.UInt8)
 
-local Cop2ControlRdOperand = oop.class(RdOperand)
-Cop2ControlRdOperand.type = OperandType.COP2ControlRegister
+function Cop2ControlRsOperand:__ctor(data)
+  self.value = bit.rshift(bit.band(data, 0x03E00000), 0x15)
+end
+
+local Cop2ControlRtOperand = Operand:define(OperandType.COP2ControlRegister, DataType.UInt8)
+
+function Cop2ControlRtOperand:__ctor(data)
+  self.value = bit.rshift(bit.band(data, 0x001F0000), 0x10)
+end
+
+local Cop2ControlRdOperand = Operand:define(OperandType.COP2ControlRegister, DataType.UInt8)
+
+function Cop2ControlRdOperand:__ctor(data)
+  self.value = bit.rshift(bit.band(data, 0x0000F800), 0x0B)
+end
 
 return { rs = RsOperand, rt = RtOperand, rd = RdOperand,
          shamt = ShamtOperand, imm16 = Imm16Operand, target = TargetOperand, offset = OffsetOperand, memory = MemoryOperand,
