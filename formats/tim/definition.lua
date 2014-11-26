@@ -73,17 +73,6 @@ function TimFormat:validate(validator)
     
     pixeldatapos = clutsize + 20
   end
-  
-  pixeldatapos = pixeldatapos + 4 -- Skip Pixel Block Size
-  
-  local pxfbx = buffer:readType(pixeldatapos, pref.datatype.UInt16_LE)
-  local pxfby = buffer:readType(pixeldatapos + 2, pref.datatype.UInt16_LE)
-  local pxw = buffer:readType(pixeldatapos + 4, pref.datatype.UInt16_LE)
-  local pxh = buffer:readType(pixeldatapos + 6, pref.datatype.UInt16_LE)
-  
-  if ((pxfbx < 0) or (pxw < 0) or (pxfby < 0) or (pxh < 0)) or (pxfbx > pxw) or (pxfby > pxh) then
-    validator:error("Invalid Pixel Block Metrics")
-  end
 end
     
 function TimFormat:parse(formattree)
