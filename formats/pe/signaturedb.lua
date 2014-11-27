@@ -3,7 +3,7 @@ local oop = require("oop")
 local SignatureDB = oop.class()
 
 function SignatureDB:__ctor(dbfile)
-  SignatureDB.defaultpath = "formats/portableexecutable/"
+  SignatureDB.defaultpath = "formats/pe/"
   SignatureDB.defaultdbfile = "signatures.txt"
   
   if (SignatureDB.db == nil) or (dbfile and (SignatureDB.dbfile ~= dbfile)) then

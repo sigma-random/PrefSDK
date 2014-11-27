@@ -1,9 +1,9 @@
 local oop = require("oop")
 local Address = require("sdk.math.address")
 local Pointer = require("sdk.math.pointer")
-local PeConstants = require("formats.portableexecutable.constants")
-local PeFunctions = require("formats.portableexecutable.functions")
+local PeConstants = require("formats.pe.constants")
 
+local DataType = pref.datatype
 local ResourceDirectory = oop.class()
 
 function ResourceDirectory:__ctor(formattree, section, directoryoffset)
@@ -11,6 +11,14 @@ function ResourceDirectory:__ctor(formattree, section, directoryoffset)
   self.formattree = formattree
   self.section = section
   self.directoryoffset = directoryoffset
+end
+
+function ResourceDirectory.isResourceNameString(val)
+  return bit.band(val, PeConstants.ImageResourceNameIsString[32]) ~= 0
+end
+
+function ResourceDirectory.isResourceDataDirectory(val)
+  return bit.band(val, PeConstants.ImageResourceDataIsDirectory[32]) ~= 0
 end
 
 function ResourceDirectory.getEntriesCount(formatdefinition, resourcedirectory)
@@ -26,7 +34,7 @@ function ResourceDirectory.getEntriesCount(formatdefinition, resourcedirectory)
 end
 
 function ResourceDirectory.getResourceName(entry, formattree)
-  if not PeFunctions.isResourceNameString(entry.Name.value) then
+  if not ResourceDirectory.isResourceNameString(entry.Name.value) then
     local id = PeConstants.ResourceDirectoryId[entry.Name.Id.value]
     return id or ""
   end
@@ -35,7 +43,7 @@ function ResourceDirectory.getResourceName(entry, formattree)
 end
 
 function ResourceDirectory.getNameInfo(name, formattree)
-  if PeFunctions.isResourceNameString(name.value) then
+  if ResourceDirectory.isResourceNameString(name.value) then
     return "Name is String"
   end
   
@@ -43,7 +51,7 @@ function ResourceDirectory.getNameInfo(name, formattree)
 end
 
 function ResourceDirectory.getOffsetInfo(offsettodata, formattree)
-  if PeFunctions.isResourceDataDirectory(offsettodata.value) then
+  if ResourceDirectory.isResourceDataDirectory(offsettodata.value) then
     return "Offset is Directory"
   end
   
@@ -52,22 +60,22 @@ end
 
 function ResourceDirectory:parse()
   local resourcedirectory = self.formattree:addStructure(PeConstants.DirectoryNames[3], self.directoryoffset)
-  resourcedirectory:addField(pref.datatype.UInt32_LE, "Characteristics")
-  resourcedirectory:addField(pref.datatype.UInt32_LE, "TimeDateStamp")
-  resourcedirectory:addField(pref.datatype.UInt16_LE, "MajorVersion")
-  resourcedirectory:addField(pref.datatype.UInt16_LE, "MinorVersion")
-  resourcedirectory:addField(pref.datatype.UInt16_LE, "NumberOfNamedEntries")
-  resourcedirectory:addField(pref.datatype.UInt16_LE, "NumberOfIdEntries")
+  resourcedirectory:addField(DataType.UInt32_LE, "Characteristics")
+  resourcedirectory:addField(DataType.UInt32_LE, "TimeDateStamp")
+  resourcedirectory:addField(DataType.UInt16_LE, "MajorVersion")
+  resourcedirectory:addField(DataType.UInt16_LE, "MinorVersion")
+  resourcedirectory:addField(DataType.UInt16_LE, "NumberOfNamedEntries")
+  resourcedirectory:addField(DataType.UInt16_LE, "NumberOfIdEntries")
   
   local totentries = resourcedirectory.NumberOfNamedEntries.value + resourcedirectory.NumberOfIdEntries.value
   local directoryentries = resourcedirectory:addStructure("DirectoryEntries")
   
   for i = 1, totentries do
     local entry = directoryentries:addStructure("Entry" .. i):dynamicInfo(ResourceDirectory.getResourceName)
-    local fname = entry:addField(pref.datatype.UInt32_LE, "Name"):dynamicInfo(ResourceDirectory.getNameInfo)
+    local fname = entry:addField(DataType.UInt32_LE, "Name"):dynamicInfo(ResourceDirectory.getNameInfo)
     fname:setBitField("Id", 0, 16)
     
-    local foffsettodata = entry:addField(pref.datatype.UInt32_LE, "OffsetToData"):dynamicInfo(ResourceDirectory.getOffsetInfo)
+    local foffsettodata = entry:addField(DataType.UInt32_LE, "OffsetToData"):dynamicInfo(ResourceDirectory.getOffsetInfo)
     foffsettodata:setBitField("Offset", 0, 30)
     foffsettodata:setBitField("IsDirectory", 31, 32)
   end

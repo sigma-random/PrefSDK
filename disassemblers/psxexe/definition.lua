@@ -42,7 +42,7 @@ function PsxExeDisassembler:analyzeInstruction(instruction)
   local symboltable = self.listing.symboltable
   
   if instruction.type == InstructionType.Invalid then
-      self:warning(string.format("Got an Invalid Instruction at %08Xh", instruction.address))
+    pref.warning("Got an Invalid Instruction at %08Xh", instruction.address)
   elseif instruction.iscall and instruction.isdestinationvalid then
     self.listing:createFunction(instruction.destination, instruction.address)
     self:enqueue(instruction.destination)

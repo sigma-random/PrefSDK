@@ -1,6 +1,7 @@
 local oop = require("oop")
-local PeFunctions = require("formats.portableexecutable.functions")
+local PeFunctions = require("formats.pe.functions")
 
+local DataType = pref.datatype
 local SectionTable = oop.class()
 
 function SectionTable:__ctor(formattree)
@@ -21,16 +22,16 @@ function SectionTable:parse()
     
      for i = 1, numberofsections do
       local section = sectiontable:addStructure("Section" .. i):dynamicInfo(SectionTable.getSectionName)
-      section:addField(pref.datatype.Character, "Name", 8)
-      section:addField(pref.datatype.UInt32_LE, "VirtualSize")
-      section:addField(pref.datatype.UInt32_LE, "VirtualAddress")
-      section:addField(pref.datatype.UInt32_LE, "SizeOfRawData")
-      section:addField(pref.datatype.UInt32_LE, "PointerToRawData")
-      section:addField(pref.datatype.UInt32_LE, "PointertoRelocations")
-      section:addField(pref.datatype.UInt32_LE, "PointertoLineNumbers")
-      section:addField(pref.datatype.UInt16_LE, "NumberOfRelocations")
-      section:addField(pref.datatype.UInt16_LE, "NumberOfLineNumbers")
-      section:addField(pref.datatype.UInt32_LE, "Characteristics")
+      section:addField(DataType.Character, "Name", 8)
+      section:addField(DataType.UInt32_LE, "VirtualSize")
+      section:addField(DataType.UInt32_LE, "VirtualAddress")
+      section:addField(DataType.UInt32_LE, "SizeOfRawData")
+      section:addField(DataType.UInt32_LE, "PointerToRawData")
+      section:addField(DataType.UInt32_LE, "PointertoRelocations")
+      section:addField(DataType.UInt32_LE, "PointertoLineNumbers")
+      section:addField(DataType.UInt16_LE, "NumberOfRelocations")
+      section:addField(DataType.UInt16_LE, "NumberOfLineNumbers")
+      section:addField(DataType.UInt32_LE, "Characteristics")
     end
   end
 end

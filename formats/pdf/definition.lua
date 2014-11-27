@@ -1,8 +1,8 @@
 local pref = require("pref")
-local PdfFunctions = require("formats.pdf.functions")
-local PdfTypes = require("formats.pdf.pdftypes")
-local PdfDebug = require("formats.pdf.pdfdebug")
+local PdfTypes = require("formats.pdf.types")
+local PdfParser = require("formats.pdf.parser")
 
+local DataType = pref.datatype
 local PdfFormat = pref.format.create("Portable Document Format", "Documents", "Dax", "1.1b")
 
 function PdfFormat:validate(validator)
@@ -10,27 +10,64 @@ function PdfFormat:validate(validator)
 end
 
 function PdfFormat:parse(formattree)  
-  local objtable = PdfFunctions.findAllKeywords(self, formattree.buffer)
-  -- PdfDebug.printObjectTable(objtable)
+  local pdfparser = PdfParser()
+  local objtable = pdfparser:analyze(formattree.buffer)
 
   for i, v in ipairs(objtable) do
     if v.type == PdfTypes.PdfWhitespace then
-      PdfFunctions.createPdfWhitespaceStruct(formattree, v)
+      self:createPdfWhitespaceStruct(formattree, v)
     elseif v.type == PdfTypes.PdfComment then
-      PdfFunctions.createPdfCommentStruct(formattree, v)
+      self:createPdfCommentStruct(formattree, v)
     elseif v.type == PdfTypes.PdfObject then
-      PdfFunctions.createPdfObjectStruct(formattree, v)
+      self:createPdfObjectStruct(formattree, v)
     elseif v.type == PdfTypes.PdfHeader then
-      PdfFunctions.createPdfHeaderStruct(formattree, v)
+      self:createPdfHeaderStruct(formattree, v)
     elseif v.type == PdfTypes.PdfXRef then
-      PdfFunctions.createPdfXRefStruct(formattree, v)
+      self:createPdfXRefStruct(formattree, v)
     elseif v.type == PdfTypes.PdfTrailer then
-      PdfFunctions.createPdfTrailerStruct(formattree, v)
+      self:createPdfTrailerStruct(formattree, v)
     else
-      self:error("Unknown PdfType")
+      pref.error("Unknown PdfType")
       return
     end
   end
+end
+
+function PdfFormat:createPdfWhitespaceStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFWHITESPACE", obj.startpos)
+  pdfobj:addField(DataType.Blob, "Whitespace", obj.endpos - obj.startpos)
+end
+
+function PdfFormat:createPdfCommentStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFCOMMENT", obj.startpos)
+  pdfobj:addField(DataType.Blob, "Comment", obj.endpos - obj.startpos)
+end
+
+function PdfFormat:createPdfObjectStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFOBJECT", obj.startpos):dynamicInfo(PdfFormat.getObjectName)
+  pdfobj:addField(DataType.Blob, "Data", obj.endpos - obj.startpos)
+end
+
+function PdfFormat:createPdfHeaderStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFHEADER", obj.startpos)
+  pdfobj:addField(DataType.Character, "Header", obj.endpos - obj.startpos)
+end
+
+function PdfFormat:createPdfXRefStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFXREF", obj.startpos)
+  pdfobj:addField(DataType.Blob, "Data", obj.endpos - obj.startpos)
+end
+
+function PdfFormat:createPdfTrailerStruct(formattree, obj)
+  local pdfobj = formattree:addStructure("PDFTRAILER", obj.startpos)
+  pdfobj:addField(DataType.Character, "Trailer", obj.endpos - obj.startpos)
+end
+
+function PdfFormat.getObjectName(objstruct, formattree)
+  local buffer, offset = formattree.buffer, objstruct.offset
+  local objpos = buffer:indexOf("obj", offset)
+  
+  return "Object(Number, Revision): " .. buffer:readString(offset, (objpos - offset) - 1)
 end
 
 return PdfFormat

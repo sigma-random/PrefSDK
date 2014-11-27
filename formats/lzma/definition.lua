@@ -1,17 +1,17 @@
 local pref = require("pref")
 local MathFunctions = require("sdk.math.functions")
 local LZma = require("sdk.compression.lzma")
-local LZmaFunctions = require("formats.lzma.functions")
 
+local DataType = pref.datatype
 local LZmaFormat = pref.format.create("LZMA Format", "Compression", "Dax", "1.0")
 
 function LZmaFormat:validate(validator)  
-  validator:checkType(0, 0x5D, pref.datatype.UInt8)
+  validator:checkType(0, 0x5D, DataType.UInt8)
   
   local buffer = validator.buffer
-  local props = buffer:readType(0, pref.datatype.UInt8)
-  local dictsize = buffer:readType(1, pref.datatype.UInt32_LE)
-  local uncompressedsize = buffer:readType(5,pref.datatype.Int64_LE)
+  local props = buffer:readType(0, DataType.UInt8)
+  local dictsize = buffer:readType(1, DataType.UInt32_LE)
+  local uncompressedsize = buffer:readType(5,DataType.Int64_LE)
   local dictcount = MathFunctions.logb(dictsize, 2)
   local lc, lp, pb = LZma.getProperties(props)
   
@@ -27,9 +27,27 @@ end
     
 function LZmaFormat:parse(formattree)
   local lzmaheader = formattree:addStructure("LZmaHeader")
-  lzmaheader:addField(pref.datatype.UInt8, "Properties"):dynamicInfo(LZmaFunctions.analyzeProperties)
-  lzmaheader:addField(pref.datatype.UInt32_LE, "DictionarySize"):dynamicInfo(LZmaFunctions.getDictionarySize)
-  lzmaheader:addField(pref.datatype.Int64_LE, "UncompressedSize"):dynamicInfo(LZmaFunctions.checkUncompressedSize)
+  lzmaheader:addField(DataType.UInt8, "Properties"):dynamicInfo(LZmaFormat.analyzeProperties)
+  lzmaheader:addField(DataType.UInt32_LE, "DictionarySize"):dynamicInfo(LZmaFormat.getDictionarySize)
+  lzmaheader:addField(DataType.Int64_LE, "UncompressedSize"):dynamicInfo(LZmaFormat.checkUncompressedSize)
 end 
+
+function LZmaFormat.analyzeProperties(propfield, formattree)
+  local lc, lp, pb = LZma.getProperties(propfield.value)
+  return string.format("lc: %d, lp %d, pb: %d", lc, lp, pb)
+end
+
+function LZmaFormat.getDictionarySize(dictsizefield, formattree)
+  local val = MathFunctions.logb(dictsizefield.value, 2)
+  return string.format("2^%d bytes", val)
+end
+
+function LZmaFormat.checkUncompressedSize(uncomprsizefield, formattree)
+  if uncomprsizefield.value == -1 then
+    return "Unknown Size"
+  end
+  
+  return ""
+end
 
 return LZmaFormat

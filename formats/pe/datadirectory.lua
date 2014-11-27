@@ -1,10 +1,10 @@
 local oop = require("oop")
 local Address = require("sdk.math.address")
-local PeConstants = require("formats.portableexecutable.constants")
-local PeFunctions = require("formats.portableexecutable.functions")
-local ExportDirectory = require("formats.portableexecutable.datadirectory.exportdirectory")
-local ImportDirectory = require("formats.portableexecutable.datadirectory.importdirectory")
-local ResourceDirectory = require("formats.portableexecutable.datadirectory.resourcedirectory")
+local PeConstants = require("formats.pe.constants")
+local PeFunctions = require("formats.pe.functions")
+local ExportDirectory = require("formats.pe.datadirectory.exportdirectory")
+local ImportDirectory = require("formats.pe.datadirectory.importdirectory")
+local ResourceDirectory = require("formats.pe.datadirectory.resourcedirectory")
 
 local DataDirectory = oop.class()
 
