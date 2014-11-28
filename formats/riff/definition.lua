@@ -1,3 +1,7 @@
+-- http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/RIFF.html
+-- http://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
+-- http://www.sonicspot.com/guide/wavefiles.html
+
 local pref = require("pref")
 local WaveCompressionType = require("formats.riff.wavcompressiontypes")
 
@@ -11,82 +15,61 @@ end
 function RiffFormat:parse(formattree)
   local buffer = formattree.buffer
   local riffheader = formattree:addStructure("RiffHeader")
-  riffheader:addField(DataType.Character, "ChunkID", 4)
-  riffheader:addField(DataType.UInt32_LE, "ChunkDataSize")
-  riffheader:addField(DataType.Character, "RiffType", 4)
+  riffheader:addField(DataType.Character, "ckID", 4)
+  riffheader:addField(DataType.UInt32_LE, "ckSize")
+  riffheader:addField(DataType.Character, "ckType", 4)
   
-  local pos = riffheader.endoffset
+  local i, pos = 0, riffheader.endoffset
   
   while pos < buffer.length do
-    local chunksize = self:verifyChunkType(buffer:readString(pos, 4), formattree)
-    
-    if chunksize == 0 then
-      pref.warning("Unknown Chunk Detected at %08Xh", pos)
-      break
+    local chunk = self:defineChunk(formattree, string.format("Chunk%d", i))
+    pos = pos + chunk.size
+    i = i + 1
+  end
+end
+
+function RiffFormat:defineChunk(formattree, name)
+  local chunk = formattree:addStructure(name):dynamicInfo(RiffFormat.getChunkType)
+  chunk:addField(DataType.Character, "ckID", 4)
+  chunk:addField(DataType.UInt32_LE, "ckSize")
+  
+  local chunkid = chunk.ckID.value
+  
+  if chunkid == "fmt " then
+    self:defineFmtChunk(chunk)
+  elseif chunk.ckSize.value > 0 then  
+    chunk:addField(DataType.Blob, "ckData", chunk.ckSize.value)
+  end
+  
+  return chunk
+end
+
+function RiffFormat:defineFmtChunk(chunk)
+  chunk:addField(DataType.UInt16_LE, "wFormatTag"):dynamicInfo(RiffFormat.getFormatTag)
+  chunk:addField(DataType.UInt16_LE, "wChannels")
+  chunk:addField(DataType.UInt32_LE, "dwSamplesPerSec")
+  chunk:addField(DataType.UInt32_LE, "dwAvgBytesPerSec")
+  chunk:addField(DataType.UInt16_LE, "wBlockAlign")
+  
+  local formattag = chunk.wFormatTag.value
+  
+  if formattag == 0x0001 then -- PCM
+    chunk:addField(DataType.UInt16_LE, "wBitsPerSample")
+  else
+    local extradata = chunk.ckSize.value - (chunk.size - 8)
+  
+    if extradata > 0 then
+      chunk:addField(DataType.Blob, "bExtraData", extradata)
     end
-    
-    pos = pos + chunksize
   end
 end
 
-function RiffFormat:verifyChunkType(chunktype, formattree)
-  if chunktype == "fmt " then
-    return self:defineFmtChunk(formattree)
-  elseif chunktype == "data" then
-    return self:defineDataChunk(formattree)
-  elseif chunktype == "fact" then
-    return self:defineFactChunk(formattree)
-  end
-  
-  return 0
+function RiffFormat.getChunkType(chunk)
+  return string.format("%q", chunk.ckID.value)
 end
 
-function RiffFormat:defineFmtChunk(formattree)
-  local formatchunk = formattree:addStructure("FormatChunk")
-  formatchunk:addField(DataType.Character, "ChunkID", 4)
-  formatchunk:addField(DataType.UInt32_LE, "ChunkDataSize")
-  formatchunk:addField(DataType.UInt16_LE, "CompressionCode"):dynamicInfo(RiffFormat.getWaveCompressionType)
-  formatchunk:addField(DataType.UInt16_LE, "NumberOfChannels")
-  formatchunk:addField(DataType.UInt32_LE, "SampleRate")
-  formatchunk:addField(DataType.UInt32_LE, "AvgBytesPerSecond")
-  formatchunk:addField(DataType.UInt16_LE, "BlockAlign")
-  formatchunk:addField(DataType.UInt16_LE, "BitsPerSample")
-  
-  local chunkdatasize = formatchunk.ChunkDataSize.value
-
-  if chunkdatasize > 0 then
-    formatchunk:addField(DataType.Blob, "ExtraFormatData", chunkdatasize - 16)
-  end
-
-  return formatchunk.size
-end
-
-function RiffFormat:defineDataChunk(formattree)
-  local datachunk = formattree:addStructure("DataChunk")
-  datachunk:addField(DataType.Character, "ChunkID", 4)
-  datachunk:addField(DataType.UInt32_LE, "ChunkDataSize")  
-  datachunk:addField(DataType.Blob, datachunk.ChunkDataSize.value, "SampleData")
-  
-  return datachunk.size
-end
-
-function RiffFormat:defineFactChunk(formattree)
-  local factchunk = formattree:addStructure("FactChunk")
-  factchunk:addField(DataType.Character, "ChunkID", 4)
-  factchunk:addField(DataType.UInt32_LE, "ChunkDataSize")
-  factchunk:addField(DataType.Blob, factchunk.ChunkDataSize.value, "FormatData")
-  
-  return factchunk.size
-end
-
-function RiffFormat:getWaveCompressionType(compressiontypefield, formattree)
-  local compressiontype = WaveCompressionType[compressiontypefield.value]
-  
-  if compressiontype ~= nil then
-    return compressiontype
-  end
-  
-  return "Unknown"
+function RiffFormat.getFormatTag(compressiontypefield, formattree)
+  return WaveCompressionType[compressiontypefield.value] or "Unknown"
 end
 
 return RiffFormat
