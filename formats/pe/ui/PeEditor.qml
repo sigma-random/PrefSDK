@@ -9,13 +9,11 @@ Item
         anchors.fill: parent
         tabPosition: Qt.BottomEdge
 
-        Tab { title: "Dos Header"; DosHeader { } }
-        Tab { title: "Nt Headers"; NtHeader { } }
-        Tab { title: "File Header"; FileHeader { } }
-        Tab { title: "Optional Header"; OptionalHeader { } }
-        Tab { title: "Data Directory"; DataDirectory { } }
-        Tab { title: "Section Table"; SectionTable { } }
-        Tab { title: "Export Table"; ExportTable { } }
-        Tab { title: "Import Table"; ImportTable { } }
+         Tab { title: "Dos Header"; DosHeader { } }
+         Tab { title: "Nt Headers"; NtHeaders { } }
+         Tab { title: "Data Directory"; DataDirectory { } }
+         Tab { title: "Section Table"; SectionTable { } }
+         Tab { title: "Export Table"; ExportTable { } }
+         Tab { title: "Import Table"; ImportTable { } }
     }
 }
