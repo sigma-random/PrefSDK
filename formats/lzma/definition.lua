@@ -3,7 +3,7 @@ local MathFunctions = require("sdk.math.functions")
 local LZma = require("sdk.compression.lzma")
 
 local DataType = pref.datatype
-local LZmaFormat = pref.format.create("LZMA Format", "Compression", "Dax", "1.0")
+local LZmaFormat = pref.format.create("LZma Stream", "Compression", "Dax", "1.0")
 
 function LZmaFormat:validate(validator)  
   validator:checkType(0, 0x5D, DataType.UInt8)

@@ -1,7 +1,7 @@
 local pref = require("pref")
 
 local DataType = pref.datatype
-local VagFormat = pref.format.create("VAG Format", "Sony Playstation 1", "Dax", "1.0")
+local VagFormat = pref.format.create("VAG Audio", "Sony Playstation 1", "Dax", "1.0")
 
 function VagFormat:validate(validator)
   validator:checkAscii(0, "VAGp")

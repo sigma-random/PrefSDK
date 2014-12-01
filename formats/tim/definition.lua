@@ -2,7 +2,7 @@ local pref = require("pref")
 local TimBpp = require("formats.tim.bpp")
 
 local DataType = pref.datatype
-local TimFormat = pref.format.create("TIM Format", "Sony Playstation 1", "Dax", "1.0")
+local TimFormat = pref.format.create("TIM Image", "Sony Playstation 1", "Dax", "1.0")
 
 function TimFormat:validate(validator)
   local buffer = validator.buffer

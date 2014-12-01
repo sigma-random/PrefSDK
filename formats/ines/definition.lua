@@ -2,7 +2,7 @@ local pref = require("pref")
 local MapperTypes = require("formats.ines.mappers")
 
 local DataType = pref.datatype
-local INesFormat = pref.format.create("iNES Format", "Nintendo", "Dax", "1.0")
+local INesFormat = pref.format.create("iNES ROM Image", "Nintendo", "Dax", "1.0")
 
 function INesFormat:validate(validator)
   validator:checkType(0, 0x1A53454E, DataType.UInt32_LE) -- "'Nes^Z' Signature"

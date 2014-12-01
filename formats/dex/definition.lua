@@ -3,7 +3,7 @@ local MapItemTypes = require("formats.dex.mapitemtypes")
 local MapItemParser = require("formats.dex.mapitemparser")
 
 local DataType = pref.datatype
-local DexFormat = pref.format.create("Dalvik Executable Format", "Android", "Dax", "1.0")
+local DexFormat = pref.format.create("Dalvik Executable", "Android", "Dax", "1.0")
 
 function DexFormat:validate(validator)
   validator:checkAscii(0x00000000, "dex")

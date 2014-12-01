@@ -8,7 +8,7 @@ local DataDirectory = require("formats.pe.datadirectory")
 local SignatureDB = require("formats.pe.signaturedb")
 
 local DataType = pref.datatype
-local PeFormat = pref.format.create("Portable Executable Format", "Windows", "Dax", "1.0")
+local PeFormat = pref.format.create("Portable Executable", "Windows", "Dax", "1.0")
 
 function PeFormat:validate(validator)
   local buffer = validator.buffer

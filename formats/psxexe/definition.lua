@@ -1,7 +1,7 @@
 local pref = require("pref")
 
 local DataType = pref.datatype
-local PsxExeFormat = pref.format.create("Sony Playstation 1 Executable Format", "Sony Playstation 1", "Dax", "1.0")
+local PsxExeFormat = pref.format.create("Playstation 1 Executable", "Sony Playstation 1", "Dax", "1.0")
 
 function PsxExeFormat:validate(validator)
   validator:checkAscii(0, "PS-X EXE")

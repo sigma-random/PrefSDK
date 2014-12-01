@@ -2,7 +2,7 @@ local pref = require("pref")
 local BitmapBPP = require("formats.bitmap.bpp")
 
 local DataType = pref.datatype
-local BitmapFormat = pref.format.create("Bitmap Format", "Imaging", "Dax", "1.1")
+local BitmapFormat = pref.format.create("Bitmap Image", "Imaging", "Dax", "1.1")
 
 function BitmapFormat:validate(validator)
   local validbpp = {1, 4, 8, 16, 24, 32}

@@ -4,7 +4,7 @@ local pref = require("pref")
 local ZLib = require("sdk.compression.zlib")
 
 local DataType = pref.datatype
-local ZLibFormat = pref.format.create("ZLib Format", "Compression", "Dax", "1.0")
+local ZLibFormat = pref.format.create("ZLib Stream", "Compression", "Dax", "1.0")
 
 function ZLibFormat:validate(validator)
   local buffer = validator.buffer

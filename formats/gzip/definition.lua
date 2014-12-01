@@ -2,7 +2,7 @@ local pref = require("pref")
 local GZipOS = require("formats.gzip.gzipos")
 
 local DataType = pref.datatype
-local GZipFormat = pref.format.create("GZip Format", "Compression", "Karl", "1.1")
+local GZipFormat = pref.format.create("GZip Stream", "Compression", "Karl", "1.1")
 
 function GZipFormat:validate(validator)
   validator:checkType(0, 0x8B1F, DataType.UInt16_LE)
