@@ -1,19 +1,21 @@
+local capstone = require("capstone")
+
 local InstructionHighlighter = { }
 
-function InstructionHighlighter.highlight(capstone, instruction)
-  if capstone:instructionGroup(instruction, capstone.lib.X86_GRP_JUMP) then
+function InstructionHighlighter.highlight(cshandle, instruction)
+  if capstone.instructiongroup(cshandle, instruction.csinsn, capstone.X86_GRP_JUMP) then
     return 0xDC143C
   end
   
-  if capstone:instructionGroup(instruction, capstone.lib.X86_GRP_CALL) then
+  if capstone.instructiongroup(cshandle, instruction.csinsn, capstone.X86_GRP_CALL) then
     return 0x808000
   end
     
-  if capstone:instructionGroup(instruction, capstone.lib.X86_GRP_RET) then
+  if capstone.instructiongroup(cshandle, instruction.csinsn, capstone.X86_GRP_RET) then
     return 0x822222
   end
   
-  if capstone.id == capstone.lib.X86_INS_NOP then
+  if instruction.id == capstone.X86_INS_NOP then
     return 0xD3D3D3
   end
   

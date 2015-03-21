@@ -15,7 +15,7 @@ local DataType = pref.datatype
 
 local MipsProcessor = oop.class(Processor)
 
-function MipsProcessor:decode(address, memorybuffer)
+function MipsProcessor:decode(address, memorybuffer)  
   local data = memorybuffer:read(address, DataType.UInt32)
   local instructiondef = InstructionSet.decode(data)
   
