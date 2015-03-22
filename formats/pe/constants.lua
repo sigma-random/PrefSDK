@@ -3,6 +3,9 @@ local PeConstants = { NumberOfDirectoryEntries = 15,
                       ImageResourceDataIsDirectory = { [32] = 0x80000000, [64] = 0x8000000000000000 },
                       ImageOrdinalFlag = { [32] = 0x80000000, [64] = 0x8000000000000000 },
                       ImageOptionalHeaderMagic = { [0x10B] = "32 Bit PE", [0x20B] = "64 Bit PE", [0x107] = "ROM" }, 
+                      
+                      Section = { Code = 0x00000020, InitializedData = 0x00000040, UninitializedData = 0x00000080, 
+                                  Shared = 0x10000000, Execute = 0x20000000, Read = 0x40000000, Write = 0x80000000 },
                         
                       DirectoryNames = { [1]  = "ExportDirectory",    [2]  = "ImportDirectory",             [3]  = "ResourceDirectory",
                                          [4]  = "ExceptionDirectory", [5]  = "SecurityDirectory",           [6]  = "BaseRelocationDirectory",

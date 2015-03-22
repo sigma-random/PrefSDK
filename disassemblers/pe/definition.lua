@@ -4,7 +4,10 @@ local pref = require("pref")
 local capstone = require("capstone")
 local CapstoneInstruction = require("sdk.disassembler.capstone.instruction")
 local PeFormat = require("formats.pe.definition")
+local PeConstants = require("formats.pe.constants")
+local InstructionAnalyzer = require("disassemblers.pe.instructionanalyzer")
 local InstructionHighlighter = require("disassemblers.pe.instructionhighlighter")
+local ImportResolver = require("disassemblers.pe.importresolver")
 
 local DataType = pref.datatype
 local SegmentType = pref.disassembler.segmenttype
@@ -23,6 +26,8 @@ function PeDisassembler:initialize()
   
   capstone.option(handle, capstone.CS_OPT_DETAIL, capstone.CS_OPT_ON)
   self.cshandle = handle
+  self.analyzer = InstructionAnalyzer(handle, self.formattree)
+  self.importresolver = ImportResolver(self.formattree)
 end
 
 function PeDisassembler:finalize()
@@ -54,24 +59,49 @@ function PeDisassembler:map()
   
   for i = 1, numberofsections do
     local section = sectiontable["Section" .. i]
-    self.listing:createSegment(section.Name.value, SegmentType.Code, imagebase + section.VirtualAddress.value, section.VirtualSize.value, section.PointerToRawData.value)
+    local segmenttype = SegmentType.Data
+    
+    if bit.band(section.Characteristics.value, PeConstants.Section.Code) ~= 0 then
+      segmenttype = SegmentType.Code
+    end
+    
+    self.listing:createSegment(section.Name.value, segmenttype, imagebase + section.VirtualAddress.value, section.VirtualSize.value, section.PointerToRawData.value)  
   end
   
   self.listing:createEntryPoint(imagebase + ntheaders.OptionalHeader.AddressOfEntryPoint.value, "start")
+  self.importresolver:createImports(self.listing)
 end
 
 function PeDisassembler:disassemble(address)
+  local symboltable = self.listing.symboltable
   local instruction = self:decode(address)
-  self.listing:addInstruction(instruction)
   
-  if instruction.mnemonic == "LEAVE" then
-    return nil
+  self.listing:addInstruction(instruction)
+  self.analyzer:analyze(instruction)
+  
+  if self.analyzer:isImportBranch(instruction) then
+    if symboltable:contains(instruction.destination) then
+      self.listing:setFunction(instruction.address, self.importresolver:callName(symboltable:name(instruction.destination)))
+    end
+    
+    if instruction.isjump then
+      return nil -- Stop Here
+    end
+  elseif self.listing:isAddress(address) and instruction.isdestinationvalid then
+    if instruction.isjump then
+      self.listing:createLabel(instruction.destination, instruction.address, string.format("j_%08X", instruction.destination))
+    elseif instruction.iscall then
+      self.listing:createFunction(instruction.destination, instruction.address)
+    end
+    
+    self:enqueue(instruction.destination)
   end
   
   return self:next(instruction)
 end
 
 function PeDisassembler:output(printer, instruction)
+  local symboltable = self.listing.symboltable
   local x86 = instruction.detail.x86
   printer:outword(instruction.mnemonic, InstructionHighlighter.highlight(self.cshandle, instruction))
    
@@ -81,7 +111,11 @@ function PeDisassembler:output(printer, instruction)
     if op.type == capstone.X86_OP_REG then
       printer:outregister(capstone.registername(self.cshandle, op.reg))
     elseif op.type == capstone.X86_OP_IMM then
-      printer:outvalue(op.imm, DataType.besttype(op.size))
+      if symboltable:contains(op.imm) then
+        printer:out(symboltable:name(op.imm), 0x0000FF)
+      else
+        printer:outvalue(op.imm, DataType.besttype(op.size))
+      end
     elseif op.type == capstone.X86_OP_MEM then
       local mem = op.mem
       
@@ -99,13 +133,18 @@ function PeDisassembler:output(printer, instruction)
         printer:outregister(capstone.registername(self.cshandle, mem.index))
         
         if mem.scale > 1 then
-          printer:out(" * "):outvalue(scale, DataType.UInt8)
+          printer:out(" * "):outvalue(mem.scale, DataType.UInt8)
         end
         
         printer:out(" + ")
       end
       
-      printer:outvalue(mem.disp, DataType.besttype(op.size))
+      if symboltable:contains(mem.disp) then
+        printer:out(symboltable:name(mem.disp), 0x0000FF)
+      else
+        printer:outvalue(mem.disp, DataType.besttype(op.size))
+      end
+        
       printer:out("]")
     else
       pref.warning("Invalid operand detected")
@@ -116,7 +155,7 @@ function PeDisassembler:output(printer, instruction)
     end
   end
   
-  printer:outcomment(instruction.csinsn.op_str) -- NOTE: Debugging 
+  -- printer:outcomment(instruction.csinsn.op_str) -- NOTE: Debugging 
 end
 
 return PeDisassembler 
